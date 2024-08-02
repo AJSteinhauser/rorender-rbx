@@ -43,3 +43,8 @@ export function splitImageIntoChunks(image: string, chunkSize: number = HTTPS_BO
     }
     return chunks
 }
+
+export function color3ToVector3(color: Color3): Vector3 {
+    return new Vector3(color.R, color.G, color.B)
+}
+
