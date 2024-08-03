@@ -59,18 +59,11 @@ const convertRunLengthSequenceToRawBuffer = (runLengthSequence: RunLengthSequenc
     return output
 }
 
-
 const convertRunLengthSequenceToEncodedBuffer = (runLengthSequence: RunLengthSequence[]): buffer => {
     const output = buffer.create(runLengthSequence.size() * (RUN_LENGTH_BYTE_SIZE + 1))
     runLengthSequence.forEach((item, idx) => {
         buffer.writeu16(output, idx * (RUN_LENGTH_BYTE_SIZE + 1), item.length)
         buffer.writeu8(output, idx * (RUN_LENGTH_BYTE_SIZE + 1) + 2, item.value)
     })
-    return output
-}
-
-const getImageDataFromBuffer = (buf: buffer): buffer => {
-    const output = buffer.create(buffer.len(buf) - HEADER_DATA_SIZE)
-    buffer.copy(output, 0, buf, HEADER_DATA_SIZE, buffer.len(buf) - HEADER_DATA_SIZE)
     return output
 }

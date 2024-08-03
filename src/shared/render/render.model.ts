@@ -15,4 +15,6 @@ export interface RenderConstants {
     xSpacing: number
     ySpacing: number
     imageDimensions: Vector2
+    rayBottom: number
+    normalizedRayTop: number
 }

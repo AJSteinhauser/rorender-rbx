@@ -4,7 +4,6 @@ export const RORENDER_FILE_VERSION = 1
 export const HEADER_DATA_SIZE = 6
 
 export interface ImageBuffers {
-    header: buffer
     red: buffer
     green: buffer
     blue: buffer
@@ -16,7 +15,6 @@ export interface ImageBuffers {
 }
 
 export const FILE_FORMAT_DATA_ORDER: (keyof ImageBuffers)[] = [
-    'header',
     'red',
     'green',
     'blue',

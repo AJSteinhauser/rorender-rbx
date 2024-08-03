@@ -13,6 +13,8 @@ materials.forEach((material: Enum.Material, index: number) => {
     materialMap.set(material, index)
 })
 
+const MAP_STRUCTURES = game.Workspace.FindFirstChild("Structures")
+
 export function computePixel(
     position: Vector2,
     settings: Settings,
@@ -27,22 +29,24 @@ export function computePixel(
     if (!result) {
         return
     }
+    // showDebugRayPosition(rayCenter)
 
     let color = getColorFromResult(result)
     color = shadeColor(color, result)
 
-    const height =
-        (result.Position.Y - renderConstants.rayLength) / (settings.corners.topRight.Y - renderConstants.rayLength)
+    const height = math.floor((result.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
+
+    const isStructure = MAP_STRUCTURES && result.Instance.IsDescendantOf(MAP_STRUCTURES)
 
     return {
-        r: color.X,
-        g: color.Y,
-        b: color.Z,
-        h: height * 255,
+        r: math.floor(color.X * 255),
+        g: math.floor(color.Y * 255),
+        b: math.floor(color.Z * 255),
+        h: height,
         material: materialMap.get(result.Material) || 0,
-        road: 0,
-        building: 0,
-        water: 0,
+        road: result.Material === Enum.Material.Cobblestone ? 1 : 0,
+        building: isStructure ? 1 : 0,
+        water: result.Material === Enum.Material.Water ? 1 : 0,
     }
 }
 
@@ -59,6 +63,15 @@ function getColorFromResult(result: RaycastResult): Vector3 {
     }
     return color3ToVector3(TERRAIN.GetMaterialColor(result.Material))
 }
+
+function showDebugRayPosition(position: Vector3) {
+    const part = new Instance('Part')
+    part.Anchored = true
+    part.CFrame = new CFrame(position)
+    part.Color = new Color3(1, 0, 0)
+    part.Size = new Vector3(1, 1, 1)
+    part.Parent = game.Workspace
+} 
 
 function shadeColor(color: Vector3, result: RaycastResult): Vector3 {
     const recievedIlluminance = math.max(result.Normal.Dot(SUN_POSITION), 0)

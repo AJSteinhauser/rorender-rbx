@@ -14,9 +14,7 @@ function writeHeader(imageSize: Vector2): buffer {
 export const generateBufferChannels = (settings: Settings): ImageBuffers => {
     const imageSize = getImageDimensions(settings)
     const bytesPerChannel = imageSize.X * imageSize.Y
-    const header = writeHeader(imageSize)
     return {
-        header,
         red: buffer.create(bytesPerChannel),
         green: buffer.create(bytesPerChannel),
         blue: buffer.create(bytesPerChannel),

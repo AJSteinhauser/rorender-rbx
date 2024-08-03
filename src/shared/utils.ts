@@ -1,8 +1,8 @@
 import { Pixel } from './render/render.model'
 import { Settings } from './settings/settings.model'
 
-const HTTPS_BODY_LIMIT = 1024 * 1000 - 1 // 1024Kb - 2
-const HEADER_DATA_SIZE = 6 // 3 of 2byte u16int values
+export const HTTPS_BODY_LIMIT = 1024 * 1000 - 1 // 1024Kb - 2
+export const HEADER_DATA_SIZE = 6 // 3 of 2byte u16int values
 
 export function getImageDimensions(settings: Settings): Vector2 {
     return new Vector2(
