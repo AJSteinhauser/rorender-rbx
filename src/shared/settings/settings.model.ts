@@ -6,4 +6,3 @@ export interface Settings {
     samples: number
     resolution: number
 }
-
