@@ -55,7 +55,6 @@ const convertRunLengthSequenceToRawBuffer = (runLengthSequence: RunLengthSequenc
         }
         idx += item.length
     })
-
     return output
 }
 

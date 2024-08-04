@@ -5,6 +5,6 @@ export const renderSettings: Settings = {
         topRight: new Vector3(-500, 100, -500),
         bottomLeft: new Vector3(500, -100, 500),
     },
-    resolution: 2,
+    resolution: 1,
     samples: 1,
 } as const

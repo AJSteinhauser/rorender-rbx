@@ -1,12 +1,11 @@
 import { Settings } from 'shared/settings/settings.model'
 import { Pixel, RenderConstants } from './render.model'
-import { computePixel } from './render.utils'
+import { computePixel, delayForScriptExhuastion } from './render.utils'
 import { getImageDimensions } from 'shared/utils'
 import { generateBufferChannels } from 'shared/file/file.utils'
 import { ImageBuffers } from 'shared/file/file.modal'
 import { writePixelToImageBuffer } from 'shared/file/file.utils'
 
-const DELAY_TIME = 5
 
 export function render(settings: Settings): ImageBuffers {
     const imageData = generateBufferChannels(settings)
@@ -46,11 +45,3 @@ function getRenderConstants(settings: Settings, imageDimensions: Vector2): Rende
     }
 }
 
-function delayForScriptExhuastion(startTime: number): number {
-    if (tick() - startTime > DELAY_TIME) {
-        task.wait(0.1)
-        return tick()
-    } else {
-        return startTime
-    }
-}

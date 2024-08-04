@@ -5,6 +5,8 @@ import { color3ToVector3 } from 'shared/utils'
 const LIGHTING = game.GetService('Lighting')
 const TERRAIN = game.Workspace.Terrain
 
+const DELAY_TIME = 5
+
 const SUN_POSITION = LIGHTING.GetSunDirection()
 
 const materials = Enum.Material.GetEnumItems()
@@ -76,4 +78,13 @@ function showDebugRayPosition(position: Vector3) {
 function shadeColor(color: Vector3, result: RaycastResult): Vector3 {
     const recievedIlluminance = math.max(result.Normal.Dot(SUN_POSITION), 0)
     return color.mul(0.2 + recievedIlluminance * 0.8)
+}
+
+export function delayForScriptExhuastion(startTime: number, delayTime: number = DELAY_TIME): number {
+    if (tick() - startTime > delayTime) {
+        task.wait(0.1)
+        return tick()
+    } else {
+        return startTime
+    }
 }
