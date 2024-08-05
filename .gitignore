@@ -1,6 +1,5 @@
 /node_modules
 /out
-/include
 *.tsbuildinfo
 catch-output/bin
 catch-output/lib
