@@ -1,7 +1,7 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { buildEncodingMap, buildTreeFromFrequencyTable, generatePriorityQueue } from "./huffman-encoding.compression"
-import { Node } from "./huffman.model"
+import { buildEncodingMap, buildTreeFromFrequencyTable, generatePriorityQueue, huffmanEncode } from "./huffman-encoding.compression"
+import { EncodingInfo, EncodingMap, Node } from "./huffman.model"
 
 
 const getCharByteValue = ( char: string ): number => {
@@ -74,16 +74,31 @@ export = () => {
         const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
         const huffmanTable = buildEncodingMap(huffmanTree)
 
-        const expectedHuffmanTable: Map<number, string> = new Map()
-        expectedHuffmanTable.set(getCharByteValue("A"), "1")
-        expectedHuffmanTable.set(getCharByteValue("B"), "00")
-        expectedHuffmanTable.set(getCharByteValue("C"), "010")
-        expectedHuffmanTable.set(getCharByteValue("D"), "011")
+        const expectedHuffmanTable: Map<number, EncodingInfo> = new Map()
+        expectedHuffmanTable.set(getCharByteValue("A"), { binaryValue: 0b1, bitLength: 1 }) // 0b1)
+        expectedHuffmanTable.set(getCharByteValue("B"), { binaryValue: 0b00, bitLength: 2 }) // 0b1)
+        expectedHuffmanTable.set(getCharByteValue("C"), { binaryValue: 0b010, bitLength: 3 }) // 0b1)
+        expectedHuffmanTable.set(getCharByteValue("D"), { binaryValue: 0b011, bitLength: 3 }) // 0b1)
 
+        print(expectedHuffmanTable)
+        print(huffmanTable)
         it("should encode the huffmen codes to the table", () => {
             huffmanTable.forEach((value, key) => {
-                expect(value).to.equal(expectedHuffmanTable.get(key))
+                expect(value.binaryValue).to.equal(expectedHuffmanTable.get(key)?.binaryValue)
+                expect(value.bitLength).to.equal(expectedHuffmanTable.get(key)?.bitLength)
             })
         })
+
+    })
+
+    describe("huffman encoding", () => {
+        const frequencyTable = generatePriorityQueue(buffer.fromstring(testString))
+        const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
+        const huffmanTable = buildEncodingMap(huffmanTree)
+
+        it("should encode a string to match the expect example encoding", () => {
+            const huffmanEncoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+        })
+
     })
 }

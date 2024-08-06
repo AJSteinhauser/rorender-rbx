@@ -10,3 +10,11 @@ export interface Node {
     frequency: number 
     symbol?: number
 }
+
+export type EncodingMap = Map<number, EncodingInfo>
+
+
+export interface EncodingInfo {
+    bitLength: number
+    binaryValue: number
+}

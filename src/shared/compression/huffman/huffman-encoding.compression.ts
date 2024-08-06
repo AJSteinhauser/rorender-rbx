@@ -1,32 +1,29 @@
 import { delayForScriptExhuastion } from "shared/render/render.utils"
-import { Node, ValueFrequency } from "./huffman.model"
+import { EncodingInfo, EncodingMap, Node } from "./huffman.model"
 
+export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): buffer => {
 
-let totalCount = 0
-
-export const hoffmanEncode = (image: buffer): buffer => {
     return image
 }
 
-export const buildEncodingMap = (node: Node): Map<number, string> => {
-    const huffmanMap = new Map<number, string>()
+export const buildEncodingMap = (node: Node): EncodingMap => {
+    const huffmanMap: EncodingMap = new Map<number, EncodingInfo>()
 
     huffmanTreeDepthFirst(node, huffmanMap)
     return huffmanMap
 }
 
-export const huffmanTreeDepthFirst = (node: Node, map: Map<number, string>, currentInput: string = ""): void => {
+export const huffmanTreeDepthFirst = (node: Node, map: EncodingMap, binaryValue: number = 0, bitLength: number = 0): void => {
     const isLeafNode = !node.left && !node.right 
     const symbol = node.symbol 
     if (isLeafNode && symbol !== undefined) {
-        map.set(symbol, currentInput)
-        totalCount += currentInput.size() * node.frequency
+        map.set(symbol, { binaryValue, bitLength })
     }
     if (node.left) {
-        huffmanTreeDepthFirst(node.left, map, currentInput + "0")
+        huffmanTreeDepthFirst(node.left, map, binaryValue << 1, bitLength + 1)
     }
     if (node.right) {
-        huffmanTreeDepthFirst(node.right, map, currentInput + "1")
+        huffmanTreeDepthFirst(node.right, map, binaryValue << 1 | 1, bitLength + 1)
     }
 }
 
