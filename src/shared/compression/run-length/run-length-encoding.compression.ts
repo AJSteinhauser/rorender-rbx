@@ -1,5 +1,4 @@
-import { HEADER_DATA_SIZE } from 'shared/file/file.modal'
-import { MAX_RUN_LENGTH, RUN_LENGTH_BYTE_SIZE, RunLengthSequence } from './compression.model'
+import { MAX_RUN_LENGTH, RUN_LENGTH_BYTE_SIZE, RunLengthSequence } from './run-length.model'
 
 export const runLengthEncode = (image: buffer): buffer => {
     let idx = 0
@@ -58,7 +57,7 @@ const convertRunLengthSequenceToRawBuffer = (runLengthSequence: RunLengthSequenc
     return output
 }
 
-const convertRunLengthSequenceToEncodedBuffer = (runLengthSequence: RunLengthSequence[]): buffer => {
+export const convertRunLengthSequenceToEncodedBuffer = (runLengthSequence: RunLengthSequence[]): buffer => {
     const output = buffer.create(runLengthSequence.size() * (RUN_LENGTH_BYTE_SIZE + 1))
     runLengthSequence.forEach((item, idx) => {
         buffer.writeu16(output, idx * (RUN_LENGTH_BYTE_SIZE + 1), item.length)

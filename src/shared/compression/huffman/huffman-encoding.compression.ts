@@ -1,5 +1,5 @@
 import { delayForScriptExhuastion } from "shared/render/render.utils"
-import { Node, ValueFrequency } from "./compression.model"
+import { Node, ValueFrequency } from "./huffman.model"
 
 
 let totalCount = 0
@@ -12,7 +12,6 @@ export const buildEncodingMap = (node: Node): Map<number, string> => {
     const huffmanMap = new Map<number, string>()
 
     huffmanTreeDepthFirst(node, huffmanMap)
-    print(math.ceil(totalCount/8) / 1000, "KB Huffman")
     return huffmanMap
 }
 
@@ -31,14 +30,13 @@ export const huffmanTreeDepthFirst = (node: Node, map: Map<number, string>, curr
     }
 }
 
-
 export const buildTreeFromFrequencyTable = (priorityQueue: Node[]): Node => {
     let root: Node | undefined = undefined
     let deferTime = tick()
     while (priorityQueue.size() > 1) {
         deferTime = delayForScriptExhuastion(deferTime)
-        const left = priorityQueue.pop()
         const right = priorityQueue.pop()
+        const left = priorityQueue.pop()
         if (left && right) {
             root = { left, right, frequency: left.frequency + right.frequency }
             addNodeToPriorityQueue(root, priorityQueue)
