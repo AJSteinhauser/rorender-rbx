@@ -7,7 +7,6 @@ export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedI
     const bufferStore: number[] = []
 
     let imageIdx = 0
-
     let bitIdx = writeBufferBitLength
     let currentBuf = 0
     let currentBufDirty = false
@@ -15,23 +14,25 @@ export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedI
     let bitLength = 0
 
     while (imageIdx < buffer.len(image)) {
+
+        const preOperationSpaceRemaining = bitIdx + 1
         const symbol = buffer.readu8(image, imageIdx)
         const encodingInfo = encodingMap.get(symbol)
         if (!encodingInfo) {
             throw `Symbol: ${symbol} not found in encoding map`
         }
-         
-        const tmp = encodingInfo.binaryValue << (bitIdx - encodingInfo.bitLength + 1)
-        currentBuf |= tmp
+        currentBuf |= encodingInfo.binaryValue << (bitIdx - encodingInfo.bitLength + 1)
+
         bitIdx -= encodingInfo.bitLength
         currentBufDirty = true
         bitLength += encodingInfo.bitLength
 
-        if (bitIdx >= writeBufferBitLength) {
+        if (bitIdx < 0) {
             bufferStore.push(currentBuf)
             currentBuf = 0
-            const overflowAmount = math.abs(bitIdx - writeBufferBitLength)
+            const overflowAmount = math.abs(preOperationSpaceRemaining - encodingInfo.bitLength)
             currentBufDirty = false
+            bitIdx = writeBufferBitLength
             if (overflowAmount > 0) {
                 currentBuf |= encodingInfo.binaryValue 
                 currentBuf <<= overflowAmount
@@ -66,26 +67,17 @@ export const maskOtherBits = (value: number, position: number): number => {
     return value & mask
 }
 
-export const huffmanDecode = (image: buffer, bitLength: number, encodingTree: Node): string => {
+export const huffmanDecode = (image: buffer, bitLength: number, encodingTree: Node): buffer => {
     let currentTreePos = encodingTree
     let byteIdx = 0
-    let bitIdx = 0
+    let overallBitIdx = 0
+    let subBitIdx = 31
     let currentBuffer = buffer.readu32(image, byteIdx)
     let output = ""
-    let dirtyFlag = false
-    while (bitIdx < bitLength) {
-        if (isLeafNode(currentTreePos)){
-            if (currentTreePos.symbol === undefined){
-                throw `Symbol is undefined on a leaf node freq: ${currentTreePos.frequency}`
-            }
-            output += string.char(currentTreePos.symbol)
-            currentTreePos = encodingTree
-            dirtyFlag = false
-        }
-        const inverseBitPosition = writeBufferBitLength - bitIdx
-        const value = maskOtherBits(currentBuffer,inverseBitPosition)
-        bitIdx += 1
-        dirtyFlag = true
+    while (overallBitIdx < bitLength) {
+        const value = maskOtherBits(currentBuffer,subBitIdx)
+        overallBitIdx += 1
+        subBitIdx -= 1
         if (!currentTreePos.left || !currentTreePos.right) {
             throw `Invalid tree`
         }
@@ -95,14 +87,28 @@ export const huffmanDecode = (image: buffer, bitLength: number, encodingTree: No
         else {
             currentTreePos = currentTreePos.right
         }
-    }
-    if (dirtyFlag){
-        if (currentTreePos.symbol === undefined){
-            throw `[Dirty flag] Symbol is undefined on a leaf node freq: ${currentTreePos.frequency}`
+        if (isLeafNode(currentTreePos)){
+            if (currentTreePos.symbol === undefined){
+                throw `Symbol is undefined on a leaf node freq: ${currentTreePos.frequency}`
+            }
+            output += string.char(currentTreePos.symbol)
+            currentTreePos = encodingTree
         }
-        output += string.char(currentTreePos.symbol)
+        if (subBitIdx < 0 && overallBitIdx < bitLength){
+            byteIdx += 4
+            currentBuffer = buffer.readu32(image, byteIdx)
+            subBitIdx = 31
+        }
     }
-    return output
+    // if (dirtyFlag){
+    //     if (currentTreePos.symbol === undefined){
+    //         throw `[Dirty flag] Symbol is undefined on a leaf node freq: ${currentTreePos.frequency}`
+    //     }
+    //     output += string.char(currentTreePos.symbol)
+    // }
+    const outputBuf = buffer.create(output.size())
+    buffer.writestring(outputBuf,0, output, output.size())
+    return outputBuf
 }
 
 

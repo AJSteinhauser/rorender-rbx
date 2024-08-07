@@ -8,10 +8,6 @@ const getCharByteValue = ( char: string ): number => {
     return string.byte(char)[0]
 }
 
-const dec2bin = (dec: number): string => {
-   return tostring((dec >>> 0))
-}
-
 function numberToBinaryString(num: number): string {
     if (num === 0) {
         return '0';
@@ -141,6 +137,30 @@ export = () => {
             const encoded = huffmanEncode(buffer.fromstring(TEST_STRING), huffmanTable)
             expect(encoded.bitLength).to.equal(28)
         })
+
+        it("should encode 1 bit overflowing strings", () => {
+            const testString = string.rep("A", 64)
+            const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+            for (let i = 0; i < 2; i++) {
+                expect(buffer.readu32(encoded.data, i * 4)).to.equal(0xFFFFFFFF)
+            }
+        })
+
+        it("should encode 2 bit overflowing strings", () => {
+            const testString = string.rep("B", 32)
+            const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+            for (let i = 0; i < 2; i++) {
+                expect(buffer.readu32(encoded.data, i * 4)).to.equal(0x00000000)
+            }
+        })
+
+        it("should encode 3 bit overflowing strings", () => {
+            const testString = string.rep("C", 1)
+            const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+            print(numberToBinaryString(buffer.readu32(encoded.data, 0)))
+            print(numberToBinaryString(buffer.readu32(encoded.data, 4)))
+            expect(buffer.readu32(encoded.data, 0)).to.equal(0b01000000000000000000000000000000)
+        })
     })
 
     describe("huffman decoding", () => {
@@ -151,34 +171,36 @@ export = () => {
         it("should decode a single character", () => {
             const test1Encoded = huffmanEncode(buffer.fromstring("A"), huffmanTable)
             const test1Decoded = huffmanDecode(test1Encoded.data,test1Encoded.bitLength,huffmanTree)
-            expect(test1Decoded).to.equal("A")
+            expect(buffer.readstring(test1Decoded,0, 1)).to.equal("A")
             const test2Encoded = huffmanEncode(buffer.fromstring("B"), huffmanTable)
             const test2Decoded = huffmanDecode(test2Encoded.data,test2Encoded.bitLength,huffmanTree)
-            expect(test2Decoded).to.equal("B")
+            expect(buffer.readstring(test2Decoded,0, 1)).to.equal("B")
             const test3Encoded = huffmanEncode(buffer.fromstring("C"), huffmanTable)
             const test3Decoded = huffmanDecode(test3Encoded.data,test3Encoded.bitLength,huffmanTree)
-            expect(test3Decoded).to.equal("C")
+            expect(buffer.readstring(test3Decoded,0, 1)).to.equal("C")
         })
 
         it("should decode multiple characters", () => {
             const test1Encoded = huffmanEncode(buffer.fromstring("AB"), huffmanTable)
             const test1Decoded = huffmanDecode(test1Encoded.data,test1Encoded.bitLength,huffmanTree)
-            expect(test1Decoded).to.equal("AB")
+            expect(buffer.readstring(test1Decoded, 0, 2)).to.equal("AB") // test1Decoded).to.equal("AB")
             const test2Encoded = huffmanEncode(buffer.fromstring("BAAAB"), huffmanTable)
             const test2Decoded = huffmanDecode(test2Encoded.data,test2Encoded.bitLength,huffmanTree)
-            expect(test2Decoded).to.equal("BAAAB")
+            expect(buffer.readstring(test2Decoded, 0, 5)).to.equal("BAAAB") // test2Decoded).to.equal("BAAAB")
         })
 
         it("should decode the test string", () => {
             const testEncoded = huffmanEncode(buffer.fromstring(TEST_STRING), huffmanTable)
             const testDecoded = huffmanDecode(testEncoded.data,testEncoded.bitLength,huffmanTree)
-            expect(testDecoded).to.equal(TEST_STRING)
+            expect(buffer.readstring(testDecoded,0, buffer.len(testDecoded))).to.equal(TEST_STRING)
         })
 
-        // it("should decode a long string with buffer overflow", () => {
-        //     const testEncoded = huffmanEncode(buffer.fromstring(string.rep(TEST_STRING, 4)), huffmanTable)
-        //     const testDecoded = huffmanDecode(testEncoded.data,testEncoded.bitLength,huffmanTree)
-        //     expect(testDecoded).to.equal(TEST_STRING)
-        // })
+        it("should decode a long string with 1 bit encoding and buffer overflow", () => {
+            const testString = string.rep("A", 33)
+            const testEncoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+            const testDecoded = huffmanDecode(testEncoded.data,testEncoded.bitLength,huffmanTree)
+            const decoded  = buffer.readstring(testDecoded, 0, buffer.len(testDecoded))
+            expect(decoded).to.equal(testString)
+        })
     })
 }
