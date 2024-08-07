@@ -1,10 +1,110 @@
 import { delayForScriptExhuastion } from "shared/render/render.utils"
-import { EncodingInfo, EncodingMap, Node } from "./huffman.model"
+import { EncodedInfo, EncodingInfo, EncodingMap, Node } from "./huffman.model"
 
-export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): buffer => {
+const writeBufferBitLength = 31 
 
-    return image
+export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedInfo => {
+    const bufferStore: number[] = []
+
+    let imageIdx = 0
+
+    let bitIdx = writeBufferBitLength
+    let currentBuf = 0
+    let currentBufDirty = false
+
+    let bitLength = 0
+
+    while (imageIdx < buffer.len(image)) {
+        const symbol = buffer.readu8(image, imageIdx)
+        const encodingInfo = encodingMap.get(symbol)
+        if (!encodingInfo) {
+            throw `Symbol: ${symbol} not found in encoding map`
+        }
+         
+        const tmp = encodingInfo.binaryValue << (bitIdx - encodingInfo.bitLength + 1)
+        currentBuf |= tmp
+        bitIdx -= encodingInfo.bitLength
+        currentBufDirty = true
+        bitLength += encodingInfo.bitLength
+
+        if (bitIdx >= writeBufferBitLength) {
+            bufferStore.push(currentBuf)
+            currentBuf = 0
+            const overflowAmount = math.abs(bitIdx - writeBufferBitLength)
+            currentBufDirty = false
+            if (overflowAmount > 0) {
+                currentBuf |= encodingInfo.binaryValue 
+                currentBuf <<= overflowAmount
+                bitIdx = overflowAmount
+                currentBufDirty = true
+            }
+        }
+        imageIdx++
+    }
+    if (currentBufDirty){
+        bufferStore.push(currentBuf)
+    }
+
+    const output = buffer.create(bufferStore.size() * 4)
+    bufferStore.forEach((value, idx) => {
+        buffer.writeu32(output, idx * 4, value)
+    })
+    return { data: output, bitLength }
 }
+
+export const isLeafNode = (node: Node): boolean => {
+    return !node.left && !node.right
+}
+
+export const maskOtherBits = (value: number, position: number): number => {
+    if (position < 0 || position > 31) {
+        throw `Invalid position: ${position}`
+    }
+
+    const mask = (1 << position) 
+
+    return value & mask
+}
+
+export const huffmanDecode = (image: buffer, bitLength: number, encodingTree: Node): string => {
+    let currentTreePos = encodingTree
+    let byteIdx = 0
+    let bitIdx = 0
+    let currentBuffer = buffer.readu32(image, byteIdx)
+    let output = ""
+    let dirtyFlag = false
+    while (bitIdx < bitLength) {
+        if (isLeafNode(currentTreePos)){
+            if (currentTreePos.symbol === undefined){
+                throw `Symbol is undefined on a leaf node freq: ${currentTreePos.frequency}`
+            }
+            output += string.char(currentTreePos.symbol)
+            currentTreePos = encodingTree
+            dirtyFlag = false
+        }
+        const inverseBitPosition = writeBufferBitLength - bitIdx
+        const value = maskOtherBits(currentBuffer,inverseBitPosition)
+        bitIdx += 1
+        dirtyFlag = true
+        if (!currentTreePos.left || !currentTreePos.right) {
+            throw `Invalid tree`
+        }
+        if (value === 0) { 
+            currentTreePos = currentTreePos.left
+        }
+        else {
+            currentTreePos = currentTreePos.right
+        }
+    }
+    if (dirtyFlag){
+        if (currentTreePos.symbol === undefined){
+            throw `[Dirty flag] Symbol is undefined on a leaf node freq: ${currentTreePos.frequency}`
+        }
+        output += string.char(currentTreePos.symbol)
+    }
+    return output
+}
+
 
 export const buildEncodingMap = (node: Node): EncodingMap => {
     const huffmanMap: EncodingMap = new Map<number, EncodingInfo>()
@@ -14,9 +114,9 @@ export const buildEncodingMap = (node: Node): EncodingMap => {
 }
 
 export const huffmanTreeDepthFirst = (node: Node, map: EncodingMap, binaryValue: number = 0, bitLength: number = 0): void => {
-    const isLeafNode = !node.left && !node.right 
+    const isLeaf = isLeafNode(node) 
     const symbol = node.symbol 
-    if (isLeafNode && symbol !== undefined) {
+    if (isLeaf && symbol !== undefined) {
         map.set(symbol, { binaryValue, bitLength })
     }
     if (node.left) {

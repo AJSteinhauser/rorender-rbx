@@ -18,3 +18,8 @@ export interface EncodingInfo {
     bitLength: number
     binaryValue: number
 }
+
+export interface EncodedInfo {
+    data: buffer
+    bitLength: number
+}

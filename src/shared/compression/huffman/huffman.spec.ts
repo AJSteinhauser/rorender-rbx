@@ -1,11 +1,29 @@
 /// <reference types="@rbxts/testez/globals" />
-
-import { buildEncodingMap, buildTreeFromFrequencyTable, generatePriorityQueue, huffmanEncode } from "./huffman-encoding.compression"
+import { buildEncodingMap, buildTreeFromFrequencyTable, huffmanDecode, generatePriorityQueue, huffmanEncode } from "./huffman-encoding.compression"
 import { EncodingInfo, EncodingMap, Node } from "./huffman.model"
 
+const TEST_STRING = "AABBBBBAAABCCAAD" as const
 
 const getCharByteValue = ( char: string ): number => {
     return string.byte(char)[0]
+}
+
+const dec2bin = (dec: number): string => {
+   return tostring((dec >>> 0))
+}
+
+function numberToBinaryString(num: number): string {
+    if (num === 0) {
+        return '0';
+    }
+    
+    let binaryString = '';
+    while (num > 0) {
+        binaryString = (num % 2) + binaryString;
+        num = math.floor(num / 2);
+    }
+    
+    return binaryString;
 }
 
 const checkTreesAreEqual = (tree1: Node | undefined, tree2: Node | undefined): boolean => {
@@ -24,7 +42,6 @@ const checkTreesAreEqual = (tree1: Node | undefined, tree2: Node | undefined): b
     }
 }
 
-const testString = "AABBBBBAAABCCAAD" as const
 
 export = () => {
     describe("frequency table", () => {
@@ -36,14 +53,14 @@ export = () => {
         ]
 
         it("should build a frequncy table that matches expected output", () => {
-            generatePriorityQueue(buffer.fromstring(testString)).forEach((node, index) => {
+            generatePriorityQueue(buffer.fromstring(TEST_STRING)).forEach((node, index) => {
                 expect(node.frequency).to.equal(expectedFrequencyTable[index].frequency)
                 expect(node.symbol).to.equal(expectedFrequencyTable[index].symbol)
             })
         })
 
         it("should build a priority queue with a length equal to the number of symbols", () => {
-            expect(generatePriorityQueue(buffer.fromstring(testString)).size()).to.equal(4)
+            expect(generatePriorityQueue(buffer.fromstring(TEST_STRING)).size()).to.equal(4)
         })
     })
 
@@ -61,7 +78,7 @@ export = () => {
                 },
             },
         }
-        const frequencyTable = generatePriorityQueue(buffer.fromstring(testString))
+        const frequencyTable = generatePriorityQueue(buffer.fromstring(TEST_STRING))
         const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
 
         it("should build a huffman tree that matches expected output", () => {
@@ -70,7 +87,7 @@ export = () => {
     })
 
     describe("huffman table", () => {
-        const frequencyTable = generatePriorityQueue(buffer.fromstring(testString))
+        const frequencyTable = generatePriorityQueue(buffer.fromstring(TEST_STRING))
         const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
         const huffmanTable = buildEncodingMap(huffmanTree)
 
@@ -80,8 +97,6 @@ export = () => {
         expectedHuffmanTable.set(getCharByteValue("C"), { binaryValue: 0b010, bitLength: 3 }) // 0b1)
         expectedHuffmanTable.set(getCharByteValue("D"), { binaryValue: 0b011, bitLength: 3 }) // 0b1)
 
-        print(expectedHuffmanTable)
-        print(huffmanTable)
         it("should encode the huffmen codes to the table", () => {
             huffmanTable.forEach((value, key) => {
                 expect(value.binaryValue).to.equal(expectedHuffmanTable.get(key)?.binaryValue)
@@ -92,13 +107,78 @@ export = () => {
     })
 
     describe("huffman encoding", () => {
-        const frequencyTable = generatePriorityQueue(buffer.fromstring(testString))
+        const huffmanTable: Map<number, EncodingInfo> = new Map()
+        huffmanTable.set(getCharByteValue("A"), { binaryValue: 0b1, bitLength: 1 }) // 0b1)
+        huffmanTable.set(getCharByteValue("B"), { binaryValue: 0b00, bitLength: 2 }) // 0b1)
+        huffmanTable.set(getCharByteValue("C"), { binaryValue: 0b010, bitLength: 3 }) // 0b1)
+        huffmanTable.set(getCharByteValue("D"), { binaryValue: 0b011, bitLength: 3 }) // 0b1)
+
+        it("should encode a single character", () => {
+            const encoded = huffmanEncode(buffer.fromstring("A"), huffmanTable)
+            expect(buffer.readu32(encoded.data,0)).to.equal(0b10000000000000000000000000000000)
+            const test2 = huffmanEncode(buffer.fromstring("C"), huffmanTable)
+            expect(buffer.readu32(test2.data,0)).to.equal(0b01000000000000000000000000000000)
+        })
+
+        it("should encode multiple characters", () => {
+            const encoded = huffmanEncode(buffer.fromstring("ABA"), huffmanTable)
+            expect(buffer.readu32(encoded.data,0)).to.equal(0b10010000000000000000000000000000)
+            const test2 = huffmanEncode(buffer.fromstring("CAB"), huffmanTable)
+            expect(buffer.readu32(test2.data,0)).to.equal(0b01010000000000000000000000000000)
+        })
+
+        it("should encode a single character to the correct bit length", () => {
+            const encoded = huffmanEncode(buffer.fromstring("A"), huffmanTable)
+            expect(encoded.bitLength).to.equal(1)
+        })
+
+        it("should encode the test string", () => {
+            const encoded = huffmanEncode(buffer.fromstring(TEST_STRING), huffmanTable)
+            expect(buffer.readu32(encoded.data,0)).to.equal(0b11000000000011100010010110110000)
+        })
+
+        it("should encode the correct bit length", () => {
+            const encoded = huffmanEncode(buffer.fromstring(TEST_STRING), huffmanTable)
+            expect(encoded.bitLength).to.equal(28)
+        })
+    })
+
+    describe("huffman decoding", () => {
+        const frequencyTable = generatePriorityQueue(buffer.fromstring(TEST_STRING))
         const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
         const huffmanTable = buildEncodingMap(huffmanTree)
 
-        it("should encode a string to match the expect example encoding", () => {
-            const huffmanEncoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+        it("should decode a single character", () => {
+            const test1Encoded = huffmanEncode(buffer.fromstring("A"), huffmanTable)
+            const test1Decoded = huffmanDecode(test1Encoded.data,test1Encoded.bitLength,huffmanTree)
+            expect(test1Decoded).to.equal("A")
+            const test2Encoded = huffmanEncode(buffer.fromstring("B"), huffmanTable)
+            const test2Decoded = huffmanDecode(test2Encoded.data,test2Encoded.bitLength,huffmanTree)
+            expect(test2Decoded).to.equal("B")
+            const test3Encoded = huffmanEncode(buffer.fromstring("C"), huffmanTable)
+            const test3Decoded = huffmanDecode(test3Encoded.data,test3Encoded.bitLength,huffmanTree)
+            expect(test3Decoded).to.equal("C")
         })
 
+        it("should decode multiple characters", () => {
+            const test1Encoded = huffmanEncode(buffer.fromstring("AB"), huffmanTable)
+            const test1Decoded = huffmanDecode(test1Encoded.data,test1Encoded.bitLength,huffmanTree)
+            expect(test1Decoded).to.equal("AB")
+            const test2Encoded = huffmanEncode(buffer.fromstring("BAAAB"), huffmanTable)
+            const test2Decoded = huffmanDecode(test2Encoded.data,test2Encoded.bitLength,huffmanTree)
+            expect(test2Decoded).to.equal("BAAAB")
+        })
+
+        it("should decode the test string", () => {
+            const testEncoded = huffmanEncode(buffer.fromstring(TEST_STRING), huffmanTable)
+            const testDecoded = huffmanDecode(testEncoded.data,testEncoded.bitLength,huffmanTree)
+            expect(testDecoded).to.equal(TEST_STRING)
+        })
+
+        // it("should decode a long string with buffer overflow", () => {
+        //     const testEncoded = huffmanEncode(buffer.fromstring(string.rep(TEST_STRING, 4)), huffmanTable)
+        //     const testDecoded = huffmanDecode(testEncoded.data,testEncoded.bitLength,huffmanTree)
+        //     expect(testDecoded).to.equal(TEST_STRING)
+        // })
     })
 }
