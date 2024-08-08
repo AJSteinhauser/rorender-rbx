@@ -1,6 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 import { getCharByteValue, to32BitBinaryString } from "../compression.utils"
-import { buildEncodingMap, buildTreeFromFrequencyTable, huffmanDecode, generatePriorityQueue, huffmanEncode } from "./huffman-encoding.compression"
+import { buildEncodingMap, buildTreeFromFrequencyTable, huffmanDecode, generatePriorityQueue, huffmanEncode, writeTreeToBuffer } from "./huffman-encoding.compression"
 import { EncodingInfo, Node } from "./huffman.model"
 
 const TEST_STRING = "AABBBBBAAABCCAAD" as const
@@ -24,6 +24,17 @@ const checkTreesAreEqual = (tree1: Node | undefined, tree2: Node | undefined): b
 
 
 export = () => {
+    describe("tree storage", () => {
+        const frequencyTable = generatePriorityQueue(buffer.fromstring(TEST_STRING))
+        const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
+
+        const tree = writeTreeToBuffer(huffmanTree)
+
+        it("should write the size of the tree as the first 16bits of the table", () => {
+            expect(buffer.readu16(tree,0)).to.equal(7)
+        })
+    })
+
     describe("frequency table", () => {
         const expectedFrequencyTable: Node[] = [
             { frequency: 7, symbol: getCharByteValue("A") },

@@ -4,6 +4,42 @@ import { to32BitBinaryString } from "../compression.utils"
 
 const writeBufferBitLength = 31 
 
+export const bredthFirstTreeArrayBuilder = (node: Node): number[] => {
+    const output: number[] = []
+    const queue: Node[] = [node]
+    while (queue.size() > 0) {
+        const current = queue.shift()
+        if (current) {
+            if (current.symbol) {
+                output.push(current.symbol)
+            }
+            else {
+                output.push(256)
+            }
+            
+            if (current.left) {
+                queue.push(current.left)
+            }
+            if (current.right) {
+                queue.push(current.right)
+            }
+        }
+    }
+    return output
+}
+
+export const writeTreeToBuffer = (node: Node): buffer => {
+    const nodeArray = bredthFirstTreeArrayBuilder(node)
+    const buf = buffer.create((nodeArray.size() * 2) + 2)
+    buffer.writeu16(buf, 0, nodeArray.size())
+    for (let i = 0; i < nodeArray.size(); i++) {
+        buffer.writeu16(buf, i * 2 + 2, nodeArray[i])
+    }
+    return buf
+}
+
+
+
 export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedInfo => {
     const bufferStore: number[] = []
 
@@ -14,7 +50,10 @@ export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedI
 
     let bitCounter = 0
 
+    let startTime = tick()
     while (symbolIdx < buffer.len(image)) {
+        startTime = delayForScriptExhuastion(startTime)
+
         const preOperationSpaceRemaining = leftBitIdx + 1
         const symbol = buffer.readu8(image, symbolIdx)
         const encodingInfo = encodingMap.get(symbol)
@@ -50,6 +89,7 @@ export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedI
 
     const output = buffer.create(bufferStore.size() * 4)
     bufferStore.forEach((value, idx) => {
+        startTime = delayForScriptExhuastion(startTime)
         buffer.writeu32(output, idx * 4, value)
     })
     return { data: output, bitLength: bitCounter }
@@ -76,7 +116,9 @@ export const huffmanDecode = (image: buffer, bitLength: number, encodingTree: No
     let subBitIdx = 31
     let currentBuffer = buffer.readu32(image, byteIdx)
     let output = ""
+    let startTime = tick()
     while (overallBitIdx < bitLength) {
+        startTime = delayForScriptExhuastion(startTime)
         const value = maskOtherBits(currentBuffer,subBitIdx)
         overallBitIdx += 1
         subBitIdx -= 1
@@ -161,7 +203,9 @@ export const addNodeToPriorityQueue = (node: Node, priorityQueue: Node[]): void=
 export const generatePriorityQueue = (buff: buffer): Node[]  => {
     const frequencyMap = new Map<number, number>()
 
+    let startTime = tick()
     for (let i = 0; i < buffer.len(buff); i++) {
+        startTime = delayForScriptExhuastion(startTime)
         const value = buffer.readu8(buff,i)
         const frequency = frequencyMap.get(value) || 0
         frequencyMap.set(value, frequency + 1)
@@ -169,6 +213,7 @@ export const generatePriorityQueue = (buff: buffer): Node[]  => {
 
     const output: Node[] = []
     frequencyMap.forEach((value, key) => {
+        startTime = delayForScriptExhuastion(startTime)
         output.push({ frequency: value, symbol: key })
     })
 

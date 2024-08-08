@@ -3,7 +3,7 @@ import { FILE_FORMAT_DATA_ORDER, HEADER_DATA_SIZE, ImageBuffers, RORENDER_FILE_V
 import { getImageDimensions } from 'shared/utils'
 import { Pixel } from 'shared/render/render.model'
 
-function writeHeader(imageSize: Vector2): buffer {
+export function writeHeader(imageSize: Vector2): buffer {
     const buf = buffer.create(HEADER_DATA_SIZE)
     buffer.writeu16(buf, 0, RORENDER_FILE_VERSION) // Version 1
     buffer.writeu16(buf, 2, imageSize.X) // Version 1
@@ -14,6 +14,10 @@ function writeHeader(imageSize: Vector2): buffer {
 export const generateBufferChannels = (settings: Settings): ImageBuffers => {
     const imageSize = getImageDimensions(settings)
     const bytesPerChannel = imageSize.X * imageSize.Y
+    if (bytesPerChannel * 8 > 1073741824) {
+        warn("Current max image size is 1GB, or 11,585px x 11,585px. If your use case requires a larger image, please make a feature request at rorender.com/support. In the meantime consider tiling your map into smaller chunks to achieve desired resolution.")
+        throw "Image too large"
+    }
     return {
         red: buffer.create(bytesPerChannel),
         green: buffer.create(bytesPerChannel),

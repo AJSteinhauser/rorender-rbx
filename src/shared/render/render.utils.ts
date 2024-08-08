@@ -5,7 +5,7 @@ import { color3ToVector3 } from 'shared/utils'
 const LIGHTING = game.GetService('Lighting')
 const TERRAIN = game.Workspace.Terrain
 
-const DELAY_TIME = 5
+const DELAY_TIME = 3 
 
 const SUN_POSITION = LIGHTING.GetSunDirection()
 

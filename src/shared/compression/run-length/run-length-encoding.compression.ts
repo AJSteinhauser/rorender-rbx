@@ -1,3 +1,4 @@
+import { delayForScriptExhuastion } from 'shared/render/render.utils'
 import { MAX_RUN_LENGTH, RUN_LENGTH_BYTE_SIZE, RunLengthSequence } from './run-length.model'
 
 export const runLengthEncode = (image: buffer): buffer => {
@@ -7,7 +8,9 @@ export const runLengthEncode = (image: buffer): buffer => {
     let current = buffer.readu8(image, idx)
     let count = 1
 
+    let startTime = tick() 
     while (idx < buffer.len(image) - 1) {
+        startTime = delayForScriptExhuastion(startTime)
         const nextValue = buffer.readu8(image, idx + 1)
         if (current === nextValue && count < MAX_RUN_LENGTH) {
             count++
@@ -35,7 +38,9 @@ export const runLengthDecode = (image: buffer): buffer => {
     const runs: RunLengthSequence[] = []
     const increment = RUN_LENGTH_BYTE_SIZE + 1
 
+    let startTime = tick()
     while (idx <= buffer.len(image) - increment) {
+        startTime = delayForScriptExhuastion(startTime)
         runs.push(readRunLengthSequence(image, idx))
         idx += increment
     }
@@ -48,8 +53,10 @@ const convertRunLengthSequenceToRawBuffer = (runLengthSequence: RunLengthSequenc
     const output = buffer.create(count)
 
     let idx = 0
+    let startTime = tick()
     runLengthSequence.forEach(item => {
         for (let i = 0; i < item.length; i++) {
+            startTime = delayForScriptExhuastion(startTime)
             buffer.writeu8(output, idx + i, item.value)
         }
         idx += item.length
@@ -59,7 +66,9 @@ const convertRunLengthSequenceToRawBuffer = (runLengthSequence: RunLengthSequenc
 
 export const convertRunLengthSequenceToEncodedBuffer = (runLengthSequence: RunLengthSequence[]): buffer => {
     const output = buffer.create(runLengthSequence.size() * (RUN_LENGTH_BYTE_SIZE + 1))
+    let startTime = tick()
     runLengthSequence.forEach((item, idx) => {
+        startTime = delayForScriptExhuastion(startTime)
         buffer.writeu16(output, idx * (RUN_LENGTH_BYTE_SIZE + 1), item.length)
         buffer.writeu8(output, idx * (RUN_LENGTH_BYTE_SIZE + 1) + 2, item.value)
     })
