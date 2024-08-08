@@ -152,32 +152,31 @@ export = () => {
         })
     })
 
-    describe("huffman encoding and decoding", () => {
+    describe("huffman encoding and decoding complicated", () => {
         const frequencyTable = generatePriorityQueue(buffer.fromstring(TEST_STRING))
         const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
         const huffmanTable = buildEncodingMap(huffmanTree)
 
         it("should work on a long string", () => {
-
-            const testString = string.rep("A", 31) + "C"
-            print(testString)
-
-
             it("should encode and decode to the same value", () => {
+                const testString = string.rep("A", 31) + "C"
                 const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
-                let encodedBinary = ""
-                for (let i = 0; i < buffer.len(encoded.data) / 4; i++) {
-                    encodedBinary += to32BitBinaryString(buffer.readu32(encoded.data, i * 4))
-                }
-                print(encodedBinary)
                 const decoded = huffmanDecode(encoded.data, encoded.bitLength, huffmanTree)
                 const output = buffer.tostring(decoded)
-                print(output)
-                expect(output === testString).to.equal(true)
-
-
-                
+                expect(output).to.equal(testString)
             })
+        })
+
+        it("should work on a long random string", () => {
+            let testString = ""
+            const rand = new Random()
+            for (let i = 0; i < 1000; i++) {
+                testString += string.char(rand.NextInteger(65,68))
+            }
+            const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+            const decoded = huffmanDecode(encoded.data, encoded.bitLength, huffmanTree)
+            const output = buffer.tostring(decoded)
+            expect(output).to.equal(testString)
         })
     })
 
