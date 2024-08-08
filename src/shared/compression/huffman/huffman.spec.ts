@@ -1,25 +1,9 @@
 /// <reference types="@rbxts/testez/globals" />
+import { getCharByteValue, to32BitBinaryString } from "../compression.utils"
 import { buildEncodingMap, buildTreeFromFrequencyTable, huffmanDecode, generatePriorityQueue, huffmanEncode } from "./huffman-encoding.compression"
-import { EncodingInfo, EncodingMap, Node } from "./huffman.model"
+import { EncodingInfo, Node } from "./huffman.model"
 
 const TEST_STRING = "AABBBBBAAABCCAAD" as const
-
-const getCharByteValue = ( char: string ): number => {
-    return string.byte(char)[0]
-}
-
-function to32BitBinaryString(value: number): string {
-    // Ensure the number is treated as an unsigned 32-bit integer
-    const unsignedValue = value >>> 0;
-
-    let binaryString = '';
-    for (let i = 31; i >= 0; i--) {
-        const bit = (unsignedValue & (1 << i)) !== 0 ? '1' : '0';
-        binaryString += bit;
-    }
-
-    return binaryString;
-}
 
 
 const checkTreesAreEqual = (tree1: Node | undefined, tree2: Node | undefined): boolean => {
@@ -165,6 +149,35 @@ export = () => {
             const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
             expect(buffer.readu32(encoded.data, 0)).to.equal(0b01001001001001001001001001001001)
             expect(buffer.readu32(encoded.data, 4)).to.equal(0b00100100000000000000000000000000)
+        })
+    })
+
+    describe("huffman encoding and decoding", () => {
+        const frequencyTable = generatePriorityQueue(buffer.fromstring(TEST_STRING))
+        const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
+        const huffmanTable = buildEncodingMap(huffmanTree)
+
+        it("should work on a long string", () => {
+
+            const testString = string.rep("A", 31) + "C"
+            print(testString)
+
+
+            it("should encode and decode to the same value", () => {
+                const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+                let encodedBinary = ""
+                for (let i = 0; i < buffer.len(encoded.data) / 4; i++) {
+                    encodedBinary += to32BitBinaryString(buffer.readu32(encoded.data, i * 4))
+                }
+                print(encodedBinary)
+                const decoded = huffmanDecode(encoded.data, encoded.bitLength, huffmanTree)
+                const output = buffer.tostring(decoded)
+                print(output)
+                expect(output === testString).to.equal(true)
+
+
+                
+            })
         })
     })
 

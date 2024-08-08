@@ -1,47 +1,48 @@
 import { delayForScriptExhuastion } from "shared/render/render.utils"
 import { EncodedInfo, EncodingInfo, EncodingMap, Node } from "./huffman.model"
+import { to32BitBinaryString } from "../compression.utils"
 
 const writeBufferBitLength = 31 
 
 export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedInfo => {
     const bufferStore: number[] = []
 
-    let imageIdx = 0
-    let bitIdx = writeBufferBitLength
+    let symbolIdx = 0
+    let leftBitIdx = writeBufferBitLength
     let currentBuf = 0
     let currentBufDirty = false
 
-    let bitLength = 0
+    let bitCounter = 0
 
-    while (imageIdx < buffer.len(image)) {
-
-        const preOperationSpaceRemaining = bitIdx + 1
-        const symbol = buffer.readu8(image, imageIdx)
+    while (symbolIdx < buffer.len(image)) {
+        const preOperationSpaceRemaining = leftBitIdx + 1
+        const symbol = buffer.readu8(image, symbolIdx)
         const encodingInfo = encodingMap.get(symbol)
         if (!encodingInfo) {
             throw `Symbol: ${symbol} not found in encoding map`
         }
-        currentBuf |= encodingInfo.binaryValue << (bitIdx - encodingInfo.bitLength + 1)
+        currentBuf |= encodingInfo.binaryValue << (leftBitIdx - encodingInfo.bitLength + 1)
 
-        bitIdx -= encodingInfo.bitLength
+        leftBitIdx -= encodingInfo.bitLength
         currentBufDirty = true
-        bitLength += encodingInfo.bitLength
+        bitCounter += encodingInfo.bitLength
 
-        if (bitIdx < 0) {
+        if (leftBitIdx < 0) {
             bufferStore.push(currentBuf)
             currentBuf = 0
             const overflowAmount = math.abs(preOperationSpaceRemaining - encodingInfo.bitLength)
 
             currentBufDirty = false
-            bitIdx = writeBufferBitLength
+            leftBitIdx = writeBufferBitLength
             if (overflowAmount > 0) {
                 currentBuf |= encodingInfo.binaryValue 
-                currentBuf <<= writeBufferBitLength - encodingInfo.bitLength
-                bitIdx = writeBufferBitLength - overflowAmount
+                const shiftAmount = writeBufferBitLength - (overflowAmount - 1)
+                currentBuf <<= shiftAmount
+                leftBitIdx = writeBufferBitLength - overflowAmount
                 currentBufDirty = true
             }
         }
-        imageIdx++
+        symbolIdx++
     }
     if (currentBufDirty){
         bufferStore.push(currentBuf)
@@ -51,7 +52,7 @@ export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedI
     bufferStore.forEach((value, idx) => {
         buffer.writeu32(output, idx * 4, value)
     })
-    return { data: output, bitLength }
+    return { data: output, bitLength: bitCounter }
 }
 
 export const isLeafNode = (node: Node): boolean => {
