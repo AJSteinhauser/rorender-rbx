@@ -7,6 +7,8 @@ import { renderSettings } from 'shared/settings/settings'
 import { getImageDimensions, HTTPS_BODY_LIMIT, splitImageIntoChunks } from 'shared/utils'
 import { runTests } from 'shared/tests/test-runner'
 
+const httpService = game.GetService('HttpService')
+
 runTests()
 
 task.wait(2)
@@ -54,6 +56,7 @@ print(string.format("Final Packets Required: %d", math.ceil(buffer.len(accumulat
 const outputData = buffer.tostring(accumulatedBuffer)
 const split = splitImageIntoChunks(outputData)
 split.forEach((chunk,idx) => {
-    
+    print('sent ' + tostring(idx), 'size: ' + chunk.size())
+    httpService.PostAsync("http://127.0.0.1:5000/upload", chunk, 'TextPlain', false, {index: tostring(idx)})
 })
 
