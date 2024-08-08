@@ -31,12 +31,13 @@ export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedI
             bufferStore.push(currentBuf)
             currentBuf = 0
             const overflowAmount = math.abs(preOperationSpaceRemaining - encodingInfo.bitLength)
+
             currentBufDirty = false
             bitIdx = writeBufferBitLength
             if (overflowAmount > 0) {
                 currentBuf |= encodingInfo.binaryValue 
-                currentBuf <<= overflowAmount
-                bitIdx = overflowAmount
+                currentBuf <<= writeBufferBitLength - encodingInfo.bitLength
+                bitIdx = writeBufferBitLength - overflowAmount
                 currentBufDirty = true
             }
         }

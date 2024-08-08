@@ -8,19 +8,19 @@ const getCharByteValue = ( char: string ): number => {
     return string.byte(char)[0]
 }
 
-function numberToBinaryString(num: number): string {
-    if (num === 0) {
-        return '0';
-    }
-    
+function to32BitBinaryString(value: number): string {
+    // Ensure the number is treated as an unsigned 32-bit integer
+    const unsignedValue = value >>> 0;
+
     let binaryString = '';
-    while (num > 0) {
-        binaryString = (num % 2) + binaryString;
-        num = math.floor(num / 2);
+    for (let i = 31; i >= 0; i--) {
+        const bit = (unsignedValue & (1 << i)) !== 0 ? '1' : '0';
+        binaryString += bit;
     }
-    
+
     return binaryString;
 }
+
 
 const checkTreesAreEqual = (tree1: Node | undefined, tree2: Node | undefined): boolean => {
     if (tree1 === undefined && tree2 === undefined) {
@@ -154,12 +154,17 @@ export = () => {
             }
         })
 
-        it("should encode 3 bit overflowing strings", () => {
+        it("should encode 3 bit single char string", () => {
             const testString = string.rep("C", 1)
             const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
-            print(numberToBinaryString(buffer.readu32(encoded.data, 0)))
-            print(numberToBinaryString(buffer.readu32(encoded.data, 4)))
             expect(buffer.readu32(encoded.data, 0)).to.equal(0b01000000000000000000000000000000)
+        })
+
+        it("should encode 3 bit repeating char overflowing string", () => {
+            const testString = string.rep("C", 13)
+            const encoded = huffmanEncode(buffer.fromstring(testString), huffmanTable)
+            expect(buffer.readu32(encoded.data, 0)).to.equal(0b01001001001001001001001001001001)
+            expect(buffer.readu32(encoded.data, 4)).to.equal(0b00100100000000000000000000000000)
         })
     })
 
