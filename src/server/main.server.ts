@@ -34,6 +34,7 @@ const frequencyTable = generatePriorityQueue(encoded)
 const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
 const huffmanMap = buildEncodingMap(huffmanTree)
 
+
 const huffmanEncoded = huffmanEncode(encoded, huffmanMap)
 print(string.format("Huffman + RLE compression: %.2f%%", (1 - (buffer.len(huffmanEncoded.data) / buffer.len(merged))) * 100))
 print(string.format("Huffman: %2.f KB", buffer.len(huffmanEncoded.data) / 1000))
@@ -60,3 +61,4 @@ split.forEach((chunk,idx) => {
     httpService.PostAsync("http://127.0.0.1:5000/upload", chunk, 'TextPlain', false, {index: tostring(idx)})
 })
 
+print(huffmanTree)

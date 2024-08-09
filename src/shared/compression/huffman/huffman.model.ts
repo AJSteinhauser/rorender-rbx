@@ -11,6 +11,12 @@ export interface Node {
     symbol?: number
 }
 
+export interface ReconstructedNode {
+    left?: ReconstructedNode
+    right?: ReconstructedNode
+    symbol?: number
+}
+
 export type EncodingMap = Map<number, EncodingInfo>
 
 

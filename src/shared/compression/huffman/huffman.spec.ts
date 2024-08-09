@@ -31,7 +31,7 @@ export = () => {
         const tree = writeTreeToBuffer(huffmanTree)
 
         it("should write the size of the tree as the first 16bits of the table", () => {
-            expect(buffer.readu16(tree,0)).to.equal(7)
+            expect(buffer.readu16(tree,0)).to.equal(15)
         })
     })
 

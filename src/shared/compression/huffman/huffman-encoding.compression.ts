@@ -1,35 +1,53 @@
 import { delayForScriptExhuastion } from "shared/render/render.utils"
-import { EncodedInfo, EncodingInfo, EncodingMap, Node } from "./huffman.model"
+import { EncodedInfo, EncodingInfo, EncodingMap, Node, ReconstructedNode } from "./huffman.model"
 import { to32BitBinaryString } from "../compression.utils"
 
 const writeBufferBitLength = 31 
+const EMPTY_NODE_CODE = 256
+const NULL_NODE_CODE = 257
 
-export const bredthFirstTreeArrayBuilder = (node: Node): number[] => {
+export const depthFirstTreeArrayBuilder = (node: Node): number[] => {
     const output: number[] = []
-    const queue: Node[] = [node]
-    while (queue.size() > 0) {
-        const current = queue.shift()
-        if (current) {
-            if (current.symbol) {
-                output.push(current.symbol)
-            }
-            else {
-                output.push(256)
-            }
-            
-            if (current.left) {
-                queue.push(current.left)
-            }
-            if (current.right) {
-                queue.push(current.right)
-            }
+    const preOrderTraversal = (node: Node | undefined) => {
+        if (!node) {
+            output.push(NULL_NODE_CODE)
+            return 
         }
+        output.push(node.symbol !== undefined ? node.symbol : EMPTY_NODE_CODE)
+        preOrderTraversal(node.left)
+        preOrderTraversal(node.right)
     }
+
+    preOrderTraversal(node)
     return output
 }
 
+export const reconstuctDepthFirstTree = (data: number[]): ReconstructedNode => {
+    let index = 0;
+
+    function buildTree(): ReconstructedNode | undefined {
+        if (index >= data.size() || data[index] === NULL_NODE_CODE) {
+            index++; // move to the next element
+            return undefined;
+        }
+
+        const node: ReconstructedNode = {
+            symbol: data[index] <= 255 ? data[index] : undefined,
+        }
+        index++;
+        node.left = buildTree();
+        node.right = buildTree();
+        return node;
+    }
+    const node = buildTree();
+    if (!node){
+        throw "Bad tree"
+    }
+    return node
+}
+
 export const writeTreeToBuffer = (node: Node): buffer => {
-    const nodeArray = bredthFirstTreeArrayBuilder(node)
+    const nodeArray = depthFirstTreeArrayBuilder(node)
     const buf = buffer.create((nodeArray.size() * 2) + 2)
     buffer.writeu16(buf, 0, nodeArray.size())
     for (let i = 0; i < nodeArray.size(); i++) {
@@ -37,8 +55,6 @@ export const writeTreeToBuffer = (node: Node): buffer => {
     }
     return buf
 }
-
-
 
 export const huffmanEncode = (image: buffer, encodingMap: EncodingMap): EncodedInfo => {
     const bufferStore: number[] = []
