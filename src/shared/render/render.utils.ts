@@ -14,6 +14,12 @@ const materialMap = new Map<Enum.Material, number>()
 materials.forEach((material: Enum.Material, index: number) => {
     materialMap.set(material, index)
 })
+const rand = new Random()
+
+
+const castParams = new RaycastParams()
+castParams.FilterType = Enum.RaycastFilterType.Exclude
+castParams.FilterDescendantsInstances = []
 
 const MAP_STRUCTURES = game.Workspace.FindFirstChild("Structures")
 
@@ -26,34 +32,82 @@ export function computePixel(
     const zPos = renderConstants.ySpacing * position.Y + settings.corners.topRight.Z
 
     const rayCenter = new Vector3(xPos, settings.corners.topRight.Y, zPos)
-    const result = castRay(rayCenter, renderConstants.rayVector)
+    const results: RaycastResult[] = []
+    const shadowSamples: Vector3[] = []
 
-    if (!result) {
+    let waterHeight = 0 //Water height of 0 assumes there is no water
+    
+    let primary = castRay(rayCenter, renderConstants.rayVector)
+    if (!primary) {
         return
     }
-    // showDebugRayPosition(rayCenter)
+    if (primary.Material === Enum.Material.Water) {
+        waterHeight = math.max(1,
+            math.floor((primary.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
+        )
+        primary = castRay(rayCenter, renderConstants.rayVector, true)
 
-    let color = getColorFromResult(result)
-    color = shadeColor(color, result)
+        if (!primary) {
+            // showDebugRayPosition(rayCenter.add(renderConstants.rayVector))
+            return
+        }
+    }
 
-    const height = math.floor((result.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
+    results.push(primary)
 
-    const isStructure = MAP_STRUCTURES && result.Instance.IsDescendantOf(MAP_STRUCTURES)
+    for (let i = 1; i < settings.samples; i++) {
+        const samplePosition = getSamplePosition(rayCenter, renderConstants)
+        const result = castRay(samplePosition, renderConstants.rayVector, true)
+        // showDebugRayPosition(samplePosition)
+        if (result) {
+            results.push(result)
+        }
+    }
+
+    let color = averageColorSamples(results)
+    color = averageShadeSamples(results, color)
+    color = gammaNormalizeSamples(color)
+
+    const height = math.floor((primary.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
+
+    const isStructure = MAP_STRUCTURES && primary.Instance.IsDescendantOf(MAP_STRUCTURES)
 
     return {
         r: math.floor(color.X * 255),
         g: math.floor(color.Y * 255),
         b: math.floor(color.Z * 255),
         h: height,
-        material: materialMap.get(result.Material) || 0,
-        road: result.Material === Enum.Material.Cobblestone ? 1 : 0,
+        material: materialMap.get(primary.Material) || 0,
+        road: isRoad(primary.Material) ? 1 : 0,
         building: isStructure ? 1 : 0,
-        water: result.Material === Enum.Material.Water ? 1 : 0,
+        water: waterHeight
     }
 }
 
-function castRay(rayPosition: Vector3, rayVector: Vector3): RaycastResult | undefined {
-    return game.Workspace.Raycast(rayPosition, rayVector)
+function getSamplePosition(rayCenter: Vector3, renderConstants: RenderConstants): Vector3 {
+    const randomOffset = new Vector3(
+        rand.NextNumber() * renderConstants.xSpacing - renderConstants.xSpacing / 2,
+        0,
+        rand.NextNumber() * renderConstants.ySpacing - renderConstants.ySpacing / 2
+    )
+    return randomOffset.add(rayCenter)
+}
+
+
+function isRoad(material: Enum.Material): boolean {
+    switch (material) {
+        case Enum.Material.Cobblestone:
+        case Enum.Material.Mud:
+            return true
+        
+    }
+    return material === Enum.Material.Cobblestone
+}
+
+function castRay(rayPosition: Vector3, rayVector: Vector3, ignoreWater: boolean = false): RaycastResult | undefined {
+    const rayParams = new RaycastParams()
+    rayParams.IgnoreWater = ignoreWater
+    return game.Workspace.Raycast(rayPosition, rayVector, rayParams)
 }
 
 function getColorFromResult(result: RaycastResult): Vector3 {
@@ -66,6 +120,43 @@ function getColorFromResult(result: RaycastResult): Vector3 {
     return color3ToVector3(TERRAIN.GetMaterialColor(result.Material))
 }
 
+function srgbToLinear(color: number): number {
+    if (color <= 0.04045) {
+        return color / 12.92;
+    } else {
+        return math.pow((color + 0.055) / 1.055, 2.4);
+    }
+}
+
+function linearToSrgb(color: number): number {
+    if (color <= 0.0031308) {
+        return color * 12.92;
+    } else {
+        return 1.055 * math.pow(color, 1 / 2.4) - 0.055;
+    }
+}
+
+function convertVector3SrgbToLinear(vector: Vector3): Vector3 {
+    return new Vector3(srgbToLinear(vector.X), srgbToLinear(vector.Y), srgbToLinear(vector.Z))
+}
+
+function convertVector3LinearToSrgb(vector: Vector3): Vector3 {
+    return new Vector3(linearToSrgb(vector.X), linearToSrgb(vector.Y), linearToSrgb(vector.Z))
+}
+
+function averageColorSamples(rayCastResults: RaycastResult[]): Vector3 {
+    let color = new Vector3(0, 0, 0)
+    rayCastResults.forEach((result: RaycastResult) => {
+        color = color.add(convertVector3SrgbToLinear(getColorFromResult(result)))
+    })
+    return convertVector3LinearToSrgb(color.div(rayCastResults.size()))
+}
+
+function gammaNormalizeSamples(samples: Vector3): Vector3 {
+    const gammeNormalize = 1.1
+    return new Vector3(samples.X ** gammeNormalize, samples.Y ** gammeNormalize, samples.Z ** gammeNormalize)
+}
+
 function showDebugRayPosition(position: Vector3) {
     const part = new Instance('Part')
     part.Anchored = true
@@ -74,6 +165,14 @@ function showDebugRayPosition(position: Vector3) {
     part.Size = new Vector3(1, 1, 1)
     part.Parent = game.Workspace
 } 
+
+function averageShadeSamples(rayCastResults: RaycastResult[], inputColor: Vector3): Vector3 {
+    let color = new Vector3(0, 0, 0)
+    rayCastResults.forEach((result: RaycastResult) => {
+        color = color.add(convertVector3SrgbToLinear(shadeColor(inputColor,result)))
+    })
+    return convertVector3LinearToSrgb(color.div(rayCastResults.size()))
+}
 
 function shadeColor(color: Vector3, result: RaycastResult): Vector3 {
     const recievedIlluminance = math.max(result.Normal.Dot(SUN_POSITION), 0)

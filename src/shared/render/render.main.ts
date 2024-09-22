@@ -1,5 +1,5 @@
 import { Settings } from 'shared/settings/settings.model'
-import { Pixel, RenderConstants } from './render.model'
+import { RenderConstants } from './render.model'
 import { computePixel, delayForScriptExhuastion } from './render.utils'
 import { getImageDimensions } from 'shared/utils'
 import { generateBufferChannels } from 'shared/file/file.utils'

@@ -1,6 +1,5 @@
 import { buildEncodingMap, buildTreeFromFrequencyTable, generatePriorityQueue, huffmanEncode, writeTreeToBuffer } from 'shared/compression/huffman/huffman-encoding.compression'
-import { runLengthDecode, runLengthEncode } from 'shared/compression/run-length/run-length-encoding.compression'
-import { FILE_FORMAT_DATA_ORDER } from 'shared/file/file.modal'
+import {  runLengthEncode } from 'shared/compression/run-length/run-length-encoding.compression'
 import { mergeImageBuffersIntoSingleBuffer, writeHeader } from 'shared/file/file.utils'
 import { render } from 'shared/render/render.main'
 import { renderSettings } from 'shared/settings/settings'
@@ -48,8 +47,11 @@ const accumulatedBuffer = buffer.create(buffer.len(headerBuffer) + buffer.len(tr
 
 buffer.copy(accumulatedBuffer, 0, headerBuffer, 0, buffer.len(headerBuffer))
 buffer.copy(accumulatedBuffer, buffer.len(headerBuffer), treeBuffer, 0, buffer.len(treeBuffer))
-buffer.writeu32(accumulatedBuffer, buffer.len(headerBuffer) + buffer.len(treeBuffer), buffer.len(huffmanEncoded.data))
+buffer.writeu32(accumulatedBuffer, buffer.len(headerBuffer) + buffer.len(treeBuffer), huffmanEncoded.bitLength)
 buffer.copy(accumulatedBuffer, buffer.len(headerBuffer) + buffer.len(treeBuffer) + 4, huffmanEncoded.data, 0, buffer.len(huffmanEncoded.data))
+
+
+print("bit length: " + huffmanEncoded.bitLength)
 
 print(string.format("Final Size : %2.f KB", buffer.len(accumulatedBuffer) / 1000))
 print(string.format("Final Packets Required: %d", math.ceil(buffer.len(accumulatedBuffer) / HTTPS_BODY_LIMIT)))

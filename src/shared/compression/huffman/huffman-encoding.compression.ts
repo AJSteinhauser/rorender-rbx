@@ -119,9 +119,7 @@ export const maskOtherBits = (value: number, position: number): number => {
     if (position < 0 || position > 31) {
         throw `Invalid position: ${position}`
     }
-
     const mask = (1 << position) 
-
     return value & mask
 }
 
@@ -160,12 +158,6 @@ export const huffmanDecode = (image: buffer, bitLength: number, encodingTree: No
             subBitIdx = 31
         }
     }
-    // if (dirtyFlag){
-    //     if (currentTreePos.symbol === undefined){
-    //         throw `[Dirty flag] Symbol is undefined on a leaf node freq: ${currentTreePos.frequency}`
-    //     }
-    //     output += string.char(currentTreePos.symbol)
-    // }
     const outputBuf = buffer.create(output.size())
     buffer.writestring(outputBuf,0, output, output.size())
     return outputBuf

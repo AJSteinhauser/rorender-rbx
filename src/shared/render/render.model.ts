@@ -18,3 +18,4 @@ export interface RenderConstants {
     rayBottom: number
     normalizedRayTop: number
 }
+

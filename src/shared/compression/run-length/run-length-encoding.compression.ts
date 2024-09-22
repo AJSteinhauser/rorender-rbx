@@ -8,6 +8,8 @@ export const runLengthEncode = (image: buffer): buffer => {
     let current = buffer.readu8(image, idx)
     let count = 1
 
+    let wastedCount = 0
+
     let startTime = tick() 
     while (idx < buffer.len(image) - 1) {
         startTime = delayForScriptExhuastion(startTime)
@@ -16,6 +18,9 @@ export const runLengthEncode = (image: buffer): buffer => {
             count++
         } else {
             runs.push({ value: current, length: count })
+            if ( count < 128) {
+                wastedCount += 1
+            }
             current = nextValue
             count = 1
         }
