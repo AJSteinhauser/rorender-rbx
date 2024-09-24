@@ -11,6 +11,12 @@ export function writeHeader(imageSize: Vector2): buffer {
     return buf
 }
 
+function generateMaterialEncoding(): buffer {
+    const materials = Enum.Material.GetEnumItems().map(x => x.Name)
+    const output = materials.join(',')
+    return buffer.fromstring(output)
+}
+
 export const generateBufferChannels = (settings: Settings): ImageBuffers => {
     const imageSize = getImageDimensions(settings)
     const bytesPerChannel = imageSize.X * imageSize.Y
@@ -27,6 +33,7 @@ export const generateBufferChannels = (settings: Settings): ImageBuffers => {
         roads: buffer.create(bytesPerChannel),
         buildings: buffer.create(bytesPerChannel),
         water: buffer.create(bytesPerChannel),
+        materialsEncoding: generateMaterialEncoding(),
     }
 }
 
@@ -58,6 +65,5 @@ export const mergeImageBuffersIntoSingleBuffer = (imageData: ImageBuffers): buff
         buffer.copy(output, currentOffset, imageData[item], 0, buffer.len(imageData[item]))
         currentOffset += buffer.len(imageData[item])
     }
-
     return output
 }

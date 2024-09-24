@@ -12,6 +12,7 @@ export interface ImageBuffers {
     roads: buffer
     buildings: buffer
     water: buffer
+    materialsEncoding: buffer
 }
 
 export const FILE_FORMAT_DATA_ORDER: (keyof ImageBuffers)[] = [
@@ -23,4 +24,5 @@ export const FILE_FORMAT_DATA_ORDER: (keyof ImageBuffers)[] = [
     'roads',
     'buildings',
     'water',
+    'materialsEncoding',
 ]

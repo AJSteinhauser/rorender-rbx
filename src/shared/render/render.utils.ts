@@ -9,11 +9,6 @@ const DELAY_TIME = 3
 
 const SUN_POSITION = LIGHTING.GetSunDirection()
 
-const materials = Enum.Material.GetEnumItems()
-const materialMap = new Map<Enum.Material, number>()
-materials.forEach((material: Enum.Material, index: number) => {
-    materialMap.set(material, index)
-})
 const rand = new Random()
 
 
@@ -64,11 +59,13 @@ export function computePixel(
         }
     }
 
+    const terrainHit = getTerrainHit(primary,rayCenter, renderConstants.rayVector, new RaycastParams()) || primary
+
     let color = averageColorSamples(results)
     color = averageShadeSamples(results, color)
     color = gammaNormalizeSamples(color)
 
-    const height = math.floor((primary.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
+    const height = math.floor((terrainHit.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
 
     const isStructure = MAP_STRUCTURES && primary.Instance.IsDescendantOf(MAP_STRUCTURES)
 
@@ -77,7 +74,7 @@ export function computePixel(
         g: math.floor(color.Y * 255),
         b: math.floor(color.Z * 255),
         h: height,
-        material: materialMap.get(primary.Material) || 0,
+        material: renderConstants.materialMap.get(primary.Material) || 0,
         road: isRoad(primary.Material) ? 1 : 0,
         building: isStructure ? 1 : 0,
         water: waterHeight
@@ -104,10 +101,36 @@ function isRoad(material: Enum.Material): boolean {
     return material === Enum.Material.Cobblestone
 }
 
-function castRay(rayPosition: Vector3, rayVector: Vector3, ignoreWater: boolean = false): RaycastResult | undefined {
-    const rayParams = new RaycastParams()
+function castRay(rayPosition: Vector3, rayVector: Vector3, ignoreWater: boolean = false, rayParams: RaycastParams = castParams): RaycastResult | undefined {
     rayParams.IgnoreWater = ignoreWater
     return game.Workspace.Raycast(rayPosition, rayVector, rayParams)
+}
+
+function findHighestAncestorThatDoesNotShareParent(instance: Instance, terrain: Instance[]): Instance | undefined {
+    if (terrain.some(terrainItem => instance.Parent && instance.Parent.IsAncestorOf(terrainItem))) {
+        return instance
+    }
+    if (instance.Parent) {
+        return findHighestAncestorThatDoesNotShareParent(instance.Parent, terrain)
+    }
+    return undefined
+}
+
+function getTerrainHit(RaycastResult: RaycastResult, rayPosition: Vector3, rayVector: Vector3, castParams: RaycastParams, terrain: Instance[] = [game.Workspace.Terrain]):  RaycastResult | undefined {
+    if (terrain.find((terrain: Instance) => RaycastResult.Instance === terrain)) {
+        return RaycastResult
+    }
+    const result = castRay(rayPosition, rayVector, true, castParams)
+    if (result) {
+        const highestNonCommonAncestor = findHighestAncestorThatDoesNotShareParent(result.Instance, terrain)
+        if (!highestNonCommonAncestor) {
+            return 
+        }
+        castParams.AddToFilter(highestNonCommonAncestor)
+        castParams.FilterType = Enum.RaycastFilterType.Exclude
+        return getTerrainHit(result, rayPosition, rayVector, castParams, terrain)
+    }
+    return 
 }
 
 function getColorFromResult(result: RaycastResult): Vector3 {

@@ -28,11 +28,23 @@ export function render(settings: Settings): ImageBuffers {
     return imageData
 }
 
+function getRenderMaterialMap(): Map<Enum.Material, number> {
+    const materials = Enum.Material.GetEnumItems()
+    const materialMap = new Map<Enum.Material, number>()
+    materials.forEach((material: Enum.Material, index: number) => {
+        materialMap.set(material, index)
+    })
+    return materialMap
+}
+
+
 function getRenderConstants(settings: Settings, imageDimensions: Vector2): RenderConstants {
     const rayLength = math.abs(settings.corners.topRight.Y - settings.corners.bottomLeft.Y)
 
     const rayBottom = settings.corners.topRight.Y - rayLength
     const normalizedRayTop = settings.corners.topRight.Y - rayBottom
+
+    const materialMap = getRenderMaterialMap()
 
     return {
         rayLength,
@@ -41,7 +53,8 @@ function getRenderConstants(settings: Settings, imageDimensions: Vector2): Rende
         ySpacing: math.abs(settings.corners.bottomLeft.Z - settings.corners.topRight.Z) / imageDimensions.Y,
         rayVector: new Vector3(0, -1, 0).mul(rayLength),
         rayBottom,
-        normalizedRayTop
+        normalizedRayTop,
+        materialMap,
     }
 }
 
