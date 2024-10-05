@@ -28,11 +28,11 @@ export function render(settings: Settings): ImageBuffers {
     return imageData
 }
 
-function getRenderMaterialMap(): Map<Enum.Material, number> {
+function getRenderMaterialMap(): Map<number, number> {
     const materials = Enum.Material.GetEnumItems()
-    const materialMap = new Map<Enum.Material, number>()
-    materials.forEach((material: Enum.Material, index: number) => {
-        materialMap.set(material, index)
+    const materialMap = new Map<number, number>()
+    materials.forEach((material, index: number) => {
+        materialMap.set(material.Value, index)
     })
     return materialMap
 }

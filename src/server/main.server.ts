@@ -60,7 +60,17 @@ const outputData = buffer.tostring(accumulatedBuffer)
 const split = splitImageIntoChunks(outputData)
 split.forEach((chunk,idx) => {
     print('sent ' + tostring(idx), 'size: ' + chunk.size())
-    httpService.PostAsync("http://127.0.0.1:5000/upload", chunk, 'TextPlain', false, {index: tostring(idx)})
+    httpService.PostAsync(
+        "http://127.0.0.1:5001/rorender-38b6b/us-central1/uploadRenderChunk",
+        chunk,
+        Enum.HttpContentType.TextPlain,
+        false,
+        {
+            chunkId: tostring(idx),
+            totalChunks: tostring(split.size()),
+            pipelineId: '67af6286-0c94-431e-b358-b250d9f0fb29'
+        }
+    )
 })
 
 print(huffmanTree)

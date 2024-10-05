@@ -74,7 +74,7 @@ export function computePixel(
         g: math.floor(color.Y * 255),
         b: math.floor(color.Z * 255),
         h: height,
-        material: renderConstants.materialMap.get(primary.Material) || 0,
+        material: renderConstants.materialMap.get(primary.Material.Value) || 0,
         road: isRoad(primary.Material) ? 1 : 0,
         building: isStructure ? 1 : 0,
         water: waterHeight
