@@ -22,6 +22,13 @@
             },
             "TS": {
                 "$path": "out/shared"
+            },
+            "TemplateActor": {
+                "$className": "Actor",
+                "$path": "out/actor",
+                "rowCalculated": {
+                    "$className": "BindableEvent"
+                }
             }
         },
         "StarterPlayer": {

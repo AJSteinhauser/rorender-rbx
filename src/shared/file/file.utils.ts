@@ -17,9 +17,9 @@ function generateMaterialEncoding(): buffer {
     return buffer.fromstring(output)
 }
 
-export const generateBufferChannels = (settings: Settings): ImageBuffers => {
+export const generateBufferChannels = (settings: Settings, isRow: boolean = false): ImageBuffers => {
     const imageSize = getImageDimensions(settings)
-    const bytesPerChannel = imageSize.X * imageSize.Y
+    const bytesPerChannel = isRow ? imageSize.X : imageSize.X * imageSize.Y
     if (bytesPerChannel * 8 > 1073741824) {
         warn("Current max image size is 1GB, or 11,585px x 11,585px. If your use case requires a larger image, please make a feature request at rorender.com/support. In the meantime consider tiling your map into smaller chunks to achieve desired resolution.")
         throw "Image too large"

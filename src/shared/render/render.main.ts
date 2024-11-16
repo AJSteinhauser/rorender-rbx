@@ -1,31 +1,44 @@
 import { Settings } from 'shared/settings/settings.model'
 import { RenderConstants } from './render.model'
-import { computePixel, delayForScriptExhuastion } from './render.utils'
 import { getImageDimensions } from 'shared/utils'
-import { generateBufferChannels } from 'shared/file/file.utils'
 import { ImageBuffers } from 'shared/file/file.modal'
-import { writePixelToImageBuffer } from 'shared/file/file.utils'
+import { ActorMessage, COMPUTE_ROW_MESSAGE } from 'actor/actor.model'
+import { WorkerPool } from './actor-pool.handler'
+import { generateBufferChannels } from 'shared/file/file.utils'
 
 
-export function render(settings: Settings): ImageBuffers {
-    const imageData = generateBufferChannels(settings)
+export async function render(settings: Settings): Promise<ImageBuffers> {
     const imageDimensions = getImageDimensions(settings)
-
     const renderConstants = getRenderConstants(settings, imageDimensions)
 
-    let startTime = tick()
+    const pool = new WorkerPool(settings)
+
+    const calculatedRows: ImageBuffers[] = []
+    const allRowsCompleted: Promise<void>[] = []
 
     for (let row = 0; row < imageDimensions.Y; row++) {
-        for (let col = 0; col < imageDimensions.X; col++) {
-            const offset = row * imageDimensions.X + col
-            startTime = delayForScriptExhuastion(startTime)
-            const pixel = computePixel(new Vector2(row, col), settings, renderConstants)
-            if (pixel) {
-                writePixelToImageBuffer(offset, pixel, imageData)
-            }
+        const actorMessage: ActorMessage = {
+            settings,
+            row,
+            renderConstants
         }
+        const rowCompleted = new Promise<void>(async (resolve) => {
+            const actor = await pool.getActor(settings)
+            const rowCalculatedEvent = actor.FindFirstChild("rowCalculated") as BindableEvent
+            const binding = rowCalculatedEvent.Event.Connect((data: ImageBuffers) => {
+                calculatedRows[row] = data
+                binding.Disconnect()
+                pool.cleanupActor(actor)
+                resolve()
+            })
+            actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
+        })
+        allRowsCompleted.push(rowCompleted)
     }
-    return imageData
+    await Promise.all(allRowsCompleted)
+
+    const output =  combineAllBuffers(calculatedRows, settings)
+    return output
 }
 
 function getRenderMaterialMap(): Map<number, number> {
@@ -35,6 +48,22 @@ function getRenderMaterialMap(): Map<number, number> {
         materialMap.set(material.Value, index)
     })
     return materialMap
+}
+
+function combineAllBuffers(buffs: ImageBuffers[], settings: Settings): ImageBuffers {
+    const output = generateBufferChannels(settings)
+    const imageDimensions = getImageDimensions(settings)
+    for (let i = 0; i < buffs.size(); i++) {
+        buffer.writestring(output.red, i * imageDimensions.X, buffer.tostring(buffs[i].red))
+        buffer.writestring(output.green, i * imageDimensions.X, buffer.tostring(buffs[i].green))
+        buffer.writestring(output.blue, i * imageDimensions.X, buffer.tostring(buffs[i].blue))
+        buffer.writestring(output.height, i * imageDimensions.X, buffer.tostring(buffs[i].height))
+        buffer.writestring(output.material, i * imageDimensions.X, buffer.tostring(buffs[i].material))
+        buffer.writestring(output.roads, i * imageDimensions.X, buffer.tostring(buffs[i].roads))
+        buffer.writestring(output.buildings, i * imageDimensions.X, buffer.tostring(buffs[i].buildings))
+        buffer.writestring(output.water, i * imageDimensions.X, buffer.tostring(buffs[i].water))
+    }
+    return output
 }
 
 

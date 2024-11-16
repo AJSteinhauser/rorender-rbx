@@ -5,6 +5,7 @@
     "scripts": {
         "build": "rbxtsc",
         "watch": "rbxtsc -w"
+
     },
     "keywords": [],
     "author": "",
