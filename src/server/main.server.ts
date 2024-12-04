@@ -8,7 +8,7 @@ import { runTests } from 'shared/tests/test-runner'
 
 const httpService = game.GetService('HttpService')
 
-runTests()
+// runTests()
 
 task.wait(2)
 render(renderSettings).then(output => {
