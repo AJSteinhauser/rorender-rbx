@@ -5,6 +5,7 @@ import { ImageBuffers } from 'shared/file/file.modal'
 import { ActorMessage, COMPUTE_ROW_MESSAGE } from 'actor/actor.model'
 import { WorkerPool } from './actor-pool.handler'
 import { generateBufferChannels } from 'shared/file/file.utils'
+import { delayForScriptExhuastion } from './render.utils'
 
 
 export async function render(settings: Settings): Promise<ImageBuffers> {
@@ -16,7 +17,11 @@ export async function render(settings: Settings): Promise<ImageBuffers> {
     const calculatedRows: ImageBuffers[] = []
     const allRowsCompleted: Promise<void>[] = []
 
+    let startTime = tick()
+    let finishedRows = 0
+    let lastRowPrinted = 0
     for (let row = 0; row < imageDimensions.Y; row++) {
+        startTime = delayForScriptExhuastion(startTime)
         const actorMessage: ActorMessage = {
             settings,
             row,
@@ -26,9 +31,16 @@ export async function render(settings: Settings): Promise<ImageBuffers> {
             const actor = await pool.getActor(settings)
             const rowCalculatedEvent = actor.FindFirstChild("rowCalculated") as BindableEvent
             const binding = rowCalculatedEvent.Event.Connect((data: ImageBuffers) => {
+                startTime = delayForScriptExhuastion(startTime)
                 calculatedRows[row] = data
                 binding.Disconnect()
                 pool.cleanupActor(actor)
+                finishedRows++
+                const currentCompletion = finishedRows / imageDimensions.Y
+                if (currentCompletion - lastRowPrinted > 0.01) {
+                    print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
+                    lastRowPrinted = currentCompletion
+                }
                 resolve()
             })
             actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
@@ -41,11 +53,13 @@ export async function render(settings: Settings): Promise<ImageBuffers> {
     return output
 }
 
-function getRenderMaterialMap(): Map<number, number> {
+export function getRenderMaterialMap(): Map<Enum.Material, number> {
     const materials = Enum.Material.GetEnumItems()
-    const materialMap = new Map<number, number>()
-    materials.forEach((material, index: number) => {
-        materialMap.set(material.Value, index)
+    const materialMap = new Map<Enum.Material, number>()
+    let counter = 1 
+    materials.forEach(material => {
+        materialMap.set(material, counter)
+        counter++
     })
     return materialMap
 }

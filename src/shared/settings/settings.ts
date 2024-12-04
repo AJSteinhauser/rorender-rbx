@@ -5,7 +5,7 @@ export const renderSettings: Settings = {
         topRight: new Vector3(-500, 200, -500),
         bottomLeft: new Vector3(500, -100, 500),
     },
-    resolution: 1,
+    resolution: .5,
     samples: 0,
     actorCount: 50
 } as const

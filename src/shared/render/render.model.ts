@@ -17,6 +17,6 @@ export interface RenderConstants {
     imageDimensions: Vector2
     rayBottom: number
     normalizedRayTop: number
-    materialMap: Map<number, number>
+    materialMap: Map<Enum.Material, number>
 }
 

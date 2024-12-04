@@ -1,6 +1,7 @@
 import { Settings } from 'shared/settings/settings.model'
 import { Pixel, RenderConstants } from './render.model'
 import { color3ToVector3 } from 'shared/utils'
+import { render } from './render.main'
 
 const LIGHTING = game.GetService('Lighting')
 const TERRAIN = game.Workspace.Terrain
@@ -69,12 +70,16 @@ export function computePixel(
 
     const isStructure = MAP_STRUCTURES && primary.Instance.IsDescendantOf(MAP_STRUCTURES)
 
+    if (!renderConstants.materialMap.get(primary.Material)) {
+        print(renderConstants.materialMap, primary.Material, renderConstants.materialMap.get(primary.Material))
+    }
+
     return {
         r: math.floor(color.X * 255),
         g: math.floor(color.Y * 255),
         b: math.floor(color.Z * 255),
         h: height,
-        material: renderConstants.materialMap.get(primary.Material.Value) || 0,
+        material: renderConstants.materialMap.get(primary.Material) || 0,
         road: isRoad(primary.Material) ? 1 : 0,
         building: isStructure ? 1 : 0,
         water: waterHeight
