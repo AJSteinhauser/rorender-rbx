@@ -2,13 +2,16 @@ import { buildEncodingMap, buildTreeFromFrequencyTable, generatePriorityQueue, h
 import {  runLengthEncode } from 'shared/compression/run-length/run-length-encoding.compression'
 import { mergeImageBuffersIntoSingleBuffer, writeHeader } from 'shared/file/file.utils'
 import { render } from 'shared/render/render.main'
-import { renderSettings } from 'shared/settings/settings'
+import { villageSettings } from 'shared/settings/settings'
 import { getImageDimensions, HTTPS_BODY_LIMIT, splitImageIntoChunks } from 'shared/utils'
 import { runTests } from 'shared/tests/test-runner'
+import { Settings } from 'shared/settings/settings.model'
 
 const httpService = game.GetService('HttpService')
 
 runTests()
+
+const renderSettings: Settings = villageSettings
 
 task.wait(2)
 render(renderSettings).then(output => {
@@ -71,7 +74,7 @@ render(renderSettings).then(output => {
                 {
                     chunkId: tostring(idx),
                     totalChunks: tostring(split.size()),
-                    pipelineId: 'bd5a8233-9712-42d0-8297-98336f6b0bff'
+                    pipelineId: '4246a9be-df9b-4cc4-ae8e-d546ae2642ae'
                 }
             )
             print(response)
