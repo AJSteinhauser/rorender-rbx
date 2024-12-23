@@ -1,5 +1,5 @@
 import { Settings } from 'shared/settings/settings.model'
-import { FILE_FORMAT_DATA_ORDER, HEADER_DATA_SIZE, ImageBuffers, RORENDER_FILE_VERSION } from './file.modal'
+import { FILE_FORMAT_DATA_ORDER, HEADER_DATA_SIZE, ImageBuffers, RORENDER_FILE_VERSION, STRING_ENCODING_SEPERATOR } from './file.modal'
 import { getImageDimensions } from 'shared/utils'
 import { Pixel } from 'shared/render/render.model'
 
@@ -11,9 +11,14 @@ export function writeHeader(imageSize: Vector2): buffer {
     return buf
 }
 
-function generateMaterialEncoding(): buffer {
-    const materials = Enum.Material.GetEnumItems().map(x => x.Name)
-    const output = materials.join(',')
+function generateStringEncodings(settings: Settings): buffer {
+    const materials = Enum.Material.GetEnumItems().map(x => x.Name).join(",")
+    const buildingGroups = settings.buildingGroups.map(x => x.name).join(",")
+    const roadGroups = settings.roadGroups.map(x => x.name).join(",")
+
+    const output = `${materials}${STRING_ENCODING_SEPERATOR}` +
+        `${buildingGroups}${STRING_ENCODING_SEPERATOR}` +
+        `${roadGroups}`
     return buffer.fromstring(output)
 }
 
@@ -33,7 +38,7 @@ export const generateBufferChannels = (settings: Settings, isRow: boolean = fals
         roads: buffer.create(bytesPerChannel),
         buildings: buffer.create(bytesPerChannel),
         water: buffer.create(bytesPerChannel),
-        materialsEncoding: generateMaterialEncoding(),
+        materialsEncoding: generateStringEncodings(settings),
     }
 }
 

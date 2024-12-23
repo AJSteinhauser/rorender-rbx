@@ -1,7 +1,6 @@
-import { computePixel } from 'shared/render/render.utils'
-
 export const RORENDER_FILE_VERSION = 1
 export const HEADER_DATA_SIZE = 6
+export const STRING_ENCODING_SEPERATOR = "@#%"
 
 export interface ImageBuffers {
     red: buffer

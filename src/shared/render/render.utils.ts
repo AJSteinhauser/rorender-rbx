@@ -1,7 +1,6 @@
 import { Settings } from 'shared/settings/settings.model'
 import { Pixel, RenderConstants } from './render.model'
 import { color3ToVector3 } from 'shared/utils'
-import { render } from './render.main'
 
 const LIGHTING = game.GetService('Lighting')
 const TERRAIN = game.Workspace.Terrain
@@ -68,11 +67,59 @@ export function computePixel(
 
     const height = math.floor((terrainHit.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
 
-    const isStructure = MAP_STRUCTURES && primary.Instance.IsDescendantOf(MAP_STRUCTURES)
+    let buildingGrouping = 0
+    for (let i = 0; i < settings.buildingGroups.size(); i++) {
+        const grouping = settings.buildingGroups[i]
+        if (grouping.instances) {
+            for (let j = 0; j < grouping.instances?.size(); j++){
+                const item = grouping.instances[j]
+                if (primary.Instance.IsDescendantOf(item)) {
+                    buildingGrouping = i + 1
+                    break
+                }
+            }
+        }
+        if (buildingGrouping !== 0){
+            break
+        }
+        if (grouping.materials) {
+            const idx = grouping.materials.findIndex(x => x === primary.Material)
+            if (idx !== -1) {
+                buildingGrouping = i + 1
+                break
+            }
+        }
+    }
+
+    let roadGrouping = 0
+    for (let i = 0; i < settings.roadGroups.size(); i++) {
+        const grouping = settings.roadGroups[i]
+        if (grouping.instances) {
+            for (let j = 0; j < grouping.instances?.size(); j++){
+                const item = grouping.instances[j]
+                if (primary.Instance.IsDescendantOf(item)) {
+                    roadGrouping = i + 1
+                    break
+                }
+            }
+        }
+        if (roadGrouping !== 0){
+            break
+        }
+        if (grouping.materials) {
+            const idx = grouping.materials.findIndex(x => x === primary.Material)
+            const onlyUseTerrainAndPrimaryIsTerrain = grouping.onlyTerrain ? primary.Instance.ClassName === "Terrain" : true
+            if (idx !== -1 && onlyUseTerrainAndPrimaryIsTerrain) {
+                roadGrouping = i + 1
+                break
+            }
+        }
+    }
 
     if (!renderConstants.materialMap.get(primary.Material)) {
         print(renderConstants.materialMap, primary.Material, renderConstants.materialMap.get(primary.Material))
     }
+
 
     return {
         r: math.floor(color.X * 255),
@@ -80,8 +127,8 @@ export function computePixel(
         b: math.floor(color.Z * 255),
         h: height,
         material: renderConstants.materialMap.get(primary.Material) || 0,
-        road: isRoad(primary.Material) ? 1 : 0,
-        building: isStructure ? 1 : 0,
+        road: roadGrouping,
+        building: buildingGrouping,
         water: waterHeight
     }
 }
@@ -95,16 +142,6 @@ function getSamplePosition(rayCenter: Vector3, renderConstants: RenderConstants)
     return randomOffset.add(rayCenter)
 }
 
-
-function isRoad(material: Enum.Material): boolean {
-    switch (material) {
-        case Enum.Material.Cobblestone:
-        case Enum.Material.Mud:
-            return true
-        
-    }
-    return material === Enum.Material.Cobblestone
-}
 
 function castRay(rayPosition: Vector3, rayVector: Vector3, ignoreWater: boolean = false, rayParams: RaycastParams = castParams): RaycastResult | undefined {
     rayParams.IgnoreWater = ignoreWater

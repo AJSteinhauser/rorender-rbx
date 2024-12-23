@@ -8,7 +8,7 @@ import { runTests } from 'shared/tests/test-runner'
 
 const httpService = game.GetService('HttpService')
 
-// runTests()
+runTests()
 
 task.wait(2)
 render(renderSettings).then(output => {
@@ -71,7 +71,7 @@ render(renderSettings).then(output => {
                 {
                     chunkId: tostring(idx),
                     totalChunks: tostring(split.size()),
-                    pipelineId: 'b351aedd-418d-4961-9c5a-7975f23dbf8b'
+                    pipelineId: 'bd5a8233-9712-42d0-8297-98336f6b0bff'
                 }
             )
             print(response)

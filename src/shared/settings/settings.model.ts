@@ -3,7 +3,17 @@ export interface Settings {
         topRight: Vector3
         bottomLeft: Vector3
     }
+    buildingGroups: StructureGrouping[]
+    roadGroups: StructureGrouping[]
     samples: number
     resolution: number
     actorCount: number
+}
+
+
+export interface StructureGrouping {
+    name: string
+    materials?: Enum.Material[]
+    instances?: Instance[]
+    onlyTerrain?: boolean
 }

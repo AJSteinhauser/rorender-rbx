@@ -80,7 +80,6 @@ function combineAllBuffers(buffs: ImageBuffers[], settings: Settings): ImageBuff
     return output
 }
 
-
 function getRenderConstants(settings: Settings, imageDimensions: Vector2): RenderConstants {
     const rayLength = math.abs(settings.corners.topRight.Y - settings.corners.bottomLeft.Y)
 
