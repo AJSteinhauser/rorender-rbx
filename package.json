@@ -1,30 +1,22 @@
 {
-    "name": "rorender-rbx",
-    "version": "1.0.0",
-    "main": "index.js",
-    "scripts": {
-        "build": "rbxtsc",
-        "watch": "rbxtsc -w"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "description": "",
-    "devDependencies": {
-        "@rbxts/compiler-types": "^2.3.0-types.1",
-        "@rbxts/types": "^1.0.794",
-        "@typescript-eslint/eslint-plugin": "^7.16.0",
-        "@typescript-eslint/parser": "^7.16.0",
-        "eslint": "^8.57.0",
-        "eslint-config-prettier": "^9.1.0",
-        "eslint-plugin-prettier": "^5.1.3",
-        "eslint-plugin-roblox-ts": "^0.0.36",
-        "prettier": "3.3.3",
-        "roblox-ts": "^3.0.0",
-        "typescript": "^5.5.3"
-    },
-    "dependencies": {
-        "@rbxts/testez": "^0.4.2-ts.0",
-        "@rbxts/vide": "^0.5.2"
-    }
+  "name": "rorender-rbx",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "rbxtsc",
+    "watch": "rbxtsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@rbxts/compiler-types": "^3.0.0-types.0",
+    "@rbxts/types": "^1.0.813",
+    "roblox-ts": "^3.0.0",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@rbxts/testez": "^0.4.2-ts.0"
+  }
 }
