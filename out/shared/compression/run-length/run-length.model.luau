@@ -1,7 +1,0 @@
--- Compiled with roblox-ts v3.0.0
-local RUN_LENGTH_BYTE_SIZE = 2
-local MAX_RUN_LENGTH = math.pow(2, 8 * RUN_LENGTH_BYTE_SIZE) - 1
-return {
-	RUN_LENGTH_BYTE_SIZE = RUN_LENGTH_BYTE_SIZE,
-	MAX_RUN_LENGTH = MAX_RUN_LENGTH,
-}
