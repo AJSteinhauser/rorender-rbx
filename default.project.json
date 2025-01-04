@@ -6,37 +6,46 @@
     ],
     "tree": {
         "$className": "DataModel",
-        "rorender/plugin": {
-            "$className": "Folder",
-            "rbxts_include": {
-                "$path": "include",
-                "node_modules": {
-                    "$className": "Folder",
-                    "@rbxts": {
-                        "$path": "node_modules/@rbxts"
-                    }
-                }
-            },
-            "shared": {
-                "$path": "out/shared"
-            },
-            "main": {
-                "$path": "out/server"
-            },
-            "TemplateActor": {
-                "$className": "Actor",
-                "actionHandler": {
-                    "$path": "out/actor/actionHandler.server.luau",
-                    "$properties": {
-                        "Enabled": false
+        "ServerScriptService": {
+            "$className": "ServerScriptService",
+            "rorender/plugin": {
+                "$className": "Folder",
+                "rbxts_include": {
+                    "$path": "include",
+                    "node_modules": {
+                        "$className": "Folder",
+                        "@rbxts": {
+                            "$path": "node_modules/@rbxts"
+                        }
                     }
                 },
-                "actor.model": {
-                    "$path": "out/actor/actor.model.luau"
+                "shared": {
+                    "$path": "out/shared"
                 },
-                "rowCalculated": {
-                    "$className": "BindableEvent"
+                "main": {
+                    "$path": "out/server"
+                },
+                "TemplateActor": {
+                    "$className": "Actor",
+                    "actionHandler": {
+                        "$path": "out/actor/actionHandler.server.luau",
+                        "$properties": {
+                            "Enabled": false
+                        }
+                    },
+                    "actor.model": {
+                        "$path": "out/actor/actor.model.luau"
+                    },
+                    "rowCalculated": {
+                        "$className": "BindableEvent"
+                    }
                 }
+            }
+        },
+        "HttpService": {
+            "$className": "HttpService",
+            "$properties": {
+                "HttpEnabled": true
             }
         }
     }
