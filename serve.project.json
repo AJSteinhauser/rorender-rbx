@@ -6,9 +6,10 @@
 	],
 	"tree": {
 		"$className": "DataModel",
-		"ServerScriptService": {
-			"$className": "ServerScriptService",
-			"Plugin": {
+		"PluginDebugService": {
+			"$className": "PluginDebugService",
+			"user_rorender.rbxm": {
+                "$className": "Plugin",
 				"$path": "./default.project.json"
 			}
 		}

@@ -1,6 +1,6 @@
 import { Settings } from "shared/settings/settings.model"
 
-const templateActor = game.GetService("ReplicatedStorage").FindFirstChild("TemplateActor") as Actor
+const templateActor = script.Parent?.Parent?.Parent?.FindFirstChild("actor") as Actor
 if (!templateActor) {
     throw "TemplateActor not found"
 }

@@ -1,4 +1,3 @@
-import { RenderConstants } from "shared/render/render.model"
 import { ActorMessage, COMPUTE_ROW_MESSAGE } from "./actor.model"
 import { computePixel, delayForScriptExhuastion } from "shared/render/render.utils"
 import { getImageDimensions } from "shared/utils"

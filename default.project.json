@@ -5,48 +5,16 @@
         "**/tsconfig.json"
     ],
     "tree": {
-        "$className": "DataModel",
-        "ServerScriptService": {
-            "$className": "ServerScriptService",
-            "rorender/plugin": {
+        "$path": "out",
+        "rbxts_include": {
+            "$path": "include",
+            "node_modules": {
                 "$className": "Folder",
-                "rbxts_include": {
-                    "$path": "include",
-                    "node_modules": {
-                        "$className": "Folder",
-                        "@rbxts": {
-                            "$path": "node_modules/@rbxts"
-                        }
-                    }
-                },
-                "shared": {
-                    "$path": "out/shared"
-                },
-                "main": {
-                    "$path": "out/server"
-                },
-                "TemplateActor": {
-                    "$className": "Actor",
-                    "actionHandler": {
-                        "$path": "out/actor/actionHandler.server.luau",
-                        "$properties": {
-                            "Enabled": false
-                        }
-                    },
-                    "actor.model": {
-                        "$path": "out/actor/actor.model.luau"
-                    },
-                    "rowCalculated": {
-                        "$className": "BindableEvent"
-                    }
+                "@rbxts": {
+                    "$path": "node_modules/@rbxts"
                 }
-            }
-        },
-        "HttpService": {
-            "$className": "HttpService",
-            "$properties": {
-                "HttpEnabled": true
             }
         }
     }
 }
+

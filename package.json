@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "rbxtsc",
-    "watch": "rbxtsc -w"
+    "serve": "rojo serve serve.project.json",
+    "build": "rojo build --plugin rorender.rbxm",
+    "watch": "rbxtsc -w --verbose"
   },
   "keywords": [],
   "author": "",
