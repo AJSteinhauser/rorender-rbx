@@ -1,9 +1,17 @@
 import React, { useState } from "@rbxts/react";
-import uiConstants from "./ui-constants";
-import { Button, ButtonType } from "./button";
-import { Textarea } from "./text-area";
+import { runRender } from "server/render-runner";
+import { render } from "shared/render/render.main";
+import { villageSettings } from "shared/settings/settings";
+import { Button, ButtonType } from "ui/button";
+import { unloadRender } from "ui/config-helper";
+import { Screens } from "ui/constants";
+import { Textarea } from "ui/text-area";
+import uiConstants from "ui/ui-constants";
+
+const studioService = game.GetService("StudioService")
 
 export function RenderConfigScreen(props: {
+    changeScreen: (screen: Screens) => void
 }) {
 	return (
         <frame
@@ -18,8 +26,11 @@ export function RenderConfigScreen(props: {
 
             <Textarea label="Render Id" placeholder="Paste the render id here" size={new UDim2(1,0,0,50)}/>
             <Button label="Start Render" buttonType={ButtonType.filled} size={new UDim2(1,0,0,30)} clicked={() => {
+                runRender(villageSettings)
             }}/>
             <Button label="Detach Configuration" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => {
+                unloadRender()
+                props.changeScreen(Screens.Home)
             }}/>
         </frame>
 	);

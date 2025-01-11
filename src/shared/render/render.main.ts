@@ -2,10 +2,10 @@ import { Settings } from 'shared/settings/settings.model'
 import { RenderConstants } from './render.model'
 import { getImageDimensions } from 'shared/utils'
 import { ImageBuffers } from 'shared/file/file.modal'
-import { ActorMessage, COMPUTE_ROW_MESSAGE } from 'actor/actor.model'
 import { WorkerPool } from './actor-pool.handler'
 import { generateBufferChannels } from 'shared/file/file.utils'
 import { delayForScriptExhuastion } from './render.utils'
+import { ActorMessage, COMPUTE_ROW_MESSAGE } from './actor.model'
 
 
 export async function render(settings: Settings): Promise<ImageBuffers> {
@@ -34,7 +34,7 @@ export async function render(settings: Settings): Promise<ImageBuffers> {
                 startTime = delayForScriptExhuastion(startTime)
                 calculatedRows[row] = data
                 binding.Disconnect()
-                pool.cleanupActor(actor)
+                pool.releaseActor(actor)
                 finishedRows++
                 const currentCompletion = finishedRows / imageDimensions.Y
                 if (currentCompletion - lastRowPrinted > 0.01) {

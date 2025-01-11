@@ -1,10 +1,10 @@
 import React, { useState } from "@rbxts/react";
-import uiConstants from "./ui-constants";
-import { Button, ButtonType } from "./button";
-import { getRenderSettingsFromSelection, loadRender } from "./config-helper";
-import { Screens } from "./constants";
+import { Button, ButtonType } from "ui/button";
+import { getRenderSettingsFromSelection, loadRender } from "ui/config-helper";
+import { Screens } from "ui/constants";
+import uiConstants from "ui/ui-constants";
 
-const renderSettings = script.Parent?.Parent?.FindFirstChild("RoRenderSettings") as ModuleScript
+const renderSettings = script.Parent?.Parent?.Parent?.FindFirstChild("RoRenderSettings") as ModuleScript
 const changeHistoryService = game.GetService("ChangeHistoryService")
 const selectionService = game.GetService("Selection")
 
@@ -42,7 +42,14 @@ export function StartScreen(props: {
                 loadRender(renderSettings)
                 props.changeScreen(Screens.Configuration)
             }}/>
-            <Button label="Load Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={getRenderSettingsFromSelection}/>
+            <Button label="Load Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() =>{
+                try {
+                    getRenderSettingsFromSelection()
+                    props.changeScreen(Screens.Configuration)
+                }
+                catch(exception) {
+                }
+            }}/>
             <textlabel
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}

@@ -1,8 +1,8 @@
 import React, { useState } from "@rbxts/react";
-import uiConstants from "./ui-constants";
 import { StartScreen } from "./start-screen";
 import { RenderConfigScreen } from "./render-config-screen";
-import { Screens } from "./constants";
+import { Screens } from "ui/constants";
+import uiConstants from "ui/ui-constants";
 
 
 export function Main() {
@@ -17,7 +17,7 @@ export function Main() {
             case Screens.Home:
                 return <StartScreen changeScreen={changeScreen} />
             case Screens.Configuration:
-                return <RenderConfigScreen />
+                return <RenderConfigScreen changeScreen={changeScreen} />
             case Screens.Rendering:
         }
     }

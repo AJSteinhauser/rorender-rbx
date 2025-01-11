@@ -1,10 +1,5 @@
 import { Settings } from "shared/settings/settings.model"
 
-const templateActor = script.Parent?.Parent?.Parent?.FindFirstChild("actor") as Actor
-if (!templateActor) {
-    throw "TemplateActor not found"
-}
-
 export class WorkerPool {
     private actorPoolIntialized = false
 
@@ -32,12 +27,7 @@ export class WorkerPool {
             return
         }
         this.actorPoolIntialized = true
-        for (let i = 0; i < renderSettings.actorCount; i++) {
-            const actor = templateActor.Clone()
-            actor.Name = `actor-${i}`
-            actor.Parent = game.GetService("ServerScriptService")
-            this.pool.push(actor)
-        }
+        this.pool = script.Parent?.Parent?.Parent?.FindFirstChild("actorPool")?.GetChildren() as Actor[]
     }
     getActor = (renderSettings: Settings): Promise<Actor> => {
         if (!this.actorPoolIntialized) {
@@ -53,13 +43,9 @@ export class WorkerPool {
         })
     }
 
-    cleanupActor = (actor: Actor) => {
+    releaseActor = (actor: Actor) => {
         this.pool.push(actor)
         this.actorAddedBackToPool.Fire()
     }
 
 }
-
-
-
-

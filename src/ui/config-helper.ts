@@ -5,23 +5,9 @@ import { render } from "shared/render/render.main"
 const coreUi = game.GetService("CoreGui")
 const selectionService = game.GetService("Selection")
 
-let loadedRender: ModuleScript | undefined 
-
-const edgePart = new Instance("Part")
-edgePart.Anchored = true
-edgePart.Locked = true
-edgePart.Transparency = 1
-edgePart.Size = new Vector3(1,1,1)
-
-const handles = new Instance("Handles")
-handles.Style = Enum.HandlesStyle.Resize
-handles.Color3 = uiConstants.groundColor
-handles.Name = "Handles"
-handles.Parent = edgePart
-
+let loadedRenderRef: ModuleScript | undefined 
 
 export const getRenderSettingsFromSelection = () => {
-    print("Testing")
     const currentSelection = selectionService.Get()
     if (currentSelection.size() !== 1) {
         error("Please only select the render settings ModuleScript")
@@ -34,29 +20,55 @@ export const getRenderSettingsFromSelection = () => {
 }
 
 export const loadRender = (render: ModuleScript) => {
-    const box = render.FindFirstChild("box") as Folder
-    const center = box?.FindFirstChild("center") as Part
-    print(box,center)
-    if (!box || !center) {
-        error("Not a valid render settings object")
-    }
     cleanUpLastLoadedRender()
+    setHandlesInCorrectPosition(render)
+    setupUpdateConnections(render)
+
+    loadedRenderRef = render
+}
+
+export const unloadRender = () => {
+    cleanUpLastLoadedRender()
+}
+
+const setHandlesInCorrectPosition = (render: ModuleScript) => {
+    const { c0, c1 } = getElementsFromSettings(render)
 
     const positions = getHandlePositions(render)
+    c0.CFrame = positions.c0
+    c1.CFrame = positions.c1
 }
 
 const cleanUpLastLoadedRender = () => {
-    loadedRender = undefined
+    loadedRenderRef = undefined
+    selectionService.Set([])
+}
+
+const setupUpdateConnections = (render: ModuleScript) => {
+    const { c0, c1, mesh } = getElementsFromSettings(render)
+
+    const c0PositionConnection = c0.GetPropertyChangedSignal("Position")
+    const c1PositionConnection = c1.GetPropertyChangedSignal("Position")
+}
+
+
+const getElementsFromSettings = (settings: ModuleScript) => {
+    const box = settings.FindFirstChild("box") as Folder
+    const center = box?.FindFirstChild("center") as Part
+    const mesh = center?.FindFirstChild("mesh") as BlockMesh
+    const c0 = center?.FindFirstChild("c1") as Part
+    const c1 = center?.FindFirstChild("c0") as Part
+
+    if (!box || !center || !mesh || !c0 || !c1) {
+        error("Not a valid settings module")
+    }
+    return {
+        box, center, mesh, c0, c1
+    }
 }
 
 export const getHandlePositions = (renderSettings: ModuleScript) => {
-    const box = renderSettings.FindFirstChild("box") as Folder
-    const center = box?.FindFirstChild("center") as Part
-    const mesh = center?.FindFirstChild("mesh") as BlockMesh
-    print(center.GetChildren())
-    if (!mesh) {
-        return
-    }
+    const { center, mesh } = getElementsFromSettings(renderSettings)
     const c0_offset = new CFrame(
         new Vector3(
             -(mesh.Scale.X / 2),

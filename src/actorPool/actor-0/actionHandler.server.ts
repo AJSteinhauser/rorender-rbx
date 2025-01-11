@@ -1,8 +1,8 @@
-import { ActorMessage, COMPUTE_ROW_MESSAGE } from "./actor.model"
 import { computePixel, delayForScriptExhuastion } from "shared/render/render.utils"
 import { getImageDimensions } from "shared/utils"
 import { generateBufferChannels, writePixelToImageBuffer } from "shared/file/file.utils"
 import { getRenderMaterialMap } from "shared/render/render.main"
+import { ActorMessage, COMPUTE_ROW_MESSAGE } from "shared/render/actor.model"
 
 const actor = script.GetActor()
 
