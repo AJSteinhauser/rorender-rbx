@@ -3,9 +3,9 @@
 		// required
 		"allowSyntheticDefaultImports": true,
 		"downlevelIteration": true,
-		"jsx": "react",
-        "jsxFactory": "Vide.jsx",
-        "jsxFragmentFactory": "Vide.Fragment",
+        "jsx": "react",
+        "jsxFactory": "React.createElement",
+        "jsxFragmentFactory": "React.Fragment",
 		"module": "commonjs",
 		"moduleResolution": "Node",
 		"noLib": true,

@@ -1,4 +1,4 @@
-import Vide from "@rbxts/vide";
+import React, { useState } from "@rbxts/react";
 import uiConstants from "./ui-constants";
 import { Textarea } from "./text-area";
 import { Button, ButtonType } from "./button";
@@ -18,10 +18,8 @@ export function Container() {
         <frame
             Size={UDim2.fromScale(1,1)}
             BackgroundColor3={uiConstants.groundColor}
-            Name={"Background"}
         >
             <frame
-                Name={"Padding"}
                 Size={new UDim2(1,-100,1,-100)}
                 Position={UDim2.fromScale(.5,.5)}
                 AnchorPoint={new Vector2(.5,.5)}
@@ -33,7 +31,6 @@ export function Container() {
                     Padding={new UDim(0,uiConstants.spacingNormal)}
                 />
                 <textlabel
-                    Name={"Title"}
                     TextColor3={uiConstants.primaryColor}
                     BackgroundTransparency={1}
                     Font={Enum.Font.Bangers}

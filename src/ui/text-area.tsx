@@ -1,5 +1,6 @@
-import Vide from "@rbxts/vide";
 import uiConstants from "./ui-constants";
+import React, { useState } from "@rbxts/react";
+
 
 export function Textarea(props: {
     label: string,
@@ -10,7 +11,6 @@ export function Textarea(props: {
         <frame
             Size={props.size}
             BackgroundTransparency={1}
-            Name={"Container"}
         >
             <uilistlayout
                 HorizontalAlignment={Enum.HorizontalAlignment.Left}
@@ -18,7 +18,6 @@ export function Textarea(props: {
                 Padding={new UDim(0,uiConstants.spacingSmall)}
             />
             <textlabel
-                Name={"Title"}
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
                 Font={Enum.Font.SourceSansBold}
@@ -50,6 +49,7 @@ export function Textarea(props: {
                     TextColor3={uiConstants.primaryText}
                     BackgroundTransparency={1}
                     TextTruncate={Enum.TextTruncate.AtEnd}
+                    Text={""}
                 />
             </frame>
         </frame>

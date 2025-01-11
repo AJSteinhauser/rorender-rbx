@@ -1,4 +1,4 @@
-import Vide, { source } from "@rbxts/vide";
+import React, { useState } from "@rbxts/react";
 import uiConstants from "./ui-constants";
 
 export enum ButtonType {
@@ -31,7 +31,6 @@ export function Button(props: {
         >
             <frame
                 Size={new UDim2(1,2,1,2)}
-                Name={"Container"}
                 AnchorPoint={new Vector2(.5,.5)}
                 Position={UDim2.fromScale(.5,.5)}
                 ZIndex={1}
@@ -40,18 +39,20 @@ export function Button(props: {
                 <uicorner CornerRadius={new UDim(0,uiConstants.cornerRadius)} />
             </frame>
             <textbutton
-                Activated={() => props.clicked()}
                 ZIndex={3}
                 Size={UDim2.fromScale(1,1)}
                 AnchorPoint={new Vector2(.5,.5)}
                 Position={UDim2.fromScale(.5,.5)}
                 BackgroundColor3={getBackgroundColor(props.buttonType)}
                 Text={props.label}
-                TextSize={uiConstants.fontSizeNormal}
+                TextSize={uiConstants.fontSizeSmall}
                 TextColor3={ props.buttonType === ButtonType.filled ? 
                     uiConstants.blackText :
                     uiConstants.primaryColor
                 }
+                Event={{
+                    Activated: props.clicked
+                }}
             >
                 <uicorner CornerRadius={new UDim(0,uiConstants.cornerRadius)} />
             </textbutton>

@@ -18,8 +18,9 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@rbxts/react": "^17.2.3",
+    "@rbxts/react-roblox": "^17.2.3",
     "@rbxts/testez": "^0.4.2-ts.0",
-    "@rbxts/vide": "^0.5.3",
     "npm": "^11.0.0"
   }
 }
