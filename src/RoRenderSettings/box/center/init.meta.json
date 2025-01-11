@@ -2,11 +2,9 @@
     "className": "Part",
     "properties": {
         "Size": [1,1,1],
-        "Attributes": {
-			"c0": {"Vector3": [-10,-10,-10]},
-			"c1": {"Vector3": [20, 10, 20]}
-		},
         "Transparency": 0.6,
-        "Color": [0.984, 0.749, 0.141]
+        "Color": [0.984, 0.749, 0.141],
+        "Locked": true,
+        "Position": [0,50,0]
     }
 }

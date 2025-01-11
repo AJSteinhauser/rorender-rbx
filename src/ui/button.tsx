@@ -45,7 +45,8 @@ export function Button(props: {
                 Position={UDim2.fromScale(.5,.5)}
                 BackgroundColor3={getBackgroundColor(props.buttonType)}
                 Text={props.label}
-                TextSize={uiConstants.fontSizeSmall}
+                Font={uiConstants.boldFont}
+                TextSize={uiConstants.fontSizeNormal}
                 TextColor3={ props.buttonType === ButtonType.filled ? 
                     uiConstants.blackText :
                     uiConstants.primaryColor

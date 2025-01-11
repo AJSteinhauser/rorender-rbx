@@ -1,7 +1,6 @@
 import uiConstants from "./ui-constants";
 import React, { useState } from "@rbxts/react";
 
-
 export function Textarea(props: {
     label: string,
     placeholder: string
@@ -20,7 +19,7 @@ export function Textarea(props: {
             <textlabel
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
-                Font={Enum.Font.SourceSansBold}
+                Font={uiConstants.boldFont}
                 Text={props.label}
                 Size={UDim2.fromScale(.5,.3)}
                 TextSize={uiConstants.fontSizeNormal}
@@ -40,7 +39,7 @@ export function Textarea(props: {
                 <textbox
                     PlaceholderText={props.placeholder}
                     PlaceholderColor3={uiConstants.subtleText}
-                    Font={Enum.Font.SourceSansSemibold}
+                    Font={uiConstants.lessboldFont}
                     TextSize={uiConstants.fontSizeNormal}
                     TextXAlignment={Enum.TextXAlignment.Left}
                     Size={new UDim2(1,-14,1,-14)}

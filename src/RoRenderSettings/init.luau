@@ -1,4 +1,5 @@
 --!strict
+--src/RoRenderSettings/init.luau
 
 type Settings = {
     corners: {

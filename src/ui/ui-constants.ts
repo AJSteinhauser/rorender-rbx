@@ -15,12 +15,19 @@ export default {
     cornerRadius: 5,
     borderSize: 1,
     spacingSmall: 5,
-    spacingNormal: 15,
-    spacingBig: 20,
+    spacingNormal: 10,
+    spacingBig: 18,
 
-    fontSizeSmall: 12,
+    fontSizeTiny: 8,
+    fontSizeSmall: 14,
     fontSizeNormal: 18,
     fontSizeBig: 24,
     fontSizeTitle: 50,
+
+    primaryFont: Enum.Font.SourceSans,
+    secondaryFont: Enum.Font.SourceSansLight,
+    boldFont: Enum.Font.SourceSansBold,
+    lessboldFont: Enum.Font.SourceSansSemibold,
+    italicFont: Enum.Font.SourceSansItalic,
 }
 
