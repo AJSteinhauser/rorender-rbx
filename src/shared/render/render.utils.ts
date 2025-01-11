@@ -59,13 +59,21 @@ export function computePixel(
         }
     }
 
-    const terrainHit = getTerrainHit(primary,rayCenter, renderConstants.rayVector, new RaycastParams()) || primary
+    const terrainHit = getTerrainHit(
+        primary,
+        rayCenter,
+        renderConstants.rayVector,
+        new RaycastParams(),
+        settings.terrain
+    ) || primary
 
     let color = averageColorSamples(results)
     color = averageShadeSamples(results, color)
     color = gammaNormalizeSamples(color)
 
-    const height = math.floor((terrainHit.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
+    const height = math.floor(
+        (terrainHit.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255
+    )
 
     let buildingGrouping = 0
     for (let i = 0; i < settings.buildingGroups.size(); i++) {
@@ -108,7 +116,9 @@ export function computePixel(
         }
         if (grouping.materials) {
             const idx = grouping.materials.findIndex(x => x === primary.Material)
-            const onlyUseTerrainAndPrimaryIsTerrain = grouping.onlyTerrain ? primary.Instance.ClassName === "Terrain" : true
+            const onlyUseTerrainAndPrimaryIsTerrain = grouping.onlyTerrain ? 
+                primary.Instance.ClassName === "Terrain" :
+                true
             if (idx !== -1 && onlyUseTerrainAndPrimaryIsTerrain) {
                 roadGrouping = i + 1
                 break
@@ -117,7 +127,11 @@ export function computePixel(
     }
 
     if (!renderConstants.materialMap.get(primary.Material)) {
-        print(renderConstants.materialMap, primary.Material, renderConstants.materialMap.get(primary.Material))
+        warn(
+            renderConstants.materialMap,
+            primary.Material,
+            renderConstants.materialMap.get(primary.Material)
+        )
     }
 
 
@@ -143,12 +157,20 @@ function getSamplePosition(rayCenter: Vector3, renderConstants: RenderConstants)
 }
 
 
-function castRay(rayPosition: Vector3, rayVector: Vector3, ignoreWater: boolean = false, rayParams: RaycastParams = castParams): RaycastResult | undefined {
+function castRay(
+    rayPosition: Vector3, 
+    rayVector: Vector3,
+    ignoreWater: boolean = false,
+    rayParams: RaycastParams = castParams
+): RaycastResult | undefined {
     rayParams.IgnoreWater = ignoreWater
     return game.Workspace.Raycast(rayPosition, rayVector, rayParams)
 }
 
-function findHighestAncestorThatDoesNotShareParent(instance: Instance, terrain: Instance[]): Instance | undefined {
+function findHighestAncestorThatDoesNotShareParent(
+    instance: Instance,
+    terrain: Instance[]
+): Instance | undefined {
     if (terrain.some(terrainItem => instance.Parent && instance.Parent.IsAncestorOf(terrainItem))) {
         return instance
     }

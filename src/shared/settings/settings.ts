@@ -1,7 +1,9 @@
 import { Settings } from './settings.model'
 
-
 export const villageSettings: Settings = {
+    terrain: [
+        game.Workspace.Terrain
+    ],
     corners: {
         topRight: new Vector3(-500, 150, -500),
         bottomLeft: new Vector3(500, -83, 500),
@@ -48,6 +50,9 @@ export const villageSettings: Settings = {
 } as const
 
 export const castleSettings: Settings = {
+    terrain: [
+        game.Workspace.Terrain
+    ],
     corners: {
         topRight: new Vector3(-507, 134, -507),
         bottomLeft: new Vector3(511, -140, 511),

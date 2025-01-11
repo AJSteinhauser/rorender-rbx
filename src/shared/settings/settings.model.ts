@@ -3,6 +3,7 @@ export interface Settings {
         topRight: Vector3
         bottomLeft: Vector3
     }
+    terrain: Instance[]
     buildingGroups: StructureGrouping[]
     roadGroups: StructureGrouping[]
     samples: number
