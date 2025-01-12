@@ -3,8 +3,9 @@ import React, { useState } from "@rbxts/react";
 
 export function Textarea(props: {
     label: string,
-    placeholder: string
-    size: UDim2
+    placeholder: string,
+    size: UDim2,
+    textChanged: (text: string) => void
 }) {
 	return (
         <frame
@@ -49,6 +50,11 @@ export function Textarea(props: {
                     BackgroundTransparency={1}
                     TextTruncate={Enum.TextTruncate.AtEnd}
                     Text={""}
+                    Event={{
+                        InputEnded: (changed, text) => {
+                            props.textChanged(changed.Text)
+                        }
+                    }}
                 />
             </frame>
         </frame>
