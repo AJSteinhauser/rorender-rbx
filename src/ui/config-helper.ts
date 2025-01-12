@@ -30,7 +30,6 @@ export const getCurrentRender = () => {
 
 export const loadRender = (render: ModuleScript) => {
     cleanUpLastLoadedRender()
-    setHandlesInCorrectPosition(render)
     setupUpdateConnections(render)
 
     loadedRenderRef = render
@@ -56,14 +55,6 @@ export const QuickSelectModule = (item: QuickSelect) => {
             selectionService.Set([loadedRenderRef])
             break
     }
-}
-
-const setHandlesInCorrectPosition = (render: ModuleScript) => {
-    const { c0, c1 } = getElementsFromSettings(render)
-
-    const positions = getHandlePositions(render)
-    c0.CFrame = positions.c0
-    c1.CFrame = positions.c1
 }
 
 const cleanUpLastLoadedRender = () => {
@@ -104,51 +95,15 @@ const getElementsFromSettings = (settings: ModuleScript) => {
     }
 }
 
-export const getHandlePositions = (renderSettings: ModuleScript) => {
-    const { center, mesh } = getElementsFromSettings(renderSettings)
-    const c0_offset = new CFrame(
-        new Vector3(
-            -(mesh.Scale.X / 2),
-             (mesh.Scale.Y / 2),
-            -(mesh.Scale.Z / 2),
-        )
-    )
-    const c1_offset = new CFrame(
-        new Vector3(
-             (mesh.Scale.X / 2),
-            -(mesh.Scale.Y / 2),
-             (mesh.Scale.Z / 2),
-        )
-    )
-
-    return {
-        c0: c0_offset.mul(center.CFrame),
-        c1: c1_offset.mul(center.CFrame) 
-    }
-}
-
 export const updateBoxFromHandles = (settings: ModuleScript) => {
     const { c0, c1, center, mesh } = getElementsFromSettings(settings)
 
-    const leftMost = c0.CFrame.Position.X < c1.CFrame.Position.X ?  c0 : c1
-    const rightMost = leftMost === c0 ?  c1 : c0
-
-    const frontMost = c0.CFrame.Position.Z < c1.CFrame.Position.Z ?  c1 : c0
-    const backMost = frontMost === c0 ?  c1 : c0
-
-    const topMost = c0.CFrame.Position.Y < c1.CFrame.Position.Y ? c1 : c0
-    const bottomMost = topMost === c0 ? c1 : c0
-
-    const xScale = (rightMost.CFrame.Position.sub(leftMost.CFrame.Position)).X
-    const yScale = (topMost.CFrame.Position.sub(bottomMost.CFrame.Position)).Y
-    const zScale = (frontMost.CFrame.Position.sub(backMost.CFrame.Position)).Z
-
-    const centerPoint = c0.CFrame.Position.Lerp(c1.CFrame.Position, .5)
-    center.CFrame = new CFrame(centerPoint)
-
-    mesh.Scale = new Vector3(
-        xScale,
-        yScale,
-        zScale
+    const offset = c0.CFrame.PointToObjectSpace(c1.Position)
+    mesh.Scale = new Vector3( 
+        math.abs(offset.X),
+        math.abs(offset.Y),
+        math.abs(offset.Z),
     )
+
+    center.Position = (c0.Position.add(c1.Position)).mul(.5) 
 }

@@ -1,20 +1,11 @@
 import React, { useState } from "@rbxts/react";
-import Module from "@rbxts/testez/src/Module";
 import { runRender } from "server/render-runner";
-import { render } from "shared/render/render.main";
-import { villageSettings } from "shared/settings/settings";
 import { Settings } from "shared/settings/settings.model";
 import { Button, ButtonType } from "ui/button";
 import { getCurrentRender, QuickSelect, QuickSelectModule, unloadRender } from "ui/config-helper";
 import { Screens } from "ui/constants";
 import { Textarea } from "ui/text-area";
 import uiConstants from "ui/ui-constants";
-
-const studioService = game.GetService("StudioService")
-
-//local function isUUIDv4(str)
-//    return str:match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89abAB]%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$") ~= nil
-//end
 
 function isUUIDv4(input: string): boolean {
     return input.match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89abAB]%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$").size() > 0

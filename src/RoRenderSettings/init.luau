@@ -2,14 +2,12 @@
 --src/RoRenderSettings/init.luau
 
 export type Settings = {
-    corners: {
-        c0: Vector3,
-        c1: Vector3,
-    },
     terrain: { Instance },
     buildingGroups: { StructureGrouping },
     roadGroups: { StructureGrouping },
     samples: number,
+    mapScale: Vector3,
+    mapCFrame: CFrame,
     resolution: number,
 }
 
@@ -23,10 +21,9 @@ export type StructureGrouping = {
 local boxTargeting = script.box.center
 
 return {
-    corners = {
-        c0 = boxTargeting.c0.CFrame.Position,
-        c1 = boxTargeting.c1.CFrame.Position
-    },
+    mapScale = script.box.center.mesh.Scale,
+    mapCFrame = script.box.center.CFrame,
+    resolution = 1,
     terrain = {
         game.Workspace.Terrain
     },
@@ -51,5 +48,4 @@ return {
         }
     },
     samples = 1,
-    resolution = 1,
 } :: Settings

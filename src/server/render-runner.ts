@@ -2,7 +2,6 @@ import { buildEncodingMap, buildTreeFromFrequencyTable, generatePriorityQueue, h
 import {  runLengthEncode } from 'shared/compression/run-length/run-length-encoding.compression'
 import { mergeImageBuffersIntoSingleBuffer, writeHeader } from 'shared/file/file.utils'
 import { render } from 'shared/render/render.main'
-import { villageSettings } from 'shared/settings/settings'
 import { getImageDimensions, HTTPS_BODY_LIMIT, splitImageIntoChunks } from 'shared/utils'
 import { runTests } from 'shared/tests/test-runner'
 import { Settings } from 'shared/settings/settings.model'
@@ -11,8 +10,7 @@ const httpService = game.GetService('HttpService')
 
 //runTests()
 
-//const renderSettings: Settings = villageSettings
-export const runRender = (renderSettings: Settings) => {
+export const runRender = (renderSettings: Settings, renderId: string) => {
     render(renderSettings).then(output => {
         const headerBuffer = writeHeader(getImageDimensions(renderSettings))
 
@@ -73,7 +71,7 @@ export const runRender = (renderSettings: Settings) => {
                     {
                         chunkId: tostring(idx),
                         totalChunks: tostring(split.size()),
-                        pipelineId: '4246a9be-df9b-4cc4-ae8e-d546ae2642ae'
+                        pipelineId: renderId
                     }
                 )
                 print(response)
@@ -81,5 +79,5 @@ export const runRender = (renderSettings: Settings) => {
         })
 
         print(huffmanTree)
-    })
+    }).catch(e => error(e))
 }

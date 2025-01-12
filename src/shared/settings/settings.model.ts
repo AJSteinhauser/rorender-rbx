@@ -1,14 +1,11 @@
 export interface Settings {
-    corners: {
-        topRight: Vector3
-        bottomLeft: Vector3
-    }
+    mapScale: Vector3
+    mapCFrame: CFrame
+    resolution: number
     terrain: Instance[]
     buildingGroups: StructureGrouping[]
     roadGroups: StructureGrouping[]
     samples: number
-    resolution: number
-    actorCount: number
 }
 
 
