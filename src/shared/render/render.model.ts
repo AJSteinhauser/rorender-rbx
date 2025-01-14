@@ -12,11 +12,8 @@ export interface Pixel {
 export interface RenderConstants {
     rayVector: Vector3
     rayLength: number
-    xSpacing: number
-    ySpacing: number
     imageDimensions: Vector2
-    rayBottom: number
-    normalizedRayTop: number
+    startingPosition: CFrame
     materialMap: Map<Enum.Material, number>
 }
 

@@ -81,21 +81,20 @@ function combineAllBuffers(buffs: ImageBuffers[], settings: Settings): ImageBuff
 }
 
 function getRenderConstants(settings: Settings, imageDimensions: Vector2): RenderConstants {
-    const rayLength = math.abs(settings.corners.topRight.Y - settings.corners.bottomLeft.Y)
-
-    const rayBottom = settings.corners.topRight.Y - rayLength
-    const normalizedRayTop = settings.corners.topRight.Y - rayBottom
+    const rayLength = settings.mapScale.Y
 
     const materialMap = getRenderMaterialMap()
 
+    const mapScale = settings.mapScale
+    const mapCFrame = settings.mapCFrame
+
+    const offset = mapScale.mul(new Vector3(-.5, .5, -.5))
+
     return {
+        startingPosition: mapCFrame.mul(new CFrame(offset)),
         rayLength,
         imageDimensions,
-        xSpacing: math.abs(settings.corners.bottomLeft.X - settings.corners.topRight.X) / imageDimensions.X,
-        ySpacing: math.abs(settings.corners.bottomLeft.Z - settings.corners.topRight.Z) / imageDimensions.Y,
-        rayVector: new Vector3(0, -1, 0).mul(rayLength),
-        rayBottom,
-        normalizedRayTop,
+        rayVector: settings.mapCFrame.UpVector.mul(-1).mul(rayLength),
         materialMap,
     }
 }

@@ -1,6 +1,7 @@
 import { Settings } from 'shared/settings/settings.model'
 import { Pixel, RenderConstants } from './render.model'
 import { color3ToVector3 } from 'shared/utils'
+import { render } from './render.main'
 
 const LIGHTING = game.GetService('Lighting')
 const TERRAIN = game.Workspace.Terrain
@@ -10,7 +11,6 @@ const DELAY_TIME = 3
 const SUN_POSITION = LIGHTING.GetSunDirection()
 
 const rand = new Random()
-
 
 const castParams = new RaycastParams()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -23,12 +23,15 @@ export function computePixel(
     settings: Settings,
     renderConstants: RenderConstants,
 ): Pixel | undefined {
-    const xPos = renderConstants.xSpacing * position.X + settings.corners.topRight.X
-    const zPos = renderConstants.ySpacing * position.Y + settings.corners.topRight.Z
+    const xOffset = position.X * settings.resolution
+    const zOffset = position.Y * settings.resolution
 
-    const rayCenter = new Vector3(xPos, settings.corners.topRight.Y, zPos)
+    const rayCFrame = renderConstants.startingPosition.mul(new CFrame(xOffset, 0 , zOffset))
+    const rayCenter = rayCFrame.Position
     const results: RaycastResult[] = []
     const shadowSamples: Vector3[] = []
+
+    const rayBottom = (renderConstants.startingPosition.Y - renderConstants.rayLength)
 
     let waterHeight = 0 //Water height of 0 assumes there is no water
     
@@ -37,8 +40,8 @@ export function computePixel(
         return
     }
     if (primary.Material === Enum.Material.Water) {
-        waterHeight = math.max(1,
-            math.floor((primary.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
+        waterHeight = math.floor(
+            ((primary.Position.Y - rayBottom)  / renderConstants.startingPosition.Y) * 255
         )
         primary = castRay(rayCenter, renderConstants.rayVector, true)
 
@@ -51,7 +54,7 @@ export function computePixel(
     results.push(primary)
 
     for (let i = 1; i < settings.samples; i++) {
-        const samplePosition = getSamplePosition(rayCenter, renderConstants)
+        const samplePosition = getSamplePosition(rayCFrame, position, settings.resolution)
         const result = castRay(samplePosition, renderConstants.rayVector, true)
         // showDebugRayPosition(samplePosition)
         if (result) {
@@ -72,7 +75,7 @@ export function computePixel(
     color = gammaNormalizeSamples(color)
 
     const height = math.floor(
-        (terrainHit.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255
+        ((terrainHit.Position.Y - rayBottom)  / renderConstants.startingPosition.Y) * 255
     )
 
     let buildingGrouping = 0
@@ -147,13 +150,13 @@ export function computePixel(
     }
 }
 
-function getSamplePosition(rayCenter: Vector3, renderConstants: RenderConstants): Vector3 {
-    const randomOffset = new Vector3(
-        rand.NextNumber() * renderConstants.xSpacing - renderConstants.xSpacing / 2,
+function getSamplePosition(rayCenter: CFrame, position: Vector2, resolution: number): Vector3 {
+    const randomOffset = new CFrame(
+        (rand.NextNumber() - .5) * resolution,
         0,
-        rand.NextNumber() * renderConstants.ySpacing - renderConstants.ySpacing / 2
+        (rand.NextNumber() - .5) * resolution,
     )
-    return randomOffset.add(rayCenter)
+    return randomOffset.mul(rayCenter).Position
 }
 
 
