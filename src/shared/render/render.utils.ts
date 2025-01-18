@@ -1,4 +1,4 @@
-import { Settings } from 'shared/settings/settings.model'
+import { Settings, StructureGrouping } from 'shared/settings/settings.model'
 import { Pixel, RenderConstants } from './render.model'
 import { color3ToVector3 } from 'shared/utils'
 import { render } from './render.main'
@@ -23,131 +23,107 @@ export function computePixel(
     settings: Settings,
     renderConstants: RenderConstants,
 ): Pixel | undefined {
-    const xOffset = position.X * settings.resolution
-    const zOffset = position.Y * settings.resolution
+    const xOffset = position.X * settings.resolution;
+    const zOffset = position.Y * settings.resolution;
 
-    const rayCFrame = renderConstants.startingPosition.mul(new CFrame(xOffset, 0 , zOffset))
-    const rayCenter = rayCFrame.Position
-    const results: RaycastResult[] = []
-    const shadowSamples: Vector3[] = []
+    const rayCFrame = renderConstants.startingPosition.mul(new CFrame(xOffset, 0, zOffset));
+    const rayCenter = rayCFrame.Position;
+    const results: RaycastResult[] = [];
+    let waterHeight = 0; // Default to no water
+    const rayBottom = renderConstants.startingPosition.Y - renderConstants.rayLength;
 
-    const rayBottom = (renderConstants.startingPosition.Y - renderConstants.rayLength)
+    // Helper function to compute height
+    const calculateHeight = (y: number) =>
+        math.floor(((y - rayBottom) / renderConstants.startingPosition.Y) * 255);
 
-    let waterHeight = 0 //Water height of 0 assumes there is no water
-    
-    let primary = castRay(rayCenter, renderConstants.rayVector)
-    if (!primary) {
-        return
-    }
+    // Initial raycast
+    let primary = castRay(rayCenter, renderConstants.rayVector);
+    if (!primary) return;
+
+    // Handle water material
     if (primary.Material === Enum.Material.Water) {
-        waterHeight = math.floor(
-            ((primary.Position.Y - rayBottom)  / renderConstants.startingPosition.Y) * 255
-        )
-        primary = castRay(rayCenter, renderConstants.rayVector, true)
-
-        if (!primary) {
-            // showDebugRayPosition(rayCenter.add(renderConstants.rayVector))
-            return
-        }
+        waterHeight = calculateHeight(primary.Position.Y);
+        primary = castRay(rayCenter, renderConstants.rayVector, true);
+        if (!primary) return;
     }
 
-    results.push(primary)
+    results.push(primary);
 
+    // Collect additional samples
     for (let i = 1; i < settings.samples; i++) {
-        const samplePosition = getSamplePosition(rayCFrame, position, settings.resolution)
-        const result = castRay(samplePosition, renderConstants.rayVector, true)
-        // showDebugRayPosition(samplePosition)
-        if (result) {
-            results.push(result)
-        }
+        const samplePosition = getSamplePosition(rayCFrame, position, settings.resolution);
+        const result = castRay(samplePosition, renderConstants.rayVector, true);
+        if (result) results.push(result);
     }
 
+    // Handle terrain hit
     const terrainHit = getTerrainHit(
         primary,
         rayCenter,
         renderConstants.rayVector,
         new RaycastParams(),
-        settings.terrain
-    ) || primary
+        settings.terrain,
+    ) || primary;
 
-    let color = averageColorSamples(results)
-    color = averageShadeSamples(results, color)
-    color = gammaNormalizeSamples(color)
+    // Compute color
+    let color = averageColorSamples(results);
+    color = averageShadeSamples(results, color);
+    color = gammaNormalizeSamples(color);
 
-    const height = math.floor(
-        ((terrainHit.Position.Y - rayBottom)  / renderConstants.startingPosition.Y) * 255
-    )
+    // Determine groupings
+    const buildingGrouping = findGrouping(settings.buildingGroups, primary, true);
+    const roadGrouping = findGrouping(settings.roadGroups, primary, false);
 
-    let buildingGrouping = 0
-    for (let i = 0; i < settings.buildingGroups.size(); i++) {
-        const grouping = settings.buildingGroups[i]
-        if (grouping.instances) {
-            for (let j = 0; j < grouping.instances?.size(); j++){
-                const item = grouping.instances[j]
-                if (primary.Instance.IsDescendantOf(item)) {
-                    buildingGrouping = i + 1
-                    break
-                }
-            }
-        }
-        if (buildingGrouping !== 0){
-            break
-        }
-        if (grouping.materials) {
-            const idx = grouping.materials.findIndex(x => x === primary.Material)
-            if (idx !== -1) {
-                buildingGrouping = i + 1
-                break
-            }
-        }
-    }
-
-    let roadGrouping = 0
-    for (let i = 0; i < settings.roadGroups.size(); i++) {
-        const grouping = settings.roadGroups[i]
-        if (grouping.instances) {
-            for (let j = 0; j < grouping.instances?.size(); j++){
-                const item = grouping.instances[j]
-                if (primary.Instance.IsDescendantOf(item)) {
-                    roadGrouping = i + 1
-                    break
-                }
-            }
-        }
-        if (roadGrouping !== 0){
-            break
-        }
-        if (grouping.materials) {
-            const idx = grouping.materials.findIndex(x => x === primary.Material)
-            const onlyUseTerrainAndPrimaryIsTerrain = grouping.onlyTerrain ? 
-                primary.Instance.ClassName === "Terrain" :
-                true
-            if (idx !== -1 && onlyUseTerrainAndPrimaryIsTerrain) {
-                roadGrouping = i + 1
-                break
-            }
-        }
-    }
-
+    // Validate material map
     if (!renderConstants.materialMap.get(primary.Material)) {
         warn(
             renderConstants.materialMap,
             primary.Material,
-            renderConstants.materialMap.get(primary.Material)
-        )
+            renderConstants.materialMap.get(primary.Material),
+        );
     }
-
 
     return {
         r: math.floor(color.X * 255),
         g: math.floor(color.Y * 255),
         b: math.floor(color.Z * 255),
-        h: height,
+        h: calculateHeight(terrainHit.Position.Y),
         material: renderConstants.materialMap.get(primary.Material) || 0,
         road: roadGrouping,
         building: buildingGrouping,
-        water: waterHeight
+        water: waterHeight,
+    };
+}
+
+// Helper function to find groupings (buildings, roads, etc.)
+function findGrouping(
+    groups: StructureGrouping[],
+    primary: RaycastResult,
+    allowNonTerrain: boolean,
+): number {
+    for (let i = 0; i < groups.size(); i++) {
+        const group = groups[i];
+
+        // Check instance hierarchy
+        if (group.instances) {
+            for (const item of group.instances) {
+                if (primary.Instance.IsDescendantOf(item)) return i + 1;
+            }
+        }
+
+        // Check materials
+        if (group.materials) {
+            const isMaterialMatch = group.materials.includes(primary.Material);
+            const isTerrainMatch = group.onlyTerrain
+                ? primary.Instance.ClassName === "Terrain"
+                : true;
+
+            if (isMaterialMatch && (allowNonTerrain || isTerrainMatch)) {
+                return i + 1;
+            }
+        }
     }
+    return 0;
 }
 
 function getSamplePosition(rayCenter: CFrame, position: Vector2, resolution: number): Vector3 {

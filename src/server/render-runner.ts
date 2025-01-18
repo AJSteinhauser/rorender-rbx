@@ -76,7 +76,6 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
         split.forEach((chunk,idx) => {
             task.spawn(() => {
                 print('sent ' + tostring(idx), 'size: ' + chunk.size())
-
                 const response = httpService.PostAsync(
                     // "https://us-central1-rorender-38b6b.cloudfunctions.net/uploadRenderChunk",
                     // "http://127.0.0.1:5001/rorender-38b6b/us-central1/uploadRenderChunk",
