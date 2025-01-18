@@ -19,11 +19,9 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
         progressHooks.setCurrentProgress(0)
         progressHooks.setCurrentStatusText("Performing Data Accumulation...")
         const merged = mergeImageBuffersIntoSingleBuffer(output)
-        task.wait()
 
         progressHooks.setCurrentProgress(1/4)
         progressHooks.setCurrentStatusText("Compressing Data [Run Length Encoding]")
-        task.wait()
         const encoded = runLengthEncode(merged)
 
         print(getImageDimensions(renderSettings))
@@ -39,7 +37,6 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
 
         progressHooks.setCurrentProgress(2/4)
         progressHooks.setCurrentStatusText("Compressing Data [Huffman Encoding]")
-        task.wait()
         const frequencyTable = generatePriorityQueue(encoded)
         const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
         const huffmanMap = buildEncodingMap(huffmanTree)
@@ -56,7 +53,6 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
         // header -> tree -> data length -> data
         progressHooks.setCurrentProgress(3/4)
         progressHooks.setCurrentStatusText("Adding Final Encodings...")
-        task.wait()
         const accumulatedBuffer = buffer.create(buffer.len(headerBuffer) + buffer.len(treeBuffer) + 4 + buffer.len(huffmanEncoded.data))
 
         buffer.copy(accumulatedBuffer, 0, headerBuffer, 0, buffer.len(headerBuffer))

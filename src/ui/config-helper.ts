@@ -1,5 +1,4 @@
 const selectionService = game.GetService("Selection")
-
 let loadedRenderRef: ModuleScript | undefined 
 let connections: RBXScriptConnection[] = []
 
@@ -12,7 +11,8 @@ export enum QuickSelect {
 export const getRenderSettingsFromSelection = () => {
     const currentSelection = selectionService.Get()
     if (currentSelection.size() !== 1) {
-        error("Please only select the render settings ModuleScript")
+        warn("Please only select the render settings ModuleScript")
+        return getRandomRenderSettings()
     }
     let settingsModule = currentSelection[0] as ModuleScript
     if (settingsModule.ClassName !== "ModuleScript") {
@@ -22,6 +22,18 @@ export const getRenderSettingsFromSelection = () => {
         }
     }
     loadRender(settingsModule)
+}
+
+const getRandomRenderSettings = () => {
+    const randomSettings = game.Workspace.FindFirstChild("RoRenderSettings") as ModuleScript
+    if (randomSettings) {
+        const [success] = pcall(() => {
+            getElementsFromSettings(randomSettings)
+        })
+        if (success) {
+            loadRender(randomSettings)
+        }
+    }
 }
 
 export const getCurrentRender = () => {

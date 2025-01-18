@@ -13,7 +13,7 @@ export interface ProgressUpdateData {
 
 export interface ProgressUpdateHooks {
     setCurrentProgress: React.Dispatch<React.SetStateAction<number>>
-    setCurrentStatusText: React.Dispatch<React.SetStateAction<string>>
+    setCurrentStatusText: (status: string) => void
     renderComplete: () => void
 }
 
@@ -34,7 +34,10 @@ export function Main() {
 
     const progressUpdateHooks: ProgressUpdateHooks = {
         setCurrentProgress,
-        setCurrentStatusText,
+        setCurrentStatusText: (input: string) => {
+            setCurrentStatusText(input)
+            task.wait()
+        },
         renderComplete
     }
 
