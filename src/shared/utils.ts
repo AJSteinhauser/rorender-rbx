@@ -6,8 +6,8 @@ export const HEADER_DATA_SIZE = 6 // 3 of 2byte u16int values
 
 export function getImageDimensions(settings: Settings): Vector2 {
     return new Vector2(
-        math.floor(settings.mapScale.X * settings.resolution),
-        math.floor(settings.mapScale.Z * settings.resolution),
+        math.floor(settings.mapScale.X / settings.resolution),
+        math.floor(settings.mapScale.Z / settings.resolution),
     )
 }
 

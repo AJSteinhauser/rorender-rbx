@@ -91,7 +91,7 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
                 progressHooks.setCurrentProgress(idx/split.size())
             })
         })
-        progressHooks.setCurrentStatusText("Complete")
+        progressHooks.setCurrentStatusText("Render Complete... Image being loaded on RoRender.com")
         progressHooks.setCurrentProgress(1)
         progressHooks.renderComplete()
     }).catch(e => {

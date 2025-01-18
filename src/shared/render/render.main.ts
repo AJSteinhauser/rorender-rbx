@@ -51,7 +51,7 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
     }
     await Promise.all(allRowsCompleted)
 
-    const output =  combineAllBuffers(calculatedRows, settings)
+    const output = combineAllBuffers(calculatedRows, settings)
     return output
 }
 

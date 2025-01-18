@@ -24,7 +24,7 @@ actor?.BindToMessageParallel(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
         const offset = col
         startTime = delayForScriptExhuastion(startTime)
         const pixel = computePixel(
-            new Vector2(message.row, col),
+            new Vector2(col, message.row),
             message.settings, 
             message.renderConstants
         )
