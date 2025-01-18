@@ -6,13 +6,15 @@ import { getCurrentRender, QuickSelect, QuickSelectModule, unloadRender } from "
 import { Screens } from "ui/constants";
 import { Textarea } from "ui/text-area";
 import uiConstants from "ui/ui-constants";
+import { ProgressUpdateData, ProgressUpdateHooks } from "./main";
 
 function isUUIDv4(input: string): boolean {
     return input.match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89abAB]%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$").size() > 0
 }
 
 export function RenderConfigScreen(props: {
-    changeScreen: (screen: Screens) => void
+    changeScreen: (screen: Screens) => void,
+    progressHooks: ProgressUpdateHooks
 }) {
     const [renderId, setRenderId] = useState<undefined | string>(undefined)
 
@@ -78,11 +80,15 @@ export function RenderConfigScreen(props: {
                 Size={new UDim2(1,0,0,50)}
             >
             </frame>
-
             <Textarea label="Render Id" placeholder="Paste the render id here" size={new UDim2(1,0,0,50)} textChanged={textChanged}/>
             <Button label="Start Render" buttonType={ButtonType.filled} size={new UDim2(1,0,0,30)} clicked={() => {
                 if (validateUUID(renderId)){
-                    runRender(require((getCurrentRender() as ModuleScript).Clone()) as Settings, renderId as string)
+                    props.changeScreen(Screens.Rendering)
+                    runRender(
+                        require((getCurrentRender() as ModuleScript).Clone()) as Settings,
+                        renderId as string,
+                        props.progressHooks
+                    )
                 }
             }}/>
             <Button label="Detach Configuration" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => {

@@ -5,17 +5,25 @@ import { render } from 'shared/render/render.main'
 import { getImageDimensions, HTTPS_BODY_LIMIT, splitImageIntoChunks } from 'shared/utils'
 import { runTests } from 'shared/tests/test-runner'
 import { Settings } from 'shared/settings/settings.model'
+import { ProgressUpdateHooks } from 'ui/screens/main'
 
 const httpService = game.GetService('HttpService')
 
 //runTests()
 
-export const runRender = (renderSettings: Settings, renderId: string) => {
-    render(renderSettings).then(output => {
+export const runRender = (renderSettings: Settings, renderId: string, progressHooks: ProgressUpdateHooks) => {
+    progressHooks.setCurrentStatusText("Rendering Image...")
+    render(renderSettings, progressHooks).then(output => {
         const headerBuffer = writeHeader(getImageDimensions(renderSettings))
 
+        progressHooks.setCurrentProgress(0)
+        progressHooks.setCurrentStatusText("Performing Data Accumulation...")
         const merged = mergeImageBuffersIntoSingleBuffer(output)
+        task.wait()
 
+        progressHooks.setCurrentProgress(1/4)
+        progressHooks.setCurrentStatusText("Compressing Data [Run Length Encoding]")
+        task.wait()
         const encoded = runLengthEncode(merged)
 
         print(getImageDimensions(renderSettings))
@@ -29,6 +37,9 @@ export const runRender = (renderSettings: Settings, renderId: string) => {
         print(string.format("RLE Packets Required: %d", math.ceil(buffer.len(encoded) / HTTPS_BODY_LIMIT)))
         print("\n\n")
 
+        progressHooks.setCurrentProgress(2/4)
+        progressHooks.setCurrentStatusText("Compressing Data [Huffman Encoding]")
+        task.wait()
         const frequencyTable = generatePriorityQueue(encoded)
         const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
         const huffmanMap = buildEncodingMap(huffmanTree)
@@ -43,6 +54,9 @@ export const runRender = (renderSettings: Settings, renderId: string) => {
         const treeBuffer = writeTreeToBuffer(huffmanTree)
 
         // header -> tree -> data length -> data
+        progressHooks.setCurrentProgress(3/4)
+        progressHooks.setCurrentStatusText("Adding Final Encodings...")
+        task.wait()
         const accumulatedBuffer = buffer.create(buffer.len(headerBuffer) + buffer.len(treeBuffer) + 4 + buffer.len(huffmanEncoded.data))
 
         buffer.copy(accumulatedBuffer, 0, headerBuffer, 0, buffer.len(headerBuffer))
@@ -58,9 +72,12 @@ export const runRender = (renderSettings: Settings, renderId: string) => {
 
         const outputData = buffer.tostring(accumulatedBuffer)
         const split = splitImageIntoChunks(outputData)
+        progressHooks.setCurrentProgress(0)
+        progressHooks.setCurrentStatusText("Sending Data to RoRender.com")
         split.forEach((chunk,idx) => {
             task.spawn(() => {
                 print('sent ' + tostring(idx), 'size: ' + chunk.size())
+
                 const response = httpService.PostAsync(
                     // "https://us-central1-rorender-38b6b.cloudfunctions.net/uploadRenderChunk",
                     // "http://127.0.0.1:5001/rorender-38b6b/us-central1/uploadRenderChunk",
@@ -75,9 +92,14 @@ export const runRender = (renderSettings: Settings, renderId: string) => {
                     }
                 )
                 print(response)
+                progressHooks.setCurrentProgress(idx/split.size())
             })
         })
-
-        print(huffmanTree)
-    }).catch(e => error(e))
+        progressHooks.setCurrentStatusText("Complete")
+        progressHooks.setCurrentProgress(1)
+        progressHooks.renderComplete()
+    }).catch(e => {
+        progressHooks.renderComplete()
+        error(e)
+    })
 }

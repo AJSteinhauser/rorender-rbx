@@ -6,9 +6,9 @@ import { WorkerPool } from './actor-pool.handler'
 import { generateBufferChannels } from 'shared/file/file.utils'
 import { delayForScriptExhuastion } from './render.utils'
 import { ActorMessage, COMPUTE_ROW_MESSAGE } from './actor.model'
+import { ProgressUpdateHooks } from 'ui/screens/main'
 
-
-export async function render(settings: Settings): Promise<ImageBuffers> {
+export async function render(settings: Settings, progressHooks: ProgressUpdateHooks): Promise<ImageBuffers> {
     const imageDimensions = getImageDimensions(settings)
     const renderConstants = getRenderConstants(settings, imageDimensions)
 
@@ -37,9 +37,11 @@ export async function render(settings: Settings): Promise<ImageBuffers> {
                 pool.releaseActor(actor)
                 finishedRows++
                 const currentCompletion = finishedRows / imageDimensions.Y
-                if (currentCompletion - lastRowPrinted > 0.01) {
-                    print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
+                if (currentCompletion - lastRowPrinted > 0.03) {
+                    //print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
+                    progressHooks.setCurrentProgress(finishedRows / imageDimensions.Y)
                     lastRowPrinted = currentCompletion
+                    task.wait(.05)
                 }
                 resolve()
             })

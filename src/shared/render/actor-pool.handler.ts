@@ -29,6 +29,7 @@ export class WorkerPool {
         this.actorPoolIntialized = true
         this.pool = script.Parent?.Parent?.Parent?.FindFirstChild("actorPool")?.GetChildren() as Actor[]
     }
+
     getActor = (renderSettings: Settings): Promise<Actor> => {
         if (!this.actorPoolIntialized) {
             this.initializeActors(renderSettings)
@@ -47,5 +48,4 @@ export class WorkerPool {
         this.pool.push(actor)
         this.actorAddedBackToPool.Fire()
     }
-
 }
