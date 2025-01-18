@@ -13,6 +13,7 @@ const httpService = game.GetService('HttpService')
 
 export const runRender = (renderSettings: Settings, renderId: string, progressHooks: ProgressUpdateHooks) => {
     progressHooks.setCurrentStatusText("Rendering Image...")
+    task.wait(.5)
     render(renderSettings, progressHooks).then(output => {
         const headerBuffer = writeHeader(getImageDimensions(renderSettings))
 
@@ -70,6 +71,8 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
         const split = splitImageIntoChunks(outputData)
         progressHooks.setCurrentProgress(0)
         progressHooks.setCurrentStatusText("Sending Data to RoRender.com")
+
+        let chunksSent = 0
         split.forEach((chunk,idx) => {
             task.spawn(() => {
                 print('sent ' + tostring(idx), 'size: ' + chunk.size())
@@ -87,13 +90,14 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
                         pipelineId: renderId
                     }
                 )
-                print(response)
-                progressHooks.setCurrentProgress(idx/split.size())
+                chunksSent++
+                progressHooks.setCurrentProgress(chunksSent/split.size())
+                if (chunksSent === split.size()) {
+                    progressHooks.setCurrentStatusText("Render Complete...")
+                    progressHooks.renderComplete()
+                }
             })
         })
-        progressHooks.setCurrentStatusText("Render Complete... Image being loaded on RoRender.com")
-        progressHooks.setCurrentProgress(1)
-        progressHooks.renderComplete()
     }).catch(e => {
         progressHooks.renderComplete()
         error(e)
