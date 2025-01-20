@@ -9,9 +9,6 @@ const TERRAIN = game.Workspace.Terrain
 
 const DELAY_TIME = 3 
 
-const SHADOW_MAX_OFFSET = 5
-const SHADOW_MAX_DARKNESS = .3
-
 const SUN_POSITION = LIGHTING.GetSunDirection()
 
 const rand = new Random()
@@ -141,7 +138,7 @@ function applyShadowsSamples(samples: RaycastResult[], color: Vector3, settings:
         checkSunShadow(sample, settings) ? acc + 1 : acc
     , 0)
 
-    const shadowDarkness = ((occludedSamples / samples.size()) * SHADOW_MAX_DARKNESS)
+    const shadowDarkness = ((occludedSamples / samples.size()) * settings.shadows.darkness)
     return color.mul(1 - shadowDarkness)
 }
 
@@ -166,27 +163,9 @@ function castRay(
 }
 
 function checkSunShadow(hit: RaycastResult, settings: Settings): boolean {
-    let direction = sampleFromCone(settings.shadows.sunDirection, 15)
+    let direction = settings.shadows.sunDirection // Multiple samples at different positions act as shadow sample offsettings
     const occluded = castRay(hit.Position, direction.mul(3000))
     return !!occluded
-}
-
-function sampleFromCone(unitVector: Vector3, angleDegrees: number) {
-    const angleRadians = math.rad(angleDegrees)
-
-    const z = math.cos(angleRadians) + (1 - math.cos(angleRadians)) * rand.NextNumber()
-    const theta = rand.NextNumber() * 2 * math.pi
-    const r = math.sqrt(1 - z * z)
-
-    const localX = r * math.cos(theta)
-    const localY = r * math.sin(theta)
-    const localZ = z
-    const localPoint = new Vector3(localX, localY, localZ)
-
-    const baseCFrame = CFrame.fromMatrix(Vector3.zero, unitVector, new Vector3(0, 1, 0).Cross(unitVector).Unit)
-    const rotatedPoint = baseCFrame.mul(localPoint)
-
-    return rotatedPoint
 }
 
 function getTerrainHit(RaycastResult: RaycastResult, rayPosition: Vector3, rayVector: Vector3, terrain: Instance[] = [game.Workspace.Terrain]):  RaycastResult | undefined {

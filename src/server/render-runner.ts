@@ -2,7 +2,7 @@ import { buildEncodingMap, buildTreeFromFrequencyTable, generatePriorityQueue, h
 import {  runLengthEncode } from 'shared/compression/run-length/run-length-encoding.compression'
 import { mergeImageBuffersIntoSingleBuffer, writeHeader } from 'shared/file/file.utils'
 import { render } from 'shared/render/render.main'
-import { getImageDimensions, HTTPS_BODY_LIMIT, splitImageIntoChunks } from 'shared/utils'
+import { ensureImageLessThanMaxSize, getImageDimensions, HTTPS_BODY_LIMIT, splitImageIntoChunks } from 'shared/utils'
 import { runTests } from 'shared/tests/test-runner'
 import { Settings } from 'shared/settings/settings.model'
 import { ProgressUpdateHooks } from 'ui/screens/main'
@@ -12,6 +12,7 @@ const httpService = game.GetService('HttpService')
 //runTests()
 
 export const runRender = (renderSettings: Settings, renderId: string, progressHooks: ProgressUpdateHooks) => {
+    ensureImageLessThanMaxSize(renderSettings)
     progressHooks.setCurrentStatusText("Rendering Image...")
     progressHooks.setCurrentProgress(0)
     task.wait(.5)
@@ -78,8 +79,6 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
             task.spawn(() => {
                 print('sent ' + tostring(idx), 'size: ' + chunk.size())
                 const response = httpService.PostAsync(
-                    // "https://us-central1-rorender-38b6b.cloudfunctions.net/uploadRenderChunk",
-                    // "http://127.0.0.1:5001/rorender-38b6b/us-central1/uploadRenderChunk",
                     "https://uploadrenderchunk-izsda2emzq-uc.a.run.app",
                     chunk,
                     Enum.HttpContentType.TextPlain,

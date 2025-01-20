@@ -12,6 +12,7 @@ export type Settings = {
     shadows: {
         enabled: boolean,
         sunDirection: Vector3,
+        darkness: number
     }
 }
 
@@ -55,5 +56,6 @@ return {
     shadows = {
         enabled = false, -- I reccomend leaving shadows off, IMHO they make your map worse and take a long time to calculate.
         sunDirection = game:GetService("Lighting"):GetSunDirection(),
+        darkness = .3 -- Percentage value (Areas in shadow are x% darker)
     }
 } :: Settings

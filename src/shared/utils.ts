@@ -26,3 +26,12 @@ export function splitImageIntoChunks(image: string, chunkSize: number = HTTPS_BO
 export function color3ToVector3(color: Color3): Vector3 {
     return new Vector3(color.R, color.G, color.B)
 }
+
+export function ensureImageLessThanMaxSize(settings: Settings) {
+    const imageSize = getImageDimensions(settings)
+    const bytesPerChannel = imageSize.X * imageSize.Y * 8
+    if (bytesPerChannel * 8 > 1073741824) {
+        warn("Current max image size is 1GB, or 11,585px x 11,585px. If your use case requires a larger image, please make a feature request at rorender.com/support. In the meantime consider tiling your map into smaller chunks to achieve desired resolution.")
+        throw "Image too large"
+    }
+}

@@ -9,6 +9,7 @@ export interface Settings {
     shadows: {
         enabled: boolean
         sunDirection: Vector3
+        darkness: number
     }
 }
 
