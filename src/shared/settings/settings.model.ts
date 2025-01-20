@@ -6,6 +6,10 @@ export interface Settings {
     buildingGroups: StructureGrouping[]
     roadGroups: StructureGrouping[]
     samples: number
+    shadows: {
+        enabled: boolean
+        sunDirection: Vector3
+    }
 }
 
 

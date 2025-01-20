@@ -9,6 +9,10 @@ export type Settings = {
     mapScale: Vector3,
     mapCFrame: CFrame,
     resolution: number,
+    shadows: {
+        enabled: boolean,
+        sunDirection: Vector3,
+    }
 }
 
 export type StructureGrouping = {
@@ -47,5 +51,9 @@ return {
             materials = {}
         }
     },
-    samples = 1,
+    samples = 5,
+    shadows = {
+        enabled = false, -- I reccomend leaving shadows off, IMHO they make your map worse and take a long time to calculate.
+        sunDirection = game:GetService("Lighting"):GetSunDirection(),
+    }
 } :: Settings

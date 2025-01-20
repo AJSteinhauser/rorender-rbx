@@ -13,6 +13,7 @@ const httpService = game.GetService('HttpService')
 
 export const runRender = (renderSettings: Settings, renderId: string, progressHooks: ProgressUpdateHooks) => {
     progressHooks.setCurrentStatusText("Rendering Image...")
+    progressHooks.setCurrentProgress(0)
     task.wait(.5)
     render(renderSettings, progressHooks).then(output => {
         const headerBuffer = writeHeader(getImageDimensions(renderSettings))

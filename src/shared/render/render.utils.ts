@@ -2,11 +2,15 @@ import { Settings, StructureGrouping } from 'shared/settings/settings.model'
 import { Pixel, RenderConstants } from './render.model'
 import { color3ToVector3 } from 'shared/utils'
 import { render } from './render.main'
+import runLenghSpec from 'shared/compression/run-length/run-lengh.spec'
 
 const LIGHTING = game.GetService('Lighting')
 const TERRAIN = game.Workspace.Terrain
 
 const DELAY_TIME = 3 
+
+const SHADOW_MAX_OFFSET = 5
+const SHADOW_MAX_DARKNESS = .3
 
 const SUN_POSITION = LIGHTING.GetSunDirection()
 
@@ -16,7 +20,6 @@ const castParams = new RaycastParams()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
 castParams.FilterDescendantsInstances = []
 
-const MAP_STRUCTURES = game.Workspace.FindFirstChild("Structures")
 
 export function computePixel(
     position: Vector2,
@@ -29,6 +32,7 @@ export function computePixel(
     const rayCFrame = renderConstants.startingPosition.mul(new CFrame(xOffset, 0, zOffset));
     const rayCenter = rayCFrame.Position;
     const results: RaycastResult[] = [];
+
     let waterHeight = 0; // Default to no water
     const rayBottom = renderConstants.startingPosition.Y - renderConstants.rayLength;
 
@@ -53,7 +57,9 @@ export function computePixel(
     for (let i = 1; i < settings.samples; i++) {
         const samplePosition = getSamplePosition(rayCFrame, position, settings.resolution);
         const result = castRay(samplePosition, renderConstants.rayVector, true);
-        if (result) results.push(result);
+        if (result) {
+            results.push(result);
+        }
     }
 
     // Handle terrain hit
@@ -61,14 +67,18 @@ export function computePixel(
         primary,
         rayCenter,
         renderConstants.rayVector,
-        new RaycastParams(),
         settings.terrain,
     ) || primary;
+
+
 
     // Compute color
     let color = averageColorSamples(results);
     color = averageShadeSamples(results, color);
     color = gammaNormalizeSamples(color);
+    if (settings.shadows.enabled) {
+        color = applyShadowsSamples(results, color, settings)
+    }
 
     // Determine groupings
     const buildingGrouping = findGrouping(settings.buildingGroups, primary, true);
@@ -126,6 +136,15 @@ function findGrouping(
     return 0;
 }
 
+function applyShadowsSamples(samples: RaycastResult[], color: Vector3, settings: Settings): Vector3 {
+    const occludedSamples = samples.reduce((acc, sample) => 
+        checkSunShadow(sample, settings) ? acc + 1 : acc
+    , 0)
+
+    const shadowDarkness = ((occludedSamples / samples.size()) * SHADOW_MAX_DARKNESS)
+    return color.mul(1 - shadowDarkness)
+}
+
 function getSamplePosition(rayCenter: CFrame, position: Vector2, resolution: number): Vector3 {
     const randomOffset = new CFrame(
         (rand.NextNumber() - .5) * resolution,
@@ -146,34 +165,40 @@ function castRay(
     return game.Workspace.Raycast(rayPosition, rayVector, rayParams)
 }
 
-function findHighestAncestorThatDoesNotShareParent(
-    instance: Instance,
-    terrain: Instance[]
-): Instance | undefined {
-    if (terrain.some(terrainItem => instance.Parent && instance.Parent.IsAncestorOf(terrainItem))) {
-        return instance
-    }
-    if (instance.Parent) {
-        return findHighestAncestorThatDoesNotShareParent(instance.Parent, terrain)
-    }
-    return undefined
+function checkSunShadow(hit: RaycastResult, settings: Settings): boolean {
+    let direction = sampleFromCone(settings.shadows.sunDirection, 15)
+    const occluded = castRay(hit.Position, direction.mul(3000))
+    return !!occluded
 }
 
-function getTerrainHit(RaycastResult: RaycastResult, rayPosition: Vector3, rayVector: Vector3, castParams: RaycastParams, terrain: Instance[] = [game.Workspace.Terrain]):  RaycastResult | undefined {
+function sampleFromCone(unitVector: Vector3, angleDegrees: number) {
+    const angleRadians = math.rad(angleDegrees)
+
+    const z = math.cos(angleRadians) + (1 - math.cos(angleRadians)) * rand.NextNumber()
+    const theta = rand.NextNumber() * 2 * math.pi
+    const r = math.sqrt(1 - z * z)
+
+    const localX = r * math.cos(theta)
+    const localY = r * math.sin(theta)
+    const localZ = z
+    const localPoint = new Vector3(localX, localY, localZ)
+
+    const baseCFrame = CFrame.fromMatrix(Vector3.zero, unitVector, new Vector3(0, 1, 0).Cross(unitVector).Unit)
+    const rotatedPoint = baseCFrame.mul(localPoint)
+
+    return rotatedPoint
+}
+
+function getTerrainHit(RaycastResult: RaycastResult, rayPosition: Vector3, rayVector: Vector3, terrain: Instance[] = [game.Workspace.Terrain]):  RaycastResult | undefined {
     if (terrain.find((terrain: Instance) => RaycastResult.Instance === terrain)) {
         return RaycastResult
     }
-    const result = castRay(rayPosition, rayVector, true, castParams)
-    if (result) {
-        const highestNonCommonAncestor = findHighestAncestorThatDoesNotShareParent(result.Instance, terrain)
-        if (!highestNonCommonAncestor) {
-            return 
-        }
-        castParams.AddToFilter(highestNonCommonAncestor)
-        castParams.FilterType = Enum.RaycastFilterType.Exclude
-        return getTerrainHit(result, rayPosition, rayVector, castParams, terrain)
-    }
-    return 
+    const params = new RaycastParams()
+    params.FilterType = Enum.RaycastFilterType.Include
+    params.AddToFilter(terrain)
+
+    const result = castRay(rayPosition, rayVector, true, params)
+    return result
 }
 
 function getColorFromResult(result: RaycastResult): Vector3 {
@@ -223,13 +248,15 @@ function gammaNormalizeSamples(samples: Vector3): Vector3 {
     return new Vector3(samples.X ** gammeNormalize, samples.Y ** gammeNormalize, samples.Z ** gammeNormalize)
 }
 
-function showDebugRayPosition(position: Vector3) {
+function showDebugRayPosition(position: Vector3): Part {
     const part = new Instance('Part')
     part.Anchored = true
     part.CFrame = new CFrame(position)
     part.Color = new Color3(1, 0, 0)
     part.Size = new Vector3(1, 1, 1)
-    part.Parent = game.Workspace
+    part.Parent = game.Workspace.Terrain
+
+    return part
 } 
 
 function averageShadeSamples(rayCastResults: RaycastResult[], inputColor: Vector3): Vector3 {

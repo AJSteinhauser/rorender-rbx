@@ -4,7 +4,7 @@ import { getImageDimensions } from 'shared/utils'
 import { ImageBuffers } from 'shared/file/file.modal'
 import { WorkerPool } from './actor-pool.handler'
 import { generateBufferChannels } from 'shared/file/file.utils'
-import { delayForScriptExhuastion } from './render.utils'
+import { computePixel, delayForScriptExhuastion } from './render.utils'
 import { ActorMessage, COMPUTE_ROW_MESSAGE } from './actor.model'
 import { ProgressUpdateHooks } from 'ui/screens/main'
 
@@ -48,6 +48,9 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
             actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
         })
         allRowsCompleted.push(rowCompleted)
+        //for (let col = 0; col < imageDimensions.X; col++) {
+        //    computePixel(new Vector2(col, row),settings, renderConstants)
+        //}
     }
     await Promise.all(allRowsCompleted)
 
