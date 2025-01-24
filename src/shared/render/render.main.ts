@@ -68,14 +68,16 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
     const texturePixels = new Map<Vector2, Pixel>()
 
     progressHooks.setCurrentStatusText("Computing Mesh Textures...") 
-    meshCalculation.forEach((position, idx) => {
+    progressHooks.setCurrentProgress(0)
+    for (let i = 0; i < meshCalculation.size(); i++) {
+        const position = meshCalculation[i]
         startTime = delayForScriptExhuastion(startTime)
-        const pixel = computePixel(position, settings, renderConstants, meshPixels, false)
+        const pixel = await computePixel(position, settings, renderConstants, meshPixels, false)
         if (pixel) {
             texturePixels.set(position, pixel)
         }
-        progressHooks.setCurrentProgress(idx / meshCalculation.size())
-    })
+        progressHooks.setCurrentProgress(i / meshCalculation.size())
+    }
 
     progressHooks.setCurrentProgress(0)
     progressHooks.setCurrentStatusText("Splicing Mesh Textures...") 

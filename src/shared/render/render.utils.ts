@@ -1,6 +1,7 @@
 import { Settings, StructureGrouping } from 'shared/settings/settings.model'
 import { ActorHelperRequest, Pixel, RenderConstants } from './render.model'
 import { color3ToVector3 } from 'shared/utils'
+import { getEditableImage, getEditableMesh } from './editable-cache'
 
 const LIGHTING = game.GetService('Lighting')
 const ASSET_SERVICE = game.GetService('AssetService')
@@ -8,6 +9,7 @@ const ASSET_SERVICE = game.GetService('AssetService')
 const TERRAIN = game.Workspace.Terrain
 
 const DELAY_TIME = 3 
+const MAX_EDITABLE_ATTEMPT = 3
 
 const SUN_POSITION = LIGHTING.GetSunDirection()
 
@@ -17,16 +19,13 @@ const castParams = new RaycastParams()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
 castParams.FilterDescendantsInstances = []
 
-const meshCacheStore: Map<MeshPart, EditableMesh> = new Map<MeshPart, EditableMesh>()
-const imageCacheStore: Map<string, EditableImage> = new Map<string, EditableImage>()
-
-export function computePixel(
+export async function computePixel(
     position: Vector2,
     settings: Settings,
     renderConstants: RenderConstants,
     texturedMesh: BindableEvent,
     isParallel: boolean
-): Pixel | undefined {
+): Promise<Pixel | undefined> {
     const xOffset = position.X * settings.resolution;
     const zOffset = position.Y * settings.resolution;
 
@@ -45,7 +44,7 @@ export function computePixel(
     let primary = castRay(rayCenter, renderConstants.rayVector);
     if (!primary) return;
     if (isParallel) {
-        if (primary.Instance.IsA("MeshPart") && primary.Instance.TextureID) {
+        if (primary.Instance.IsA("MeshPart") && !!primary.Instance.TextureID) {
             texturedMesh.Fire(position)
             return
         }
@@ -85,7 +84,7 @@ export function computePixel(
     ) || primary;
 
     // Compute color
-    let color = averageColorSamples(results);
+    let color = await averageColorSamples(results);
     color = averageShadeSamples(results, color);
     color = gammaNormalizeSamples(color);
     if (settings.shadows.enabled) {
@@ -194,27 +193,10 @@ function getTerrainHit(RaycastResult: RaycastResult, rayPosition: Vector3, rayVe
     return result
 }
 
-function getEditableMeshFromPart(part: MeshPart, cachedMeshs: Map<MeshPart, EditableMesh> = meshCacheStore): EditableMesh {
-    if (cachedMeshs.has(part)){
-        return cachedMeshs.get(part) as EditableMesh
-    }
-    const mesh = ASSET_SERVICE.CreateEditableMeshAsync(part.MeshId)
-    cachedMeshs.set(part, mesh)
-    return mesh
-}
-
-function getEditableTextureFromId(assetId: string, cachedImages: Map<string, EditableImage> = imageCacheStore): EditableImage {
-    if (cachedImages.has(assetId)){
-        return cachedImages.get(assetId) as EditableImage
-    }
-    const image = ASSET_SERVICE.CreateEditableImageAsync(assetId)
-    cachedImages.set(assetId, image)
-    return image
-}
 
 let testing = false
 
-function getColorFromMesh(result: RaycastResult): Vector3 {
+async function getColorFromMesh(result: RaycastResult): Promise<Vector3> {
     if (!(result.Instance as MeshPart).TextureID) {
         return color3ToVector3(result.Instance.Color)
     }
@@ -223,8 +205,8 @@ function getColorFromMesh(result: RaycastResult): Vector3 {
     let editableImage: EditableImage | undefined = undefined
 
     try {
-        editableMesh = getEditableMeshFromPart(result.Instance as MeshPart)
-        editableImage = getEditableTextureFromId((result.Instance as MeshPart).TextureID)
+        editableMesh = await getEditableMesh((result.Instance as MeshPart).MeshId)
+        editableImage = await getEditableImage((result.Instance as MeshPart).TextureID)
 
         const mesh = editableMesh as EditableMesh
         const image = editableImage as EditableImage
@@ -232,7 +214,7 @@ function getColorFromMesh(result: RaycastResult): Vector3 {
         const scale = (result.Instance as MeshPart).MeshSize.div(result.Instance.Size)
         const relativePoint = result.Instance.CFrame.PointToObjectSpace(result.Position).mul(scale)
 
-        const [faceId, surfacePoint, baryCoordinates] = mesh.FindClosestPointOnSurface(relativePoint)
+        const [faceId, _surfacePoint, baryCoordinates] = mesh.FindClosestPointOnSurface(relativePoint)
         const uvs: number[] = mesh.GetFaceUVs(faceId) as number[]
         const uvCoordinates = uvs.map(x => (mesh.GetUV(x) as Vector2))
 
@@ -256,10 +238,10 @@ function getColorFromMesh(result: RaycastResult): Vector3 {
     }
 }
 
-function getColorFromResult(result: RaycastResult): Vector3 {
+async function getColorFromResult(result: RaycastResult): Promise<Vector3> {
     if (result.Instance !== game.Workspace.Terrain) {
         if (result.Instance.IsA("MeshPart")) {
-            return getColorFromMesh(result)
+            return await getColorFromMesh(result)
         }
         else {
             return color3ToVector3(result.Instance.Color)
@@ -295,11 +277,13 @@ function convertVector3LinearToSrgb(vector: Vector3): Vector3 {
     return new Vector3(linearToSrgb(vector.X), linearToSrgb(vector.Y), linearToSrgb(vector.Z))
 }
 
-function averageColorSamples(rayCastResults: RaycastResult[]): Vector3 {
+async function averageColorSamples(rayCastResults: RaycastResult[]): Promise<Vector3> {
     let color = new Vector3(0, 0, 0)
-    rayCastResults.forEach((result: RaycastResult) => {
-        color = color.add(convertVector3SrgbToLinear(getColorFromResult(result)))
-    })
+
+    for (const result of rayCastResults) {
+        const sampleColor = await getColorFromResult(result); // Await works here
+        color = color.add(convertVector3SrgbToLinear(sampleColor));
+    }
     return convertVector3LinearToSrgb(color.div(rayCastResults.size()))
 }
 
