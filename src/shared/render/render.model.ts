@@ -17,3 +17,13 @@ export interface RenderConstants {
     materialMap: Map<Enum.Material, number>
 }
 
+export enum ActorHelperRequest{
+    editableMesh,
+    editableImage
+}
+
+export interface ActorHelperRequestPayload {
+    meshPart: MeshPart
+    assetId: string
+}
+

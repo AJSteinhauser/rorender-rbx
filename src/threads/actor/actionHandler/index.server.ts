@@ -14,6 +14,8 @@ if (!rowCalculatedEvent) {
     throw "rowCalculated event not found"
 }
 
+const actorHelperRequest = script.Parent?.Parent?.FindFirstChild("meshPixel") as BindableEvent
+
 actor?.BindToMessageParallel(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
     let startTime = tick()
     const imageDimensions = getImageDimensions(message.settings)
@@ -26,7 +28,9 @@ actor?.BindToMessageParallel(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
         const pixel = computePixel(
             new Vector2(col, message.row),
             message.settings, 
-            message.renderConstants
+            message.renderConstants,
+            actorHelperRequest,
+            true
         )
         if (pixel) {
             writePixelToImageBuffer(offset, pixel, imageData)

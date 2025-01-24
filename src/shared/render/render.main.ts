@@ -1,5 +1,5 @@
 import { Settings } from 'shared/settings/settings.model'
-import { RenderConstants } from './render.model'
+import { Pixel, RenderConstants } from './render.model'
 import { getImageDimensions } from 'shared/utils'
 import { ImageBuffers } from 'shared/file/file.modal'
 import { WorkerPool } from './actor-pool.handler'
@@ -7,6 +7,8 @@ import { generateBufferChannels } from 'shared/file/file.utils'
 import { computePixel, delayForScriptExhuastion } from './render.utils'
 import { ActorMessage, COMPUTE_ROW_MESSAGE } from './actor.model'
 import { ProgressUpdateHooks } from 'ui/screens/main'
+
+const meshPixels = script.Parent?.Parent?.Parent?.FindFirstChild("threads")?.FindFirstChild("meshPixel") as BindableEvent
 
 export async function render(settings: Settings, progressHooks: ProgressUpdateHooks): Promise<ImageBuffers> {
     const imageDimensions = getImageDimensions(settings)
@@ -20,6 +22,11 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
     let startTime = tick()
     let finishedRows = 0
     let lastRowPrinted = 0
+
+    const meshCalculation: Vector2[] = []
+    const meshPixelsConnection = meshPixels.Event.Connect((position: Vector2) => {
+        meshCalculation.push(position)
+    })
     for (let row = 0; row < imageDimensions.Y; row++) {
         startTime = delayForScriptExhuastion(startTime)
         const actorMessage: ActorMessage = {
@@ -54,8 +61,40 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
     }
     await Promise.all(allRowsCompleted)
 
+    pool.cleanup()
+    meshPixelsConnection.Disconnect()
     const output = combineAllBuffers(calculatedRows, settings)
+
+    const texturePixels = new Map<Vector2, Pixel>()
+
+    progressHooks.setCurrentStatusText("Computing Mesh Textures...") 
+    meshCalculation.forEach((position, idx) => {
+        startTime = delayForScriptExhuastion(startTime)
+        const pixel = computePixel(position, settings, renderConstants, meshPixels, false)
+        if (pixel) {
+            texturePixels.set(position, pixel)
+        }
+        progressHooks.setCurrentProgress(idx / meshCalculation.size())
+    })
+
+    progressHooks.setCurrentProgress(0)
+    progressHooks.setCurrentStatusText("Splicing Mesh Textures...") 
+    spliceTexturedPixelsIn(output, texturePixels, imageDimensions)
     return output
+}
+
+export function spliceTexturedPixelsIn(buffers: ImageBuffers, texturedPixels: Map<Vector2, Pixel>, imageSize: Vector2) {
+    texturedPixels.forEach((pixel, key) => {
+        const bufferPosition = key.X + imageSize.X * key.Y
+        buffer.writeu8(buffers.red, bufferPosition, pixel.r)
+        buffer.writeu8(buffers.green, bufferPosition, pixel.g)
+        buffer.writeu8(buffers.blue, bufferPosition, pixel.b)
+        buffer.writeu8(buffers.height, bufferPosition, pixel.h)
+        buffer.writeu8(buffers.material, bufferPosition, pixel.material)
+        buffer.writeu8(buffers.roads, bufferPosition, pixel.road)
+        buffer.writeu8(buffers.buildings, bufferPosition, pixel.building)
+        buffer.writeu8(buffers.water, bufferPosition, pixel.water)
+    })
 }
 
 export function getRenderMaterialMap(): Map<Enum.Material, number> {

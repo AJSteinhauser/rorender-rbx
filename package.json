@@ -21,6 +21,7 @@
     "@rbxts/react": "^17.2.3",
     "@rbxts/react-roblox": "^17.2.3",
     "@rbxts/testez": "^0.4.2-ts.0",
-    "npm": "^11.0.0"
+    "npm": "^11.0.0",
+    "rbxts-transformer-services": "^1.1.1"
   }
 }

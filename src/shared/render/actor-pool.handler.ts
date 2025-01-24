@@ -27,7 +27,12 @@ export class WorkerPool {
             return
         }
         this.actorPoolIntialized = true
-        this.pool = script.Parent?.Parent?.Parent?.FindFirstChild("actorPool")?.GetChildren() as Actor[]
+        const actor = script.Parent?.Parent?.Parent?.FindFirstChild("threads")?.FindFirstChild("actor") as Actor
+        for (let i = 0; i < 50; i++) {
+            const clone = actor.Clone()
+            clone.Parent = actor.Parent
+            this.pool.push(clone)
+        }
     }
 
     getActor = (renderSettings: Settings): Promise<Actor> => {
@@ -47,5 +52,10 @@ export class WorkerPool {
     releaseActor = (actor: Actor) => {
         this.pool.push(actor)
         this.actorAddedBackToPool.Fire()
+    }
+
+    cleanup = () => {
+        this.pool.forEach(actor => actor.Destroy())
+        this.pool = []
     }
 }

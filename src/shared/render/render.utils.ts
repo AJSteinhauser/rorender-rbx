@@ -1,10 +1,10 @@
 import { Settings, StructureGrouping } from 'shared/settings/settings.model'
-import { Pixel, RenderConstants } from './render.model'
+import { ActorHelperRequest, Pixel, RenderConstants } from './render.model'
 import { color3ToVector3 } from 'shared/utils'
-import { render } from './render.main'
-import runLenghSpec from 'shared/compression/run-length/run-lengh.spec'
 
 const LIGHTING = game.GetService('Lighting')
+const ASSET_SERVICE = game.GetService('AssetService')
+
 const TERRAIN = game.Workspace.Terrain
 
 const DELAY_TIME = 3 
@@ -17,11 +17,15 @@ const castParams = new RaycastParams()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
 castParams.FilterDescendantsInstances = []
 
+const meshCacheStore: Map<MeshPart, EditableMesh> = new Map<MeshPart, EditableMesh>()
+const imageCacheStore: Map<string, EditableImage> = new Map<string, EditableImage>()
 
 export function computePixel(
     position: Vector2,
     settings: Settings,
     renderConstants: RenderConstants,
+    texturedMesh: BindableEvent,
+    isParallel: boolean
 ): Pixel | undefined {
     const xOffset = position.X * settings.resolution;
     const zOffset = position.Y * settings.resolution;
@@ -40,6 +44,12 @@ export function computePixel(
     // Initial raycast
     let primary = castRay(rayCenter, renderConstants.rayVector);
     if (!primary) return;
+    if (isParallel) {
+        if (primary.Instance.IsA("MeshPart") && primary.Instance.TextureID) {
+            texturedMesh.Fire(position)
+            return
+        }
+    }
 
     // Handle water material
     if (primary.Material === Enum.Material.Water) {
@@ -59,6 +69,13 @@ export function computePixel(
         }
     }
 
+    if (isParallel) {
+        if (results.some(x => x.Instance.IsA("MeshPart") && !!x.Instance.TextureID)) {
+            texturedMesh.Fire(position)
+            return
+        }
+    }
+
     // Handle terrain hit
     const terrainHit = getTerrainHit(
         primary,
@@ -66,8 +83,6 @@ export function computePixel(
         renderConstants.rayVector,
         settings.terrain,
     ) || primary;
-
-
 
     // Compute color
     let color = averageColorSamples(results);
@@ -151,7 +166,6 @@ function getSamplePosition(rayCenter: CFrame, position: Vector2, resolution: num
     return randomOffset.mul(rayCenter).Position
 }
 
-
 function castRay(
     rayPosition: Vector3, 
     rayVector: Vector3,
@@ -180,9 +194,76 @@ function getTerrainHit(RaycastResult: RaycastResult, rayPosition: Vector3, rayVe
     return result
 }
 
+function getEditableMeshFromPart(part: MeshPart, cachedMeshs: Map<MeshPart, EditableMesh> = meshCacheStore): EditableMesh {
+    if (cachedMeshs.has(part)){
+        return cachedMeshs.get(part) as EditableMesh
+    }
+    const mesh = ASSET_SERVICE.CreateEditableMeshAsync(part.MeshId)
+    cachedMeshs.set(part, mesh)
+    return mesh
+}
+
+function getEditableTextureFromId(assetId: string, cachedImages: Map<string, EditableImage> = imageCacheStore): EditableImage {
+    if (cachedImages.has(assetId)){
+        return cachedImages.get(assetId) as EditableImage
+    }
+    const image = ASSET_SERVICE.CreateEditableImageAsync(assetId)
+    cachedImages.set(assetId, image)
+    return image
+}
+
+let testing = false
+
+function getColorFromMesh(result: RaycastResult): Vector3 {
+    if (!(result.Instance as MeshPart).TextureID) {
+        return color3ToVector3(result.Instance.Color)
+    }
+
+    let editableMesh: EditableMesh | undefined = undefined
+    let editableImage: EditableImage | undefined = undefined
+
+    try {
+        editableMesh = getEditableMeshFromPart(result.Instance as MeshPart)
+        editableImage = getEditableTextureFromId((result.Instance as MeshPart).TextureID)
+
+        const mesh = editableMesh as EditableMesh
+        const image = editableImage as EditableImage
+
+        const scale = (result.Instance as MeshPart).MeshSize.div(result.Instance.Size)
+        const relativePoint = result.Instance.CFrame.PointToObjectSpace(result.Position).mul(scale)
+
+        const [faceId, surfacePoint, baryCoordinates] = mesh.FindClosestPointOnSurface(relativePoint)
+        const uvs: number[] = mesh.GetFaceUVs(faceId) as number[]
+        const uvCoordinates = uvs.map(x => (mesh.GetUV(x) as Vector2))
+
+        const u = baryCoordinates.X * uvCoordinates[0]?.X + baryCoordinates.Y * uvCoordinates[1]?.X + baryCoordinates.Z * uvCoordinates[2]?.X
+        const v = baryCoordinates.X * uvCoordinates[0]?.Y + baryCoordinates.Y * uvCoordinates[1]?.Y + baryCoordinates.Z * uvCoordinates[2]?.Y 
+
+        const samplePoint = new Vector2(math.floor(u * image.Size.X),math.floor(v * image.Size.Y))
+        const colorBuf = image.ReadPixelsBuffer(samplePoint, new Vector2(1,1))
+
+        const color = Color3.fromRGB(
+            buffer.readu8(colorBuf,0),
+            buffer.readu8(colorBuf,1),
+            buffer.readu8(colorBuf,2),
+        )
+
+        return color3ToVector3(color)
+
+    }
+    catch {
+        return color3ToVector3(result.Instance.Color)
+    }
+}
+
 function getColorFromResult(result: RaycastResult): Vector3 {
     if (result.Instance !== game.Workspace.Terrain) {
-        return color3ToVector3(result.Instance.Color)
+        if (result.Instance.IsA("MeshPart")) {
+            return getColorFromMesh(result)
+        }
+        else {
+            return color3ToVector3(result.Instance.Color)
+        }
     }
     if (result.Material === Enum.Material.Water) {
         return color3ToVector3(TERRAIN.WaterColor)

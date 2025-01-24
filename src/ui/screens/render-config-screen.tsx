@@ -2,7 +2,7 @@ import React, { useState } from "@rbxts/react";
 import { runRender } from "server/render-runner";
 import { Settings } from "shared/settings/settings.model";
 import { Button, ButtonType } from "ui/button";
-import { getCurrentRender, QuickSelect, QuickSelectModule, unloadRender } from "ui/config-helper";
+import { autoConfigureRenderBox, getCurrentRender, QuickSelect, QuickSelectModule, unloadRender } from "ui/config-helper";
 import { Screens } from "ui/constants";
 import { Textarea } from "ui/text-area";
 import uiConstants from "ui/ui-constants";
@@ -53,7 +53,7 @@ export function RenderConfigScreen(props: {
             />
             <frame
                 BackgroundTransparency={1}
-                Size={new UDim2(1,0,0,70)}
+                Size={new UDim2(1,0,0,90)}
             >
                 <uilistlayout
                     HorizontalAlignment={Enum.HorizontalAlignment.Center}
@@ -74,6 +74,7 @@ export function RenderConfigScreen(props: {
                     <Button label="C1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C1)} />
                 </frame>
                 <Button label="Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => QuickSelectModule(QuickSelect.Module)} />
+                <Button label="Auto Configure" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => autoConfigureRenderBox()} />
             </frame>
             <frame
                 BackgroundTransparency={1}

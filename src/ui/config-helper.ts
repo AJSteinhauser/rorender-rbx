@@ -36,6 +36,23 @@ const getRandomRenderSettings = () => {
     }
 }
 
+export const autoConfigureRenderBox = () => {
+    const settings = getCurrentRender()
+    if (!settings) {
+        error("Must be in configuration mode to configure a box")
+    }
+    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
+    const [position, scale] = game.Workspace.GetBoundingBox()
+
+    const c0offset = scale.mul(new Vector3(-.5, .5, -.5))
+    const c1offset = scale.mul(new Vector3(.5, -.5, .5))
+    c0.CFrame = position.mul(new CFrame(c0offset))
+    c1.CFrame = position.mul(new CFrame(c1offset))
+
+    center.CFrame = position
+    mesh.Scale = scale
+}
+
 export const getCurrentRender = () => {
     return loadedRenderRef
 }
