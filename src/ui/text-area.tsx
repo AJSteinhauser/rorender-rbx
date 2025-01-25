@@ -51,7 +51,7 @@ export function Textarea(props: {
                     TextTruncate={Enum.TextTruncate.AtEnd}
                     Text={""}
                     Event={{
-                        InputEnded: (changed, text) => {
+                        InputChanged: (changed, text) => {
                             props.textChanged(changed.Text)
                         }
                     }}

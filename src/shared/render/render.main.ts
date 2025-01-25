@@ -44,11 +44,11 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
                 pool.releaseActor(actor)
                 finishedRows++
                 const currentCompletion = finishedRows / imageDimensions.Y
-                if (currentCompletion - lastRowPrinted > 0.03) {
+                if (currentCompletion - lastRowPrinted > 0.05) {
                     //print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
                     progressHooks.setCurrentProgress(finishedRows / imageDimensions.Y)
-                    lastRowPrinted = currentCompletion
                     task.wait(.05)
+                    lastRowPrinted = currentCompletion
                 }
                 resolve()
             })

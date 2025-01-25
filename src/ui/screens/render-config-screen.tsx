@@ -2,7 +2,7 @@ import React, { useState } from "@rbxts/react";
 import { runRender } from "server/render-runner";
 import { Settings } from "shared/settings/settings.model";
 import { Button, ButtonType } from "ui/button";
-import { autoConfigureRenderBox, getCurrentRender, QuickSelect, QuickSelectModule, unloadRender } from "ui/config-helper";
+import { autoConfigureBoundingBox, getCurrentRender, QuickSelect, QuickSelectModule, unloadRender } from "ui/config-helper";
 import { Screens } from "ui/constants";
 import { Textarea } from "ui/text-area";
 import uiConstants from "ui/ui-constants";
@@ -15,6 +15,7 @@ function isUUIDv4(input: string): boolean {
 export function RenderConfigScreen(props: {
     changeScreen: (screen: Screens) => void,
     progressHooks: ProgressUpdateHooks
+    errorOccured: (message: string) => void
 }) {
     const [renderId, setRenderId] = useState<undefined | string>(undefined)
 
@@ -53,7 +54,7 @@ export function RenderConfigScreen(props: {
             />
             <frame
                 BackgroundTransparency={1}
-                Size={new UDim2(1,0,0,90)}
+                Size={new UDim2(1,0,0,110)}
             >
                 <uilistlayout
                     HorizontalAlignment={Enum.HorizontalAlignment.Center}
@@ -74,11 +75,11 @@ export function RenderConfigScreen(props: {
                     <Button label="C1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C1)} />
                 </frame>
                 <Button label="Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => QuickSelectModule(QuickSelect.Module)} />
-                <Button label="Auto Configure" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => autoConfigureRenderBox()} />
+                <Button label="Auto Configure" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => autoConfigureBoundingBox()} />
             </frame>
             <frame
                 BackgroundTransparency={1}
-                Size={new UDim2(1,0,0,50)}
+                Size={new UDim2(1,0,0,5)}
             >
             </frame>
             <Textarea label="Render Id" placeholder="Paste the render id here" size={new UDim2(1,0,0,50)} textChanged={textChanged}/>
@@ -90,6 +91,10 @@ export function RenderConfigScreen(props: {
                         renderId as string,
                         props.progressHooks
                     )
+                }
+                else {
+                    props.errorOccured(`${renderId} is not a valid UUID. Use the copy button to ensure the entire UUID is copied into your clipboard.`)
+
                 }
             }}/>
             <Button label="Detach Configuration" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => {

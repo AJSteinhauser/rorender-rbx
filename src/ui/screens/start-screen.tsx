@@ -10,6 +10,7 @@ const selectionService = game.GetService("Selection")
 
 export function StartScreen(props: {
     changeScreen: (screen: Screens) => void
+    errorMessage: (message: string) => void
 }) {
     const createSettingsModule = () => {
         const settings = renderSettings.Clone()
@@ -44,8 +45,13 @@ export function StartScreen(props: {
             }}/>
             <Button label="Load Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() =>{
                 try {
-                    getRenderSettingsFromSelection()
-                    props.changeScreen(Screens.Configuration)
+                    const success = getRenderSettingsFromSelection()
+                    if (success){ 
+                        props.changeScreen(Screens.Configuration)
+                    }
+                    else {
+                        props.errorMessage("No configuration found (in the workspace). Consider creating a new RenderSettings Module or manually selecting the SettingsModule")
+                    }
                 }
                 catch(exception) {
                 }

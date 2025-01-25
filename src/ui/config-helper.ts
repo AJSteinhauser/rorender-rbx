@@ -8,10 +8,10 @@ export enum QuickSelect {
     Module
 }
 
-export const getRenderSettingsFromSelection = () => {
+export const getRenderSettingsFromSelection = (): boolean => {
     const currentSelection = selectionService.Get()
     if (currentSelection.size() !== 1) {
-        warn("Please only select the render settings ModuleScript")
+        warn("Attempting to guess random configuration in workspace")
         return getRandomRenderSettings()
     }
     let settingsModule = currentSelection[0] as ModuleScript
@@ -22,9 +22,10 @@ export const getRenderSettingsFromSelection = () => {
         }
     }
     loadRender(settingsModule)
+    return true
 }
 
-const getRandomRenderSettings = () => {
+const getRandomRenderSettings = (): boolean => {
     const randomSettings = game.Workspace.FindFirstChild("RoRenderSettings") as ModuleScript
     if (randomSettings) {
         const [success] = pcall(() => {
@@ -32,25 +33,10 @@ const getRandomRenderSettings = () => {
         })
         if (success) {
             loadRender(randomSettings)
+            return true
         }
     }
-}
-
-export const autoConfigureRenderBox = () => {
-    const settings = getCurrentRender()
-    if (!settings) {
-        error("Must be in configuration mode to configure a box")
-    }
-    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
-    const [position, scale] = game.Workspace.GetBoundingBox()
-
-    const c0offset = scale.mul(new Vector3(-.5, .5, -.5))
-    const c1offset = scale.mul(new Vector3(.5, -.5, .5))
-    c0.CFrame = position.mul(new CFrame(c0offset))
-    c1.CFrame = position.mul(new CFrame(c1offset))
-
-    center.CFrame = position
-    mesh.Scale = scale
+    return false
 }
 
 export const getCurrentRender = () => {
@@ -135,4 +121,53 @@ export const updateBoxFromHandles = (settings: ModuleScript) => {
     )
 
     center.Position = (c0.Position.add(c1.Position)).mul(.5) 
+}
+
+export function autoConfigureBoundingBox(){
+    const settings = getCurrentRender()
+    if (!settings) {
+        error("No settings module loaded")
+    }
+    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
+
+    let min = new Vector3(math.huge,math.huge,math.huge)
+    let max = new Vector3(-math.huge,-math.huge,-math.huge)
+
+    const workspaceObjects = game.Workspace.GetDescendants()
+
+    workspaceObjects.forEach(object => {
+        if (!object.IsA("BasePart") || object.IsA("Terrain")){
+            return
+        }
+        if (object.Transparency >= 1 || object.IsDescendantOf(settings)) {
+            return
+        }
+
+		const c0 = (object.CFrame.mul(object.Size.div(2)));
+		const c1 = (object.CFrame.mul(object.Size.div(-2)));
+
+
+		max = new Vector3(
+			math.max(max.X, c0.X, c1.X),
+			math.max(max.Y, c0.Y, c1.Y),
+			math.max(max.Z, c0.Z, c1.Z)
+		);
+
+		min = new Vector3(
+			math.min(min.X, c0.X, c1.X),
+			math.min(min.Y, c0.Y, c1.Y),
+			math.min(min.Z, c0.Z, c1.Z)
+		);
+    })
+
+    let centerPos: CFrame = new CFrame()
+    let size: Vector3 = new Vector3()
+
+	if (min.X !== math.huge) {
+        centerPos = new CFrame(((max.add(min)).div(2)))
+        size = (max.sub(min)).add(new Vector3(0,2,0))
+    }
+
+    c0.CFrame = centerPos.mul(new CFrame(size.div(-2)))
+    c1.CFrame = centerPos.mul(new CFrame(size.div(2)))
 }

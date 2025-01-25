@@ -4,6 +4,7 @@ import { RenderConfigScreen } from "./render-config-screen";
 import { Screens } from "ui/constants";
 import uiConstants from "ui/ui-constants";
 import { RenderProgressScreen } from "./rendering-progress-screen";
+import { ErrorScreen } from "./error-screen";
 
 
 export interface ProgressUpdateData {
@@ -15,6 +16,7 @@ export interface ProgressUpdateHooks {
     setCurrentProgress: React.Dispatch<React.SetStateAction<number>>
     setCurrentStatusText: (status: string) => void
     renderComplete: () => void
+    errorOccured: (errMsg: string) => void
 }
 
 export function Main() {
@@ -26,10 +28,16 @@ export function Main() {
 
     const [currentProgess, setCurrentProgress] = useState(0);
     const [currentStatusText, setCurrentStatusText] = useState("");
+    const [currentErrorText, setCurrentErrorText] = useState("");
 
     const renderComplete = () => {
         task.wait(5)
         changeScreen(Screens.Configuration)
+    }
+
+    const errorOccured = (errMsg: string) => {
+        changeScreen(Screens.Error)
+        setCurrentErrorText(errMsg)
     }
 
     const progressUpdateHooks: ProgressUpdateHooks = {
@@ -38,7 +46,8 @@ export function Main() {
             setCurrentStatusText(input)
             task.wait()
         },
-        renderComplete
+        renderComplete,
+        errorOccured
     }
 
     const progressUpdateData: ProgressUpdateData = {
@@ -49,11 +58,13 @@ export function Main() {
     const renderedScreen = () => {
         switch(selectedScreen){
             case Screens.Home:
-                return <StartScreen changeScreen={changeScreen} />
+                return <StartScreen changeScreen={changeScreen} errorMessage={errorOccured} />
             case Screens.Configuration:
-                return <RenderConfigScreen changeScreen={changeScreen} progressHooks={progressUpdateHooks} />
+                return <RenderConfigScreen changeScreen={changeScreen} progressHooks={progressUpdateHooks} errorOccured={errorOccured}/>
             case Screens.Rendering:
                 return <RenderProgressScreen changeScreen={changeScreen} progressData={progressUpdateData} />
+            case Screens.Error:
+                return <ErrorScreen changeScreen={changeScreen} errorText={currentErrorText} />
         }
     }
 

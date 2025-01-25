@@ -8,6 +8,7 @@ export default {
     groundColor: Color3.fromHex("#111827"),
     cardColor: Color3.fromHex("#1f2937"),
     borderColor: Color3.fromHex("#4b5563"),
+    errorText: Color3.fromHex("#f87171"),
     backgroundAccentColor: Color3.fromHex("#1f2937"),
 
 

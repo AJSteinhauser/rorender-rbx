@@ -6,6 +6,7 @@ import { ensureImageLessThanMaxSize, getImageDimensions, HTTPS_BODY_LIMIT, split
 import { runTests } from 'shared/tests/test-runner'
 import { Settings } from 'shared/settings/settings.model'
 import { ProgressUpdateHooks } from 'ui/screens/main'
+import { object } from '@rbxts/react/src/prop-types'
 
 const httpService = game.GetService('HttpService')
 
@@ -75,30 +76,40 @@ export const runRender = (renderSettings: Settings, renderId: string, progressHo
         progressHooks.setCurrentStatusText("Sending Data to RoRender.com")
 
         let chunksSent = 0
+        const promises: Promise<void>[] = []
         split.forEach((chunk,idx) => {
-            task.spawn(() => {
+            promises.push(new Promise<void>((success, failure) => {
                 print('sent ' + tostring(idx), 'size: ' + chunk.size())
-                const response = httpService.PostAsync(
-                    "https://uploadrenderchunk-izsda2emzq-uc.a.run.app",
-                    chunk,
-                    Enum.HttpContentType.TextPlain,
-                    false,
-                    {
-                        chunkId: tostring(idx),
-                        totalChunks: tostring(split.size()),
-                        pipelineId: renderId
-                    }
-                )
-                chunksSent++
-                progressHooks.setCurrentProgress(chunksSent/split.size())
-                if (chunksSent === split.size()) {
-                    progressHooks.setCurrentStatusText("Render Complete...")
-                    progressHooks.renderComplete()
+                const [httpSuccess, errorMsg] = pcall(() => {
+                    const response = httpService.PostAsync(
+                        "https://uploadrenderchunk-izsda2emzq-uc.a.run.app",
+                        chunk,
+                        Enum.HttpContentType.TextPlain,
+                        false,
+                        {
+                            chunkId: tostring(idx),
+                            totalChunks: tostring(split.size()),
+                            pipelineId: renderId
+                        }
+                    )
+                })
+                if (httpSuccess) {
+                    chunksSent++
+                    progressHooks.setCurrentProgress(chunksSent/split.size())
+                    success()
                 }
-            })
+                else {
+                    failure(errorMsg)
+                }
+            }))
+        })
+        Promise.all(promises).then(_ => {
+            progressHooks.setCurrentStatusText("Render Complete...")
+            progressHooks.renderComplete()
+        }).catch(e => {
+            progressHooks.errorOccured(tostring(e))
         })
     }).catch(e => {
-        progressHooks.renderComplete()
-        error(e)
+        progressHooks.errorOccured(tostring(e))
     })
 }
