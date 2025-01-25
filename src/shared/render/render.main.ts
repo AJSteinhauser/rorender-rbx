@@ -69,10 +69,11 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
 
     progressHooks.setCurrentStatusText("Computing Mesh Textures...") 
     progressHooks.setCurrentProgress(0)
+    print("Total mesh calculations", meshCalculation.size())
     for (let i = 0; i < meshCalculation.size(); i++) {
         const position = meshCalculation[i]
         startTime = delayForScriptExhuastion(startTime)
-        const pixel = await computePixel(position, settings, renderConstants, meshPixels, false)
+        const pixel = computePixel(position, settings, renderConstants, meshPixels, false)
         if (pixel) {
             texturePixels.set(position, pixel)
         }
