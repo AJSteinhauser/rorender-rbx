@@ -16,11 +16,13 @@ if (!rowCalculatedEvent) {
 
 const actorHelperRequest = script.Parent?.Parent?.FindFirstChild("meshPixel") as BindableEvent
 
-actor?.BindToMessageParallel(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
+actor?.BindToMessage(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
     let startTime = tick()
     const imageDimensions = getImageDimensions(message.settings)
     const imageData = generateBufferChannels(message.settings, true)
     message.renderConstants.materialMap = getRenderMaterialMap() // Update material map to actually use enum instead of stringified versions
+
+    const textureSpots: Vector2[] = []
 
     for (let col = 0; col < imageDimensions.X; col++) {
         const offset = col
@@ -29,12 +31,17 @@ actor?.BindToMessageParallel(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
             new Vector2(col, message.row),
             message.settings, 
             message.renderConstants,
-            actorHelperRequest,
             true
         )
         if (pixel) {
-            writePixelToImageBuffer(offset, pixel, imageData)
+            if (pixel === 'texture') {
+                textureSpots.push(new Vector2(col, message.row))
+            }
+            else {
+                writePixelToImageBuffer(offset, pixel, imageData)
+            }
         }
     }
+    actorHelperRequest.Fire(textureSpots)
     rowCalculatedEvent.Fire(imageData)
 })

@@ -27,7 +27,7 @@ export function ErrorScreen(props: {
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
                 Text={"Error"}
-                Size={new UDim2(1,0,0,35)}
+                Size={new UDim2(1,0,0,40)}
                 TextScaled={true}
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(.5, .5)}

@@ -20,9 +20,8 @@ export function computePixel(
     position: Vector2,
     settings: Settings,
     renderConstants: RenderConstants,
-    texturedMesh: BindableEvent,
     isParallel: boolean
-): Pixel | undefined {
+): Pixel | "texture" | undefined {
     const xOffset = position.X * settings.resolution;
     const zOffset = position.Y * settings.resolution;
 
@@ -42,8 +41,7 @@ export function computePixel(
     if (!primary) return;
     if (isParallel) {
         if (primary.Instance.IsA("MeshPart") && !!primary.Instance.TextureID) {
-            texturedMesh.Fire(position)
-            return
+            return "texture"
         }
     }
 
@@ -67,8 +65,7 @@ export function computePixel(
 
     if (isParallel) {
         if (results.some(x => x.Instance.IsA("MeshPart") && !!x.Instance.TextureID)) {
-            texturedMesh.Fire(position)
-            return
+            return "texture"
         }
     }
 

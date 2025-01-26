@@ -13,7 +13,13 @@ const httpService = game.GetService('HttpService')
 //runTests()
 
 export const runRender = (renderSettings: Settings, renderId: string, progressHooks: ProgressUpdateHooks) => {
-    ensureImageLessThanMaxSize(renderSettings)
+    try {
+        ensureImageLessThanMaxSize(renderSettings)
+    }
+    catch (e: any) {
+        progressHooks.errorOccured(e)
+        return
+    }
     progressHooks.setCurrentStatusText("Rendering Image...")
     progressHooks.setCurrentProgress(0)
     task.wait(.5)
