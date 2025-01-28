@@ -1,41 +1,20 @@
 {
-    "name": "roblox-ts-game",
-    "globIgnorePaths": ["**/package.json", "**/tsconfig.json"],
+    "name": "rorender/plugin",
+    "globIgnorePaths": [
+        "**/package.json",
+        "**/tsconfig.json"
+    ],
     "tree": {
-        "$className": "DataModel",
-        "ServerScriptService": {
-            "$className": "ServerScriptService",
-            "TS": {
-                "$path": "out/server"
-            }
-        },
-        "ReplicatedStorage": {
-            "$className": "ReplicatedStorage",
-            "rbxts_include": {
-                "$path": "include",
-                "node_modules": {
-                    "$className": "Folder",
-                    "@rbxts": {
-                        "$path": "node_modules/@rbxts"
-                    }
+        "$path": "out",
+        "rbxts_include": {
+            "$path": "include",
+            "node_modules": {
+                "$className": "Folder",
+                "@rbxts": {
+                    "$path": "node_modules/@rbxts"
                 }
-            },
-            "TS": {
-                "$path": "out/shared"
-            },
-            "TemplateActor": {
-                "$className": "Actor",
-                "$path": "out/actor",
-                "rowCalculated": {
-                    "$className": "BindableEvent"
-                }
-            }
-        },
-        "HttpService": {
-            "$className": "HttpService",
-            "$properties": {
-                "HttpEnabled": true
             }
         }
     }
 }
+

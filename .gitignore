@@ -1,8 +1,2 @@
-/node_modules
-/out
-*.tsbuildinfo
-catch-output/bin
-catch-output/lib
-catch-output/include
-catch-output/output_dir
-*DS_Store
+out/*
+node_modules/*

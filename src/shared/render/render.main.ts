@@ -1,14 +1,16 @@
 import { Settings } from 'shared/settings/settings.model'
-import { RenderConstants } from './render.model'
+import { Pixel, RenderConstants } from './render.model'
 import { getImageDimensions } from 'shared/utils'
 import { ImageBuffers } from 'shared/file/file.modal'
-import { ActorMessage, COMPUTE_ROW_MESSAGE } from 'actor/actor.model'
 import { WorkerPool } from './actor-pool.handler'
 import { generateBufferChannels } from 'shared/file/file.utils'
-import { delayForScriptExhuastion } from './render.utils'
+import { computePixel, delayForScriptExhuastion } from './render.utils'
+import { ActorMessage, COMPUTE_ROW_MESSAGE } from './actor.model'
+import { ProgressUpdateHooks } from 'ui/screens/main'
 
+const meshPixels = script.Parent?.Parent?.Parent?.FindFirstChild("threads")?.FindFirstChild("meshPixel") as BindableEvent
 
-export async function render(settings: Settings): Promise<ImageBuffers> {
+export async function render(settings: Settings, progressHooks: ProgressUpdateHooks): Promise<ImageBuffers> {
     const imageDimensions = getImageDimensions(settings)
     const renderConstants = getRenderConstants(settings, imageDimensions)
 
@@ -20,6 +22,14 @@ export async function render(settings: Settings): Promise<ImageBuffers> {
     let startTime = tick()
     let finishedRows = 0
     let lastRowPrinted = 0
+
+    const meshCalculation: Vector2[] = []
+    let counter = 0
+    const meshPixelsConnection = meshPixels.Event.Connect((positions: Vector2[]) => {
+        counter++
+        positions.forEach(pos => meshCalculation.push(pos))
+    })
+    task.wait(1) // Allow time for actors to initalize and message recievers to bind to actor parent 
     for (let row = 0; row < imageDimensions.Y; row++) {
         startTime = delayForScriptExhuastion(startTime)
         const actorMessage: ActorMessage = {
@@ -34,11 +44,13 @@ export async function render(settings: Settings): Promise<ImageBuffers> {
                 startTime = delayForScriptExhuastion(startTime)
                 calculatedRows[row] = data
                 binding.Disconnect()
-                pool.cleanupActor(actor)
+                pool.releaseActor(actor)
                 finishedRows++
                 const currentCompletion = finishedRows / imageDimensions.Y
-                if (currentCompletion - lastRowPrinted > 0.01) {
-                    print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
+                if (currentCompletion - lastRowPrinted > 0.05) {
+                    //print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
+                    progressHooks.setCurrentProgress(finishedRows / imageDimensions.Y)
+                    task.wait(.05)
                     lastRowPrinted = currentCompletion
                 }
                 resolve()
@@ -46,11 +58,48 @@ export async function render(settings: Settings): Promise<ImageBuffers> {
             actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
         })
         allRowsCompleted.push(rowCompleted)
+        //for (let col = 0; col < imageDimensions.X; col++) {
+        //    computePixel(new Vector2(col, row),settings, renderConstants)
+        //}
     }
     await Promise.all(allRowsCompleted)
+    print(counter, "total pixels to be texture counted")
 
-    const output =  combineAllBuffers(calculatedRows, settings)
+    pool.cleanup()
+    meshPixelsConnection.Disconnect()
+    const output = combineAllBuffers(calculatedRows, settings)
+
+
+    progressHooks.setCurrentStatusText("Computing Mesh Textures...") 
+    progressHooks.setCurrentProgress(0)
+    print("Total mesh calculations", meshCalculation.size())
+    for (let i = 0; i < meshCalculation.size(); i++) {
+        const position = meshCalculation[i]
+        startTime = delayForScriptExhuastion(startTime)
+        const pixel = computePixel(position, settings, renderConstants, false)
+        if (pixel && pixel !== "texture") {
+            spliceTexturedPixelsIn(output, pixel, position, imageDimensions)
+        }
+        if (i % 30 === 0) {
+            progressHooks.setCurrentProgress(i / meshCalculation.size())
+        }
+    }
+
+    progressHooks.setCurrentProgress(0)
+    progressHooks.setCurrentStatusText("Splicing Mesh Textures...") 
     return output
+}
+
+export function spliceTexturedPixelsIn(buffers: ImageBuffers, pixel: Pixel, position: Vector2, imageSize: Vector2) {
+        const bufferPosition = position.X + imageSize.X * position.Y
+        buffer.writeu8(buffers.red, bufferPosition, pixel.r)
+        buffer.writeu8(buffers.green, bufferPosition, pixel.g)
+        buffer.writeu8(buffers.blue, bufferPosition, pixel.b)
+        buffer.writeu8(buffers.height, bufferPosition, pixel.h)
+        buffer.writeu8(buffers.material, bufferPosition, pixel.material)
+        buffer.writeu8(buffers.roads, bufferPosition, pixel.road)
+        buffer.writeu8(buffers.buildings, bufferPosition, pixel.building)
+        buffer.writeu8(buffers.water, bufferPosition, pixel.water)
 }
 
 export function getRenderMaterialMap(): Map<Enum.Material, number> {
@@ -81,21 +130,20 @@ function combineAllBuffers(buffs: ImageBuffers[], settings: Settings): ImageBuff
 }
 
 function getRenderConstants(settings: Settings, imageDimensions: Vector2): RenderConstants {
-    const rayLength = math.abs(settings.corners.topRight.Y - settings.corners.bottomLeft.Y)
-
-    const rayBottom = settings.corners.topRight.Y - rayLength
-    const normalizedRayTop = settings.corners.topRight.Y - rayBottom
+    const rayLength = settings.mapScale.Y
 
     const materialMap = getRenderMaterialMap()
 
+    const mapScale = settings.mapScale
+    const mapCFrame = settings.mapCFrame
+
+    const offset = mapScale.mul(new Vector3(-.5, .5, -.5))
+
     return {
+        startingPosition: mapCFrame.mul(new CFrame(offset)),
         rayLength,
         imageDimensions,
-        xSpacing: math.abs(settings.corners.bottomLeft.X - settings.corners.topRight.X) / imageDimensions.X,
-        ySpacing: math.abs(settings.corners.bottomLeft.Z - settings.corners.topRight.Z) / imageDimensions.Y,
-        rayVector: new Vector3(0, -1, 0).mul(rayLength),
-        rayBottom,
-        normalizedRayTop,
+        rayVector: settings.mapCFrame.UpVector.mul(-1).mul(rayLength),
         materialMap,
     }
 }

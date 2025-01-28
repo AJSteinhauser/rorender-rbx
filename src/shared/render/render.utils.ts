@@ -1,6 +1,7 @@
-import { Settings } from 'shared/settings/settings.model'
-import { Pixel, RenderConstants } from './render.model'
+import { Settings, StructureGrouping } from 'shared/settings/settings.model'
+import { ActorHelperRequest, Pixel, RenderConstants } from './render.model'
 import { color3ToVector3 } from 'shared/utils'
+import { getEditableImage, getEditableMesh } from './editable-cache'
 
 const LIGHTING = game.GetService('Lighting')
 const TERRAIN = game.Workspace.Terrain
@@ -11,173 +12,231 @@ const SUN_POSITION = LIGHTING.GetSunDirection()
 
 const rand = new Random()
 
-
 const castParams = new RaycastParams()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
 castParams.FilterDescendantsInstances = []
-
-const MAP_STRUCTURES = game.Workspace.FindFirstChild("Structures")
 
 export function computePixel(
     position: Vector2,
     settings: Settings,
     renderConstants: RenderConstants,
-): Pixel | undefined {
-    const xPos = renderConstants.xSpacing * position.X + settings.corners.topRight.X
-    const zPos = renderConstants.ySpacing * position.Y + settings.corners.topRight.Z
+    isParallel: boolean
+): Pixel | "texture" | undefined {
+    const xOffset = position.X * settings.resolution;
+    const zOffset = position.Y * settings.resolution;
 
-    const rayCenter = new Vector3(xPos, settings.corners.topRight.Y, zPos)
-    const results: RaycastResult[] = []
-    const shadowSamples: Vector3[] = []
+    const rayCFrame = renderConstants.startingPosition.mul(new CFrame(xOffset, 0, zOffset));
+    const rayCenter = rayCFrame.Position;
+    const results: RaycastResult[] = [];
 
-    let waterHeight = 0 //Water height of 0 assumes there is no water
-    
-    let primary = castRay(rayCenter, renderConstants.rayVector)
-    if (!primary) {
-        return
+    let waterHeight = 0; // Default to no water
+    const rayBottom = renderConstants.startingPosition.Y - renderConstants.rayLength;
+
+    // Helper function to compute height
+    const calculateHeight = (y: number) =>
+        math.floor(((y - rayBottom) / renderConstants.startingPosition.Y) * 255);
+
+    // Initial raycast
+    let primary = castRay(rayCenter, renderConstants.rayVector);
+    if (!primary) return;
+    if (isParallel) {
+        if (primary.Instance.IsA("MeshPart") && !!primary.Instance.TextureID) {
+            return "texture"
+        }
     }
+
+    // Handle water material
     if (primary.Material === Enum.Material.Water) {
-        waterHeight = math.max(1,
-            math.floor((primary.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
-        )
-        primary = castRay(rayCenter, renderConstants.rayVector, true)
-
-        if (!primary) {
-            // showDebugRayPosition(rayCenter.add(renderConstants.rayVector))
-            return
-        }
+        waterHeight = calculateHeight(primary.Position.Y);
+        primary = castRay(rayCenter, renderConstants.rayVector, true);
+        if (!primary) return;
     }
 
-    results.push(primary)
+    results.push(primary);
 
+    // Collect additional samples
     for (let i = 1; i < settings.samples; i++) {
-        const samplePosition = getSamplePosition(rayCenter, renderConstants)
-        const result = castRay(samplePosition, renderConstants.rayVector, true)
-        // showDebugRayPosition(samplePosition)
+        const samplePosition = getSamplePosition(rayCFrame, position, settings.resolution);
+        const result = castRay(samplePosition, renderConstants.rayVector, true);
         if (result) {
-            results.push(result)
+            results.push(result);
         }
     }
 
-    const terrainHit = getTerrainHit(primary,rayCenter, renderConstants.rayVector, new RaycastParams()) || primary
-
-    let color = averageColorSamples(results)
-    color = averageShadeSamples(results, color)
-    color = gammaNormalizeSamples(color)
-
-    const height = math.floor((terrainHit.Position.Y - renderConstants.rayBottom) / renderConstants.normalizedRayTop * 255)
-
-    let buildingGrouping = 0
-    for (let i = 0; i < settings.buildingGroups.size(); i++) {
-        const grouping = settings.buildingGroups[i]
-        if (grouping.instances) {
-            for (let j = 0; j < grouping.instances?.size(); j++){
-                const item = grouping.instances[j]
-                if (primary.Instance.IsDescendantOf(item)) {
-                    buildingGrouping = i + 1
-                    break
-                }
-            }
-        }
-        if (buildingGrouping !== 0){
-            break
-        }
-        if (grouping.materials) {
-            const idx = grouping.materials.findIndex(x => x === primary.Material)
-            if (idx !== -1) {
-                buildingGrouping = i + 1
-                break
-            }
+    if (isParallel) {
+        if (results.some(x => x.Instance.IsA("MeshPart") && !!x.Instance.TextureID)) {
+            return "texture"
         }
     }
 
-    let roadGrouping = 0
-    for (let i = 0; i < settings.roadGroups.size(); i++) {
-        const grouping = settings.roadGroups[i]
-        if (grouping.instances) {
-            for (let j = 0; j < grouping.instances?.size(); j++){
-                const item = grouping.instances[j]
-                if (primary.Instance.IsDescendantOf(item)) {
-                    roadGrouping = i + 1
-                    break
-                }
-            }
-        }
-        if (roadGrouping !== 0){
-            break
-        }
-        if (grouping.materials) {
-            const idx = grouping.materials.findIndex(x => x === primary.Material)
-            const onlyUseTerrainAndPrimaryIsTerrain = grouping.onlyTerrain ? primary.Instance.ClassName === "Terrain" : true
-            if (idx !== -1 && onlyUseTerrainAndPrimaryIsTerrain) {
-                roadGrouping = i + 1
-                break
-            }
-        }
+    // Handle terrain hit
+    const terrainHit = getTerrainHit(
+        primary,
+        rayCenter,
+        renderConstants.rayVector,
+        settings.terrain,
+    ) || primary;
+
+    // Compute color
+    let color = averageColorSamples(results);
+    color = averageShadeSamples(results, color);
+    color = gammaNormalizeSamples(color);
+    if (settings.shadows.enabled) {
+        color = applyShadowsSamples(results, color, settings)
     }
 
+    // Determine groupings
+    const buildingGrouping = findGrouping(settings.buildingGroups, primary, true);
+    const roadGrouping = findGrouping(settings.roadGroups, primary, false);
+
+    // Validate material map
     if (!renderConstants.materialMap.get(primary.Material)) {
-        print(renderConstants.materialMap, primary.Material, renderConstants.materialMap.get(primary.Material))
+        warn(
+            renderConstants.materialMap,
+            primary.Material,
+            renderConstants.materialMap.get(primary.Material),
+        );
     }
-
 
     return {
         r: math.floor(color.X * 255),
         g: math.floor(color.Y * 255),
         b: math.floor(color.Z * 255),
-        h: height,
+        h: calculateHeight(terrainHit.Position.Y),
         material: renderConstants.materialMap.get(primary.Material) || 0,
         road: roadGrouping,
         building: buildingGrouping,
-        water: waterHeight
+        water: waterHeight,
+    };
+}
+
+// Helper function to find groupings (buildings, roads, etc.)
+function findGrouping(
+    groups: StructureGrouping[],
+    primary: RaycastResult,
+    allowNonTerrain: boolean,
+): number {
+    for (let i = 0; i < groups.size(); i++) {
+        const group = groups[i];
+
+        // Check instance hierarchy
+        if (group.instances) {
+            for (const item of group.instances) {
+                if (primary.Instance.IsDescendantOf(item)) return i + 1;
+            }
+        }
+
+        // Check materials
+        if (group.materials) {
+            const isMaterialMatch = group.materials.includes(primary.Material);
+            const isTerrainMatch = group.onlyTerrain
+                ? primary.Instance.ClassName === "Terrain"
+                : true;
+
+            if (isMaterialMatch && (allowNonTerrain || isTerrainMatch)) {
+                return i + 1;
+            }
+        }
     }
+    return 0;
 }
 
-function getSamplePosition(rayCenter: Vector3, renderConstants: RenderConstants): Vector3 {
-    const randomOffset = new Vector3(
-        rand.NextNumber() * renderConstants.xSpacing - renderConstants.xSpacing / 2,
+function applyShadowsSamples(samples: RaycastResult[], color: Vector3, settings: Settings): Vector3 {
+    const occludedSamples = samples.reduce((acc, sample) => 
+        checkSunShadow(sample, settings) ? acc + 1 : acc
+    , 0)
+
+    const shadowDarkness = ((occludedSamples / samples.size()) * settings.shadows.darkness)
+    return color.mul(1 - shadowDarkness)
+}
+
+function getSamplePosition(rayCenter: CFrame, position: Vector2, resolution: number): Vector3 {
+    const randomOffset = new CFrame(
+        (rand.NextNumber() - .5) * resolution,
         0,
-        rand.NextNumber() * renderConstants.ySpacing - renderConstants.ySpacing / 2
+        (rand.NextNumber() - .5) * resolution,
     )
-    return randomOffset.add(rayCenter)
+    return randomOffset.mul(rayCenter).Position
 }
 
-
-function castRay(rayPosition: Vector3, rayVector: Vector3, ignoreWater: boolean = false, rayParams: RaycastParams = castParams): RaycastResult | undefined {
+function castRay(
+    rayPosition: Vector3, 
+    rayVector: Vector3,
+    ignoreWater: boolean = false,
+    rayParams: RaycastParams = castParams
+): RaycastResult | undefined {
     rayParams.IgnoreWater = ignoreWater
     return game.Workspace.Raycast(rayPosition, rayVector, rayParams)
 }
 
-function findHighestAncestorThatDoesNotShareParent(instance: Instance, terrain: Instance[]): Instance | undefined {
-    if (terrain.some(terrainItem => instance.Parent && instance.Parent.IsAncestorOf(terrainItem))) {
-        return instance
-    }
-    if (instance.Parent) {
-        return findHighestAncestorThatDoesNotShareParent(instance.Parent, terrain)
-    }
-    return undefined
+function checkSunShadow(hit: RaycastResult, settings: Settings): boolean {
+    let direction = settings.shadows.sunDirection // Multiple samples at different positions act as shadow sample offsettings
+    const occluded = castRay(hit.Position, direction.mul(3000))
+    return !!occluded
 }
 
-function getTerrainHit(RaycastResult: RaycastResult, rayPosition: Vector3, rayVector: Vector3, castParams: RaycastParams, terrain: Instance[] = [game.Workspace.Terrain]):  RaycastResult | undefined {
+function getTerrainHit(RaycastResult: RaycastResult, rayPosition: Vector3, rayVector: Vector3, terrain: Instance[] = [game.Workspace.Terrain]):  RaycastResult | undefined {
     if (terrain.find((terrain: Instance) => RaycastResult.Instance === terrain)) {
         return RaycastResult
     }
-    const result = castRay(rayPosition, rayVector, true, castParams)
-    if (result) {
-        const highestNonCommonAncestor = findHighestAncestorThatDoesNotShareParent(result.Instance, terrain)
-        if (!highestNonCommonAncestor) {
-            return 
-        }
-        castParams.AddToFilter(highestNonCommonAncestor)
-        castParams.FilterType = Enum.RaycastFilterType.Exclude
-        return getTerrainHit(result, rayPosition, rayVector, castParams, terrain)
+    const params = new RaycastParams()
+    params.FilterType = Enum.RaycastFilterType.Include
+    params.AddToFilter(terrain)
+
+    const result = castRay(rayPosition, rayVector, true, params)
+    return result
+}
+
+function getColorFromMesh(result: RaycastResult): Vector3 {
+    if (!(result.Instance as MeshPart).TextureID) {
+        return color3ToVector3(result.Instance.Color)
     }
-    return 
+
+    let editableMesh: EditableMesh | undefined = undefined
+    let editableImage: EditableImage | undefined = undefined
+
+    try {
+        editableMesh = getEditableMesh((result.Instance as MeshPart).MeshId)
+        editableImage = getEditableImage((result.Instance as MeshPart).TextureID)
+
+        const mesh = editableMesh as EditableMesh
+        const image = editableImage as EditableImage
+
+        const scale = (result.Instance as MeshPart).MeshSize.div(result.Instance.Size)
+        const relativePoint = result.Instance.CFrame.PointToObjectSpace(result.Position).mul(scale)
+
+        const [faceId, _surfacePoint, baryCoordinates] = mesh.FindClosestPointOnSurface(relativePoint)
+        const uvs: number[] = mesh.GetFaceUVs(faceId) as number[]
+        const uvCoordinates = uvs.map(x => (mesh.GetUV(x) as Vector2))
+
+        const u = baryCoordinates.X * uvCoordinates[0]?.X + baryCoordinates.Y * uvCoordinates[1]?.X + baryCoordinates.Z * uvCoordinates[2]?.X
+        const v = baryCoordinates.X * uvCoordinates[0]?.Y + baryCoordinates.Y * uvCoordinates[1]?.Y + baryCoordinates.Z * uvCoordinates[2]?.Y 
+
+        const samplePoint = new Vector2(math.floor(u * image.Size.X),math.floor(v * image.Size.Y))
+        const colorBuf = image.ReadPixelsBuffer(samplePoint, new Vector2(1,1))
+
+        const color = Color3.fromRGB(
+            buffer.readu8(colorBuf,0),
+            buffer.readu8(colorBuf,1),
+            buffer.readu8(colorBuf,2),
+        )
+
+        return color3ToVector3(color)
+
+    }
+    catch (e){
+        return color3ToVector3(result.Instance.Color)
+    }
 }
 
 function getColorFromResult(result: RaycastResult): Vector3 {
     if (result.Instance !== game.Workspace.Terrain) {
-        return color3ToVector3(result.Instance.Color)
+        if (result.Instance.IsA("MeshPart")) {
+            return getColorFromMesh(result)
+        }
+        else {
+            return color3ToVector3(result.Instance.Color)
+        }
     }
     if (result.Material === Enum.Material.Water) {
         return color3ToVector3(TERRAIN.WaterColor)
@@ -211,9 +270,11 @@ function convertVector3LinearToSrgb(vector: Vector3): Vector3 {
 
 function averageColorSamples(rayCastResults: RaycastResult[]): Vector3 {
     let color = new Vector3(0, 0, 0)
-    rayCastResults.forEach((result: RaycastResult) => {
-        color = color.add(convertVector3SrgbToLinear(getColorFromResult(result)))
-    })
+
+    for (const result of rayCastResults) {
+        const sampleColor = getColorFromResult(result); // Await works here
+        color = color.add(convertVector3SrgbToLinear(sampleColor));
+    }
     return convertVector3LinearToSrgb(color.div(rayCastResults.size()))
 }
 
@@ -222,13 +283,15 @@ function gammaNormalizeSamples(samples: Vector3): Vector3 {
     return new Vector3(samples.X ** gammeNormalize, samples.Y ** gammeNormalize, samples.Z ** gammeNormalize)
 }
 
-function showDebugRayPosition(position: Vector3) {
+function showDebugRayPosition(position: Vector3): Part {
     const part = new Instance('Part')
     part.Anchored = true
     part.CFrame = new CFrame(position)
     part.Color = new Color3(1, 0, 0)
     part.Size = new Vector3(1, 1, 1)
-    part.Parent = game.Workspace
+    part.Parent = game.Workspace.Terrain
+
+    return part
 } 
 
 function averageShadeSamples(rayCastResults: RaycastResult[], inputColor: Vector3): Vector3 {
