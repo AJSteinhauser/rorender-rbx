@@ -147,8 +147,10 @@ Don't forget to give the project a star! Thanks again!
 ### Top contributors:
 
 <a href="https://github.com/AJSteinhauser/rorender-rbx/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=AJSteinhauser/rorender-rbx" alt="contrib.rocks image" />
+  <img src="https://contrib.rocks/image?repo=AJSteinhauser/rorender-rbx" />
 </a>
+
+Made with [contrib.rocks](https://contrib.rocks).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -212,4 +214,4 @@ Project Link: [https://github.com/AJSteinhauser/rorender-rbx](https://github.com
 [rbxts-react-url]: https://github.com/littensy/rbxts-react
 
 [roblox-ts]: https://img.shields.io/badge/rbxts-20232A?style=for-the-badge&logo=typescript&logoColor=3178C6
-[roblox-ts-url]: https://github.com/littensy/rbxts-react
+[roblox-ts-url]: https://roblox-ts.com/
