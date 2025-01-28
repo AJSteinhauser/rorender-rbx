@@ -39,10 +39,10 @@
   <p align="center">
     A Roblox plugin to generate maps for RoRenderV4
     <br />
-    <a href="https://www.rorender.com"><strong>See our Website</strong></a>
+    <a href="https://rorender.com"><strong>See our Website</strong></a>
     <br />
     <br />
-    <a href="https://www.rorender.com">View Demo</a>
+    <a href="https://rorender.com">View Demo</a>
     &middot;
     <a href="https://github.com/AJSteinhauser/rorender-rbx/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
@@ -69,7 +69,14 @@ thoroughly before being accepted.
 
 ### Built With
 
-* [![React][React.js]][React-url]
+* [![roblox-ts][roblox-ts]][roblox-ts-url]
+* [![rbxts-react][rbxts-react]][rbxts-react-url]
+
+^Because of these two project I am able to have the entire project written in a single language (Typescript) (Front end, Backend, Plugin) 🤯. 
+Having one unified language to solve all these problems was amazing for development speed and I am very grateful to the maintainers of 
+these projects for enabling this developer experience. I have aspirations to one day rewrite the backend in a more performant language, but
+for a small project like this a single language was incredible.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -82,11 +89,12 @@ To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
-Ensure latest npm is installed
+Ensure latest npm and Rojo is installed
 * npm
   ```sh
   npm install npm@latest -g
   ```
+* [Rojo](https://rojo.space/docs/v7/getting-started/installation/)
 
 ### Installation
 
@@ -171,18 +179,18 @@ Project Link: [https://github.com/AJSteinhauser/rorender-rbx](https://github.com
 
 
 <!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
+<!--## Acknowledgments-->
+<!---->
+<!--Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!-->
 
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
-
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
+<!--* [Choose an Open Source License](https://choosealicense.com)-->
+<!--* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)-->
+<!--* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)-->
+<!--* [Malven's Grid Cheatsheet](https://grid.malven.co/)-->
+<!--* [Img Shields](https://shields.io)-->
+<!--* [GitHub Pages](https://pages.github.com)-->
+<!--* [Font Awesome](https://fontawesome.com)-->
+<!--* [React Icons](https://react-icons.github.io/react-icons/search)-->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -203,5 +211,9 @@ Project Link: [https://github.com/AJSteinhauser/rorender-rbx](https://github.com
 [license-url]: https://github.com/AJSteinhauser/rorender-rbx/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/othneildrew
-[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://github.com/littensy/rbxts-react#readme
+
+[rbxts-react]: https://img.shields.io/badge/rbxts-React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
+[rbxts-react-url]: https://github.com/littensy/rbxts-react
+
+[roblox-ts]: https://img.shields.io/badge/rbxts-20232A?style=for-the-badge&logo=typescript&logoColor=3178C6
+[roblxo-ts-url]: https://github.com/littensy/rbxts-react
