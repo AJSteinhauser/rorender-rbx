@@ -23,9 +23,6 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![Unlicense License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
-
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -39,7 +36,9 @@
   <p align="center">
     A Roblox plugin to generate maps for RoRenderV4
     <br />
-    <a href="https://rorender.com"><strong>See our Website</strong></a>
+    <a href="https://rorender.com/plugin"><strong>RoRender Plugin</strong></a>
+    &middot;
+    <a href="https://rorender.com"><strong>RoRender Website</strong></a>
     <br />
     <br />
     <a href="https://rorender.com">View Demo</a>
@@ -72,15 +71,12 @@ thoroughly before being accepted.
 * [![roblox-ts][roblox-ts]][roblox-ts-url]
 * [![rbxts-react][rbxts-react]][rbxts-react-url]
 
-^Because of these two project I am able to have the entire project written in a single language (Typescript) (Front end, Backend, Plugin) 🤯. 
-Having one unified language to solve all these problems was amazing for development speed and I am very grateful to the maintainers of 
-these projects for enabling this developer experience. I have aspirations to one day rewrite the backend in a more performant language, but
-for a small project like this a single language was incredible.
-
+Thanks to these two projects, I was able to write the entire stack—front end, back end, and plugin—using a single language: TypeScript 🤯. 
+Having one unified language to tackle every part of the project was a game-changer for development speed, and I’m incredibly grateful to the maintainers 
+of these projects for making such an awesome developer experience possible. While I do hope to rewrite the backend in a more performant language someday, 
+for a small project like this, sticking to one language has been an amazing experience.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -212,8 +208,8 @@ Project Link: [https://github.com/AJSteinhauser/rorender-rbx](https://github.com
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/othneildrew
 
-[rbxts-react]: https://img.shields.io/badge/rbxts-React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
+[rbxts-react]: https://img.shields.io/badge/rbxts--react-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
 [rbxts-react-url]: https://github.com/littensy/rbxts-react
 
 [roblox-ts]: https://img.shields.io/badge/rbxts-20232A?style=for-the-badge&logo=typescript&logoColor=3178C6
-[roblxo-ts-url]: https://github.com/littensy/rbxts-react
+[roblox-ts-url]: https://github.com/littensy/rbxts-react
