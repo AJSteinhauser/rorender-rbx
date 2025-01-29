@@ -29,7 +29,7 @@ export function Textarea(props: {
                 TextScaled={true}
             />
             <frame
-                Size={new UDim2(1,0,.7,0)}
+                Size={new UDim2(1,0,.7,-5)}
                 BorderSizePixel={uiConstants.borderSize}
                 BorderColor3={uiConstants.borderColor}
                 BackgroundColor3={uiConstants.cardColor}
@@ -53,7 +53,16 @@ export function Textarea(props: {
                     Event={{
                         InputChanged: (changed, text) => {
                             props.textChanged(changed.Text)
-                        }
+                        },
+                        FocusLost: (changed) => {
+                            props.textChanged(changed.Text)
+                        },
+                        InputEnded: (changed, text) => {
+                            props.textChanged(changed.Text)
+                        },
+                        MouseLeave: (changed, text) => {
+                            props.textChanged(changed.Text)
+                        },
                     }}
                 />
             </frame>

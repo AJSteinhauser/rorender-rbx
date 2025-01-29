@@ -1,6 +1,15 @@
+import { Settings } from "shared/settings/settings.model"
+import { getImageDimensions } from "shared/utils"
+
 const selectionService = game.GetService("Selection")
 let loadedRenderRef: ModuleScript | undefined 
 let connections: RBXScriptConnection[] = []
+let imageSizeHook: React.Dispatch<React.SetStateAction<string>> | undefined
+let dataHook: React.Dispatch<React.SetStateAction<string>> | undefined
+let scaleHook: React.Dispatch<React.SetStateAction<string>> | undefined
+let lastData = 0
+let lastScale = new Vector3()
+let lastImageSize = new Vector2()
 
 export enum QuickSelect {
     C0,
@@ -74,8 +83,22 @@ export const QuickSelectModule = (item: QuickSelect) => {
 
 const cleanUpLastLoadedRender = () => {
     loadedRenderRef = undefined
+    imageSizeHook = undefined
+    dataHook = undefined
+    scaleHook = undefined
     connections.forEach(x => x.Disconnect())
     selectionService.Set([])
+}
+
+export const setUpdaters = (
+    imageSize: React.Dispatch<React.SetStateAction<string>>,
+    scale: React.Dispatch<React.SetStateAction<string>>,
+    data: React.Dispatch<React.SetStateAction<string>>
+): void => {
+    imageSizeHook = imageSize
+    scaleHook = scale
+    dataHook = data
+    updateUI()
 }
 
 const setupUpdateConnections = (render: ModuleScript) => {
@@ -87,13 +110,85 @@ const setupUpdateConnections = (render: ModuleScript) => {
     connections.push(
         c0PositionConnection.Connect(() => {
             updateBoxFromHandles(render)
+            updateUI()
         }),
         c1PositionConnection.Connect(() => {
             updateBoxFromHandles(render)
-        })
+            updateUI()
+        }),
+        render.GetPropertyChangedSignal("Source").Connect(updateUI)
     )
 }
 
+export const updateUI = () => {
+    const renderSettings = loadedRenderRef
+    if (!renderSettings) {
+        return
+    }
+    let settings: Settings | undefined = undefined
+    try {
+        loadstring(renderSettings.Source)
+        pcall(() => {
+            settings = require(renderSettings.Clone()) as Settings
+        })
+    }
+    catch {
+        return
+    }
+    if (!settings) {
+        return
+    }
+    updateDepthText()
+    updateImageSizeText(settings)
+    updateDataText(settings)
+}
+
+function updateDataText(settings: Settings) {
+    if (!dataHook) {
+        return
+    }
+    const imageSize = getImageDimensions(settings)
+    const bytes = imageSize.X * imageSize.Y * 8
+    if (lastData === bytes) {
+        return
+    }
+    if (bytes / 1000 < 100) {
+        dataHook(string.format("%.2fKB", bytes / 1000))
+    }
+    else if (bytes / 1000000 < 100) {
+        dataHook(string.format("%.2fMB", bytes / 1000000))
+    }
+    else {
+        dataHook(string.format("%.2fGB", bytes / 1000000000))
+    }
+    if (imageSize !== lastImageSize) {
+        dataHook(`${imageSize.X}px x ${imageSize.Y}px`)
+    }
+    lastData = bytes
+
+}
+
+function updateDepthText(): void {
+    if (!scaleHook || !loadedRenderRef) {
+        return
+    }
+    const { mesh } = getElementsFromSettings(loadedRenderRef)
+    if (lastScale !== mesh.Scale) {
+        scaleHook(string.format("[%.0f, %.0f, %.0f]", mesh.Scale.X, mesh.Scale.Y, mesh.Scale.Z))
+    }
+    lastScale = mesh.Scale
+}
+
+function updateImageSizeText(settings: Settings): void {
+    if (!imageSizeHook) {
+        return
+    }
+    const imageSize = getImageDimensions(settings)
+    if (imageSize !== lastImageSize) {
+        imageSizeHook(`${imageSize.X}px x ${imageSize.Y}px`)
+    }
+    lastImageSize = imageSize
+}
 
 const getElementsFromSettings = (settings: ModuleScript) => {
     const box = settings.FindFirstChild("box") as Folder
