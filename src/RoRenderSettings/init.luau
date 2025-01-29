@@ -4,6 +4,7 @@
 --- Defines the structure of the configuration settings used by the renderer.
 export type Settings = {
     terrain: { Instance },
+    water: StructureGrouping,
     buildingGroups: { StructureGrouping },
     roadGroups: { StructureGrouping },
     samples: number,
@@ -40,7 +41,14 @@ local settings: Settings = {
     terrain = {
         game.Workspace.Terrain,
     },
-
+    water = {
+        name = "Water Elements",
+        instances = {
+            -- If you use BasePart(s) for water include them here 
+        },
+        onlyTerrain = true, -- Useful if you want to specify a material that is the road material but you only want terrain (non-parts) to be used
+        materials = {Enum.Material.Water}
+    },
     buildingGroups = {
         {
             name = "Building Group A",

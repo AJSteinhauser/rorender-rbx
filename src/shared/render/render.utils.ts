@@ -46,7 +46,7 @@ export function computePixel(
     }
 
     // Handle water material
-    if (primary.Material === Enum.Material.Water) {
+    if (checkIfRayIsWater(primary, settings)) {
         waterHeight = calculateHeight(primary.Position.Y);
         primary = castRay(rayCenter, renderConstants.rayVector, true);
         if (!primary) return;
@@ -108,6 +108,30 @@ export function computePixel(
         building: buildingGrouping,
         water: waterHeight,
     };
+}
+
+function checkIfRayIsWater(result: RaycastResult, settings: Settings): boolean {
+    const group = settings.water
+
+    // Check instance hierarchy
+    if (group.instances) {
+        for (const item of group.instances) {
+            if (result.Instance.IsDescendantOf(item)) return true
+        }
+    }
+
+    // Check materials
+    if (group.materials) {
+        const isMaterialMatch = group.materials.includes(result.Material);
+        const isTerrainMatch = group.onlyTerrain
+            ? result.Instance.ClassName === "Terrain"
+            : true;
+
+        if (isMaterialMatch && isTerrainMatch) {
+            return true
+        }
+    }
+    return false
 }
 
 // Helper function to find groupings (buildings, roads, etc.)

@@ -1,5 +1,4 @@
 import { Settings } from "shared/settings/settings.model"
-import { getImageDimensions } from "shared/utils"
 
 const selectionService = game.GetService("Selection")
 let loadedRenderRef: ModuleScript | undefined 
@@ -125,12 +124,9 @@ export const updateUI = () => {
     if (!renderSettings) {
         return
     }
-    let settings: Settings | undefined = undefined
+    let resolution = 1
     try {
-        loadstring(renderSettings.Source)
-        pcall(() => {
-            settings = require(renderSettings.Clone()) as Settings
-        })
+        resolution = tonumber(renderSettings.Source.match("resolution%s*=%s*(-?%d*%.?%d+)")[0]) || resolution
     }
     catch {
         return
@@ -138,16 +134,17 @@ export const updateUI = () => {
     if (!settings) {
         return
     }
+    const { mesh } = getElementsFromSettings(renderSettings)
     updateDepthText()
-    updateImageSizeText(settings)
-    updateDataText(settings)
+    updateImageSizeText(resolution, mesh.Scale)
+    updateDataText(resolution, mesh.Scale)
 }
 
-function updateDataText(settings: Settings) {
+function updateDataText(resolution: number, scale: Vector3) {
     if (!dataHook) {
         return
     }
-    const imageSize = getImageDimensions(settings)
+    const imageSize = getImageDimensions(resolution, scale)
     const bytes = imageSize.X * imageSize.Y * 8
     if (lastData === bytes) {
         return
@@ -179,11 +176,18 @@ function updateDepthText(): void {
     lastScale = mesh.Scale
 }
 
-function updateImageSizeText(settings: Settings): void {
+function getImageDimensions(resolution: number, scale: Vector3): Vector2 {
+    return new Vector2(
+        math.floor(scale.X / resolution),
+        math.floor(scale.Z / resolution),
+    )
+}
+
+function updateImageSizeText(resolution: number, scale: Vector3): void {
     if (!imageSizeHook) {
         return
     }
-    const imageSize = getImageDimensions(settings)
+    const imageSize = getImageDimensions(resolution, scale)
     if (imageSize !== lastImageSize) {
         imageSizeHook(`${imageSize.X}px x ${imageSize.Y}px`)
     }

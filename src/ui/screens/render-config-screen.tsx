@@ -124,7 +124,7 @@ export function RenderConfigScreen(props: {
             />
             <frame
                 BackgroundColor3={uiConstants.cardColor}
-                Size={new UDim2(1,0,0,80)}
+                Size={new UDim2(1,0,0,85)}
             >
                 <uicorner CornerRadius={new UDim(0,uiConstants.cornerRadius)} />
                 <frame

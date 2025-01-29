@@ -5,6 +5,7 @@ export interface Settings {
     terrain: Instance[]
     buildingGroups: StructureGrouping[]
     roadGroups: StructureGrouping[]
+    water: StructureGrouping
     samples: number
     shadows: {
         enabled: boolean
