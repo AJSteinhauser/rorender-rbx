@@ -29,7 +29,7 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
         counter++
         positions.forEach(pos => meshCalculation.push(pos))
     })
-    task.wait(1) // Allow time for actors to initalize and message recievers to bind to actor parent 
+    task.wait(.1) // Allow time for actors to initalize and message recievers to bind to actor parent 
     for (let row = 0; row < imageDimensions.Y; row++) {
         startTime = delayForScriptExhuastion(startTime)
         const actorMessage: ActorMessage = {

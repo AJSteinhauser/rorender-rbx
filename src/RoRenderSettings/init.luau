@@ -1,6 +1,7 @@
 --!strict
---src/RoRenderSettings/init.luau
+-- src/RoRenderSettings/init.luau
 
+--- Defines the structure of the configuration settings used by the renderer.
 export type Settings = {
     terrain: { Instance },
     buildingGroups: { StructureGrouping },
@@ -9,13 +10,10 @@ export type Settings = {
     mapScale: Vector3,
     mapCFrame: CFrame,
     resolution: number,
-    shadows: {
-        enabled: boolean,
-        sunDirection: Vector3,
-        darkness: number
-    }
+    shadows: ShadowSettings,
 }
 
+--- Defines a grouping of structures for rendering purposes.
 export type StructureGrouping = {
     name: string,
     materials: { Enum.Material }?,
@@ -23,39 +21,55 @@ export type StructureGrouping = {
     onlyTerrain: boolean?,
 }
 
-local boxTargeting = script.box.center
+--- Defines the shadow rendering settings.
+export type ShadowSettings = {
+    enabled: boolean,
+    sunDirection: Vector3,
+    darkness: number,
+}
 
-return {
-    mapScale = script.box.center.mesh.Scale,
-    mapCFrame = script.box.center.CFrame,
+-- Reference to the target box object in the scene.
+local boxTarget = script.box.center
+
+-- Configuration settings for the renderer.
+local settings: Settings = {
+    mapScale = boxTarget.mesh.Scale,
+    mapCFrame = boxTarget.CFrame,
     resolution = 1,
+
     terrain = {
-        game.Workspace.Terrain
+        game.Workspace.Terrain,
     },
+
     buildingGroups = {
         {
             name = "Building Group A",
             instances = {
-                -- Put all of the buildings in groups instances here
-                -- The building will check all decendent instances of the building instances provided here.
+                -- Add building instances here.
+                -- The renderer will process all descendant instances of these buildings.
             },
-        }
+        },
     },
+
     roadGroups = {
         {
             name = "Road Group A",
             instances = {
-                -- Put all of the roads in groups instances here
-                -- The renderer will check all decendent instances of the road instances provided here.
+                -- Add road instances here.
+                -- The renderer will process all descendant instances of these roads.
             },
-            onlyTerrain = false, -- Useful if you want to specify a material that is the road material but you only want terrain (non-parts) to be used
-            materials = {}
-        }
+            onlyTerrain = false, -- Set to true to only include terrain-based materials.
+            materials = {},
+        },
     },
-    samples = 5,
+
+    samples = 5, -- Number of samples used for rendering calculations.
+
     shadows = {
-        enabled = false, -- I reccomend leaving shadows off, IMHO they make your map worse and take a long time to calculate.
+        enabled = false, -- Shadows are disabled by default for better performance.
         sunDirection = game:GetService("Lighting"):GetSunDirection(),
-        darkness = .3 -- Percentage value (Areas in shadow are x% darker)
-    }
-} :: Settings
+        darkness = 0.3, -- Areas in shadow will appear 30% darker.
+    },
+}
+
+return settings

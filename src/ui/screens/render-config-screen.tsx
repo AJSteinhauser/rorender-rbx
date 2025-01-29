@@ -2,11 +2,19 @@ import React, { useState } from "@rbxts/react";
 import { runRender } from "server/render-runner";
 import { Settings } from "shared/settings/settings.model";
 import { Button, ButtonType } from "ui/button";
-import { autoConfigureBoundingBox, getCurrentRender, QuickSelect, QuickSelectModule, unloadRender } from "ui/config-helper";
+import { 
+    autoConfigureBoundingBox,
+    getCurrentRender,
+    QuickSelect,
+    QuickSelectModule,
+    setUpdaters,
+    unloadRender,
+} from "ui/config-helper";
 import { Screens } from "ui/constants";
 import { Textarea } from "ui/text-area";
 import uiConstants from "ui/ui-constants";
 import { ProgressUpdateData, ProgressUpdateHooks } from "./main";
+import { RenderProperty } from "ui/render-property";
 
 function isUUIDv4(input: string): boolean {
     return input.match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89abAB]%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$").size() > 0
@@ -18,6 +26,10 @@ export function RenderConfigScreen(props: {
     errorOccured: (message: string) => void
 }) {
     const [renderId, setRenderId] = useState<undefined | string>(undefined)
+    const [imageSize, setImageSize] = useState<string>("")
+    const [scale, setScale] = useState<string>("")
+    const [data, setData] = useState<string>("")
+    setUpdaters(setImageSize, setScale, setData)
 
     const validateUUID = (id: string | undefined): boolean => {
         if (!id){
@@ -80,9 +92,8 @@ export function RenderConfigScreen(props: {
             <frame
                 BackgroundTransparency={1}
                 Size={new UDim2(1,0,0,5)}
-            >
-            </frame>
-            <Textarea label="Render Id" placeholder="Paste the render id here" size={new UDim2(1,0,0,50)} textChanged={textChanged}/>
+            />
+            <Textarea label="Render Id" placeholder="Paste the render id here" size={new UDim2(1,0,0,60)} textChanged={textChanged}/>
             <Button label="Start Render" buttonType={ButtonType.filled} size={new UDim2(1,0,0,30)} clicked={() => {
                 if (validateUUID(renderId)){
                     props.changeScreen(Screens.Rendering)
@@ -94,13 +105,44 @@ export function RenderConfigScreen(props: {
                 }
                 else {
                     props.errorOccured(`${renderId} is not a valid UUID. Use the copy button to ensure the entire UUID is copied into your clipboard.`)
-
                 }
             }}/>
             <Button label="Detach Configuration" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => {
                 unloadRender()
                 props.changeScreen(Screens.Home)
             }}/>
+            <textlabel
+                TextColor3={uiConstants.secondayText}
+                BackgroundTransparency={1}
+                Font={uiConstants.boldFont}
+                Text={"Stats"}
+                Size={new UDim2(1,0,0,15)}
+                TextSize={uiConstants.fontSizeNormal}
+                TextXAlignment={Enum.TextXAlignment.Left}
+                AnchorPoint={new Vector2(.5, .5)}
+                TextScaled={true}
+            />
+            <frame
+                BackgroundColor3={uiConstants.cardColor}
+                Size={new UDim2(1,0,0,80)}
+            >
+                <uicorner CornerRadius={new UDim(0,uiConstants.cornerRadius)} />
+                <frame
+                    Size={new UDim2(1,-15, 1, -15)}
+                    BackgroundTransparency={1}
+                    AnchorPoint={new Vector2(.5,.5)}
+                    Position={UDim2.fromScale(.5,.5)}
+                >
+                    <uilistlayout
+                        HorizontalAlignment={Enum.HorizontalAlignment.Center}
+                        VerticalAlignment={Enum.VerticalAlignment.Top}
+                        Padding={new UDim(0,uiConstants.spacingSmall)}
+                    />
+                    <RenderProperty size={new UDim2(1,0,0,20)} property="Image Size" value={imageSize} />
+                    <RenderProperty size={new UDim2(1,0,0,20)} property="Scale" value={scale} />
+                    <RenderProperty size={new UDim2(1,0,0,20)} property="Raw Data" value={data} />
+                </frame>
+            </frame>
         </frame>
 	);
 }

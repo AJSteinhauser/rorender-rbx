@@ -1,4 +1,7 @@
+import { act } from "@rbxts/react-roblox"
 import { Settings } from "shared/settings/settings.model"
+
+const actor = script.Parent?.Parent?.Parent?.FindFirstChild("threads")?.FindFirstChild("actor") as Actor
 
 export class WorkerPool {
     private actorPoolIntialized = false
@@ -27,9 +30,9 @@ export class WorkerPool {
             return
         }
         this.actorPoolIntialized = true
-        const actor = script.Parent?.Parent?.Parent?.FindFirstChild("threads")?.FindFirstChild("actor") as Actor
         for (let i = 0; i < 50; i++) {
             const clone = actor.Clone()
+            clone.Parent = actor.Parent
             clone.Parent = actor.Parent
             this.pool.push(clone)
         }
