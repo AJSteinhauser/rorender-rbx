@@ -1,4 +1,4 @@
-import React, { useState } from "@rbxts/react";
+import React, { useEffect, useState } from "@rbxts/react";
 import { runRender } from "server/render-runner";
 import { Settings } from "shared/settings/settings.model";
 import { Button, ButtonType } from "ui/button";
@@ -29,7 +29,10 @@ export function RenderConfigScreen(props: {
     const [imageSize, setImageSize] = useState<string>("")
     const [scale, setScale] = useState<string>("")
     const [data, setData] = useState<string>("")
-    setUpdaters(setImageSize, setScale, setData)
+
+    useEffect(() => {
+        setUpdaters(setImageSize, setScale, setData)
+    }, [])
 
     const validateUUID = (id: string | undefined): boolean => {
         if (!id){

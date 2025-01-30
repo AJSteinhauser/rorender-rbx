@@ -97,6 +97,9 @@ export const setUpdaters = (
     imageSizeHook = imageSize
     scaleHook = scale
     dataHook = data
+    lastData = 0;
+    lastScale = new Vector3() 
+    lastImageSize = new Vector2()
     updateUI()
 }
 
