@@ -73,6 +73,14 @@ export function Main() {
             Size={UDim2.fromScale(1,1)}
             BackgroundColor3={uiConstants.groundColor}
         >
+            <textbox
+                Size={new UDim2(1,0,0,20)}
+                BackgroundColor3={uiConstants.primaryColor}
+                TextColor3={uiConstants.blackText}
+                Font={uiConstants.lessboldFont}
+                Text={"BETA TESTING PLUGIN. NOT FOR NORMAL USE."}
+                TextScaled={true}
+            />
             <frame
                 Size={new UDim2(1,-50,1,-50)}
                 Position={UDim2.fromScale(.5,.5)}
