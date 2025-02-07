@@ -65,7 +65,6 @@ export function RenderConfigScreen(props: {
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(.5, .5)}
-                TextScaled={true}
             />
             <frame
                 BackgroundTransparency={1}
@@ -123,7 +122,6 @@ export function RenderConfigScreen(props: {
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(.5, .5)}
-                TextScaled={true}
             />
             <frame
                 BackgroundColor3={uiConstants.cardColor}

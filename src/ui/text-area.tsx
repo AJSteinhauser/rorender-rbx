@@ -26,7 +26,6 @@ export function Textarea(props: {
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(.5, .5)}
-                TextScaled={true}
             />
             <frame
                 Size={new UDim2(1,0,.7,-5)}
