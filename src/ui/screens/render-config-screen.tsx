@@ -99,11 +99,16 @@ export function RenderConfigScreen(props: {
             <Button label="Start Render" buttonType={ButtonType.filled} size={new UDim2(1,0,0,30)} clicked={() => {
                 if (validateUUID(renderId)){
                     props.changeScreen(Screens.Rendering)
-                    runRender(
-                        require((getCurrentRender() as ModuleScript).Clone()) as Settings,
-                        renderId as string,
-                        props.progressHooks
-                    )
+                    try {
+                        runRender(
+                            require((getCurrentRender() as ModuleScript).Clone()) as Settings,
+                            renderId as string,
+                            props.progressHooks
+                        )
+                    }
+                    catch (e) {
+                        props.errorOccured(e as string);
+                    }
                 }
                 else {
                     props.errorOccured(`${renderId} is not a valid UUID. Use the copy button to ensure the entire UUID is copied into your clipboard.`)
