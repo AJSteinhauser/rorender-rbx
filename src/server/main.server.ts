@@ -14,9 +14,10 @@ const dockSettings = new DockWidgetPluginGuiInfo(
 
 const dockWindow = plugin.CreateDockWidgetPluginGui("RoRender V4", dockSettings)
 dockWindow.Title = "RoRender V4"
+dockWindow.Name = "RoRender V4"
 
 button.Click.Connect(() => {
     dockWindow.Enabled = !dockWindow.Enabled
 });
 
-mount(dockWindow)
+mount(dockWindow, plugin)

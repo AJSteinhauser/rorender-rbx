@@ -1,6 +1,10 @@
+import uiConstants from 'ui/ui-constants';
 import { Pixel } from './render/render.model'
 import { Settings } from './settings/settings.model'
 
+const TEXT_SIZE = uiConstants.fontSizeNormal; // Default text size (adjust if necessary)
+const FONT = uiConstants.boldFont; // Default font (change based on usage)
+const FRAME_SIZE = new Vector2(200, 50); // Default frame size
 export const HTTPS_BODY_LIMIT = 1024 * 1000 - 1 // 1024Kb - 2
 export const HEADER_DATA_SIZE = 6 // 3 of 2byte u16int values
 const MAX_IMAGE_SIZE = 7000 * 7000 * 8
@@ -37,4 +41,25 @@ export function ensureImageLessThanMaxSize(settings: Settings) {
     if (bytesPerChannel > MAX_IMAGE_SIZE) {
         throw `Image too large: ${imageSize}. ${SIZE_ERROR_MESSAGE}`
     }
+}
+
+export function firstLetterUppercase(word: string): string { 
+    return string.sub(word, 0, 1).upper() + string.sub(word, 2)
+}
+
+export function getTextSize(text: string, Max?: Vector2): Vector2 {
+    const size = game.GetService("TextService").GetTextSize(text, TEXT_SIZE, FONT, Max ?? FRAME_SIZE);
+    return new Vector2(math.ceil(size.X), math.ceil(size.Y)).add(Vector2.one);
+}
+
+export function findString(query: string, target: string): boolean {
+    if (query === '') {
+        return true;
+    }
+
+	query = string.lower(query);
+    target = string.lower(target);
+    
+    const result = target.find(query)
+    return result[0] !== undefined
 }

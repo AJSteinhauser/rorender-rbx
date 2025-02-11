@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "@rbxts/react";
 import { runRender } from "server/render-runner";
-import { Settings } from "shared/settings/settings.model";
+import { Settings, StructureGrouping } from "shared/settings/settings.model";
 import { Button, ButtonType } from "ui/button";
 import { 
     autoConfigureBoundingBox,
@@ -15,6 +15,8 @@ import { Textarea } from "ui/text-area";
 import uiConstants from "ui/ui-constants";
 import { ProgressUpdateData, ProgressUpdateHooks } from "./main";
 import { RenderProperty } from "ui/render-property";
+
+const CollectionService = game.GetService("CollectionService")
 
 function isUUIDv4(input: string): boolean {
     return input.match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89abAB]%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$").size() > 0
@@ -68,7 +70,7 @@ export function RenderConfigScreen(props: {
             />
             <frame
                 BackgroundTransparency={1}
-                Size={new UDim2(1,0,0,110)}
+                Size={new UDim2(1,0,0,140)}
             >
                 <uilistlayout
                     HorizontalAlignment={Enum.HorizontalAlignment.Center}
@@ -88,6 +90,7 @@ export function RenderConfigScreen(props: {
                     <Button label="C0" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C0)} />
                     <Button label="C1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C1)} />
                 </frame>
+                <Button label="Configure Settings" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => props.changeScreen(Screens.Settings)} />
                 <Button label="Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => QuickSelectModule(QuickSelect.Module)} />
                 <Button label="Auto Configure" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => autoConfigureBoundingBox()} />
             </frame>
@@ -100,8 +103,29 @@ export function RenderConfigScreen(props: {
                 if (validateUUID(renderId)){
                     props.changeScreen(Screens.Rendering)
                     try {
+                        const renderSettings = require((getCurrentRender() as ModuleScript).Clone()) as Settings
+                        
+                        const convertgroup = (group: StructureGrouping) => {
+                            for (const [key, value] of pairs(group.instances || {})) {
+                                if (typeOf(value) === 'string') { 
+                                    const insts = CollectionService.GetTagged(value as string)
+                                    if (group.instances) delete group.instances[key as number]
+                                    for (const [key, inst] of pairs(insts)) { 
+                                        if (group.instances) group.instances.push(inst)
+                                    }
+                                }
+                            }
+                        }
+
+                        convertgroup(renderSettings.water)
+                        for (const [key, value] of pairs(renderSettings.buildingGroups)) {
+                            convertgroup(value)
+                        }
+                        for (const [key, value] of pairs(renderSettings.roadGroups)) {
+                            convertgroup(value)
+                        }
                         runRender(
-                            require((getCurrentRender() as ModuleScript).Clone()) as Settings,
+                            renderSettings,
                             renderId as string,
                             props.progressHooks
                         )

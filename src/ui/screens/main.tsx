@@ -5,6 +5,7 @@ import { Screens } from "ui/constants";
 import uiConstants from "ui/ui-constants";
 import { RenderProgressScreen } from "./rendering-progress-screen";
 import { ErrorScreen } from "./error-screen";
+import { SettingsScreen } from "./settings-screen";
 
 
 export interface ProgressUpdateData {
@@ -65,6 +66,8 @@ export function Main() {
                 return <RenderProgressScreen changeScreen={changeScreen} progressData={progressUpdateData} />
             case Screens.Error:
                 return <ErrorScreen changeScreen={changeScreen} errorText={currentErrorText} />
+            case Screens.Settings:
+                return <SettingsScreen changeScreen={changeScreen} />
         }
     }
 
@@ -73,7 +76,7 @@ export function Main() {
             Size={UDim2.fromScale(1,1)}
             BackgroundColor3={uiConstants.groundColor}
         >
-            <textbox
+            <textlabel
                 Size={new UDim2(1,0,0,20)}
                 BackgroundColor3={uiConstants.primaryColor}
                 TextColor3={uiConstants.blackText}
