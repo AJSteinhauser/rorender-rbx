@@ -7,7 +7,7 @@ export function ViewFinder(props: {
     size: UDim2,
 }) {
     const generateViewfinderImage = () => {
-        const image = assetService.CreateEditableImage()
+        // const image = assetService.CreateEditableImage()
     }
 	return (
         <frame
