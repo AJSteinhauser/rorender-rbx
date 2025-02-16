@@ -87,8 +87,8 @@ export function RenderConfigScreen(props: {
                         FillDirection={Enum.FillDirection.Horizontal}
                         Padding={new UDim(0,uiConstants.spacingNormal)}
                     />
-                    <Button label="C0" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C0)} />
-                    <Button label="C1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C1)} />
+                    <Button label="Corner0" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C0)} />
+                    <Button label="Corner1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C1)} />
                 </frame>
                 <Button label="Configure Settings" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => props.changeScreen(Screens.Settings)} />
                 <Button label="Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => QuickSelectModule(QuickSelect.Module)} />
