@@ -4,4 +4,5 @@ export enum Screens {
     Configuration,
     Rendering,
     Error,
+    Settings
 }

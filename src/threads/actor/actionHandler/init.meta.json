@@ -1,4 +1,5 @@
 {
+    "classname": "Script",
     "properties": {
         "RunContext": "Plugin"
     }

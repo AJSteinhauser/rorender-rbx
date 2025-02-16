@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "rojo serve serve.project.json",
     "build": "rojo build --plugin rorender.rbxm",
-    "watch": "rbxtsc -w"
+    "watch": "rbxtsc -w",
+    "test": "rbxtsc build"
   },
   "keywords": [],
   "author": "",
