@@ -50,7 +50,7 @@ export const runLengthDecode = (image: buffer): buffer => {
         idx += increment
     }
 
-    return convertRunLengthSequenceToRawBuffer(runs)
+    return convertRunLengthSequenceToRawBuffer(runs) // TODO: Convert this to direct buffer manipulation; faster + less memory consumed (table underflow errors reported)
 }
 
 const convertRunLengthSequenceToRawBuffer = (runLengthSequence: RunLengthSequence[]): buffer => {

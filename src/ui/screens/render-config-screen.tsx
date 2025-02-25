@@ -15,6 +15,7 @@ import { Textarea } from "ui/text-area";
 import uiConstants from "ui/ui-constants";
 import { ProgressUpdateData, ProgressUpdateHooks } from "./main";
 import { RenderProperty } from "ui/render-property";
+import { ViewFinder } from "ui/view-finder";
 
 function isUUIDv4(input: string): boolean {
     return input.match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89abAB]%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$").size() > 0
@@ -85,8 +86,8 @@ export function RenderConfigScreen(props: {
                         FillDirection={Enum.FillDirection.Horizontal}
                         Padding={new UDim(0,uiConstants.spacingNormal)}
                     />
-                    <Button label="Corner0" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C0)} />
-                    <Button label="Corner1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C1)} />
+                    <Button label="Corner 0" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C0)} />
+                    <Button label="Corner 1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C1)} />
                 </frame>
                 <Button label="Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => QuickSelectModule(QuickSelect.Module)} />
                 <Button label="Auto Configure" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => autoConfigureBoundingBox()} />

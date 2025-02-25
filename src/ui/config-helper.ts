@@ -104,12 +104,16 @@ export const setUpdaters = (
 }
 
 const setupUpdateConnections = (render: ModuleScript) => {
-    const { c0, c1, mesh } = getElementsFromSettings(render)
+    const { c0, c1, center } = getElementsFromSettings(render)
 
     const c0PositionConnection = c0.GetPropertyChangedSignal("Position")
     const c1PositionConnection = c1.GetPropertyChangedSignal("Position")
+    const centerConnection = c1.GetPropertyChangedSignal("Size")
 
     connections.push(
+        centerConnection.Connect(() => {
+            center.Size = new Vector3(1,1,1)
+        }),
         c0PositionConnection.Connect(() => {
             updateBoxFromHandles(render)
             updateUI()

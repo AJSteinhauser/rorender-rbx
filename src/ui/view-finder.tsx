@@ -1,14 +1,19 @@
 import uiConstants from "./ui-constants";
-import React, { useState } from "@rbxts/react";
+import React, { useEffect, useRef, useState } from "@rbxts/react";
 
 const assetService = game.GetService("AssetService")
 
 export function ViewFinder(props: {
     size: UDim2,
 }) {
-    const generateViewfinderImage = () => {
-        // const image = assetService.CreateEditableImage()
-    }
+
+    const editageImageRef = useRef<EditableImage | undefined>(undefined)
+    useEffect(() => {
+        if (!editageImageRef.current) {
+            editageImageRef.current = assetService.CreateEditableImage()
+        }
+    }, [])
+
 	return (
         <frame
             Size={props.size}
@@ -21,6 +26,9 @@ export function ViewFinder(props: {
                 BackgroundColor3={uiConstants.cardColor}
             >
                 <imagelabel
+                    Size={UDim2.fromScale(1,1)}
+                    //ImageContent={editageImageRef.current}
+                    BackgroundColor3={new Color3(1, 0, 0)}
                 >
                 </imagelabel>
             </frame>
