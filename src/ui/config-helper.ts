@@ -1,7 +1,11 @@
+import { renderPreview } from "shared/render/render.main"
+import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model"
 import { Settings } from "shared/settings/settings.model"
+
 
 const selectionService = game.GetService("Selection")
 let loadedRenderRef: ModuleScript | undefined 
+let viewFinderImage: EditableImage | undefined = undefined
 let connections: RBXScriptConnection[] = []
 let imageSizeHook: React.Dispatch<React.SetStateAction<string>> | undefined
 let dataHook: React.Dispatch<React.SetStateAction<string>> | undefined
@@ -31,6 +35,79 @@ export const getRenderSettingsFromSelection = (): boolean => {
     }
     loadRender(settingsModule)
     return true
+}
+
+export const setViewfinderImage = (image: EditableImage) => {
+    viewFinderImage = image
+    updatePreviewImage()
+}
+
+function throttle<T extends (...args: unknown[]) => void>(func: T, limit: number): T {
+    let mostRecentId: thread
+
+    return function (...args: Parameters<T>) {
+        const thread = task.delay(limit, () => {
+            if (mostRecentId === thread) {
+                func(...args)
+            }
+        })
+        mostRecentId = thread
+    } as T;
+}
+
+
+const updatePreviewImage = () => {
+    print("running")
+    if (!loadedRenderRef || !viewFinderImage) return
+    //if (tick() - lastPreviewImageUpdate < .5) return
+    //lastPreviewImageUpdate = tick()
+
+    const settings = require(loadedRenderRef.Clone()) as Settings
+    const imageData = renderPreview(settings)
+    imageData.then(data => {
+        const imageSize = getImageDimensions(settings.resolution, settings.mapScale)
+        const tempCanvas = game.GetService("AssetService").CreateEditableImage({
+            Size: imageSize
+        })
+        const imageSizeTotal = imageSize.X * imageSize.Y
+        const imageBuff = buffer.create(imageSize.X * imageSize.Y * 4)
+        for (let i = 0; i < imageSizeTotal; i++) {
+            const baseIdx = i * 4
+            buffer.writeu8(imageBuff, baseIdx, buffer.readu8(data.red, i))
+            buffer.writeu8(imageBuff, baseIdx + 1, buffer.readu8(data.green, i))
+            buffer.writeu8(imageBuff, baseIdx + 2, buffer.readu8(data.blue, i))
+            buffer.writeu8(imageBuff, baseIdx + 3, 255)
+        }
+        tempCanvas?.WritePixelsBuffer(
+            new Vector2(),
+            imageSize,
+            imageBuff,
+        )
+
+
+        clearViewFinderImage()
+        viewFinderImage?.DrawImageTransformed(
+            VIEWFINDER_IMAGE_SIZE.div(2),
+            new Vector2(1,1),
+            0,
+            tempCanvas,
+            {
+                CombineType: Enum.ImageCombineType.AlphaBlend,
+                SamplingMode: Enum.ResamplerMode.Default,
+                PivotPoint: tempCanvas.Size.div(2)
+            }
+        )
+    })
+}
+
+const clearViewFinderImage = () => {
+    const clearBuff = buffer.create(VIEWFINDER_IMAGE_SIZE.X * VIEWFINDER_IMAGE_SIZE.Y * 4)
+    buffer.fill(clearBuff, 0, 0)
+    viewFinderImage?.WritePixelsBuffer(
+        new Vector2(),
+        VIEWFINDER_IMAGE_SIZE,
+        clearBuff
+    )
 }
 
 const getRandomRenderSettings = (): boolean => {
@@ -145,7 +222,10 @@ export const updateUI = () => {
     updateDepthText()
     updateImageSizeText(resolution, mesh.Scale)
     updateDataText(resolution, mesh.Scale)
+    updatePreviewImageThrottled()
 }
+
+const updatePreviewImageThrottled = throttle(updatePreviewImage, .3)
 
 function updateDataText(resolution: number, scale: Vector3) {
     if (!dataHook) {

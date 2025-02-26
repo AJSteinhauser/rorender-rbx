@@ -96,6 +96,7 @@ export function RenderConfigScreen(props: {
                 BackgroundTransparency={1}
                 Size={new UDim2(1,0,0,5)}
             />
+            <ViewFinder size={new UDim2(1, 0, 0, 100)} />
             <Textarea label="Render Id" placeholder="Paste the render id here" size={new UDim2(1,0,0,60)} textChanged={textChanged}/>
             <Button label="Start Render" buttonType={ButtonType.filled} size={new UDim2(1,0,0,30)} clicked={() => {
                 if (validateUUID(renderId)){

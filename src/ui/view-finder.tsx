@@ -1,3 +1,5 @@
+import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model";
+import { setViewfinderImage } from "./config-helper";
 import uiConstants from "./ui-constants";
 import React, { useEffect, useRef, useState } from "@rbxts/react";
 
@@ -8,30 +10,37 @@ export function ViewFinder(props: {
 }) {
 
     const editageImageRef = useRef<EditableImage | undefined>(undefined)
+    const contentRef = useRef<Content | undefined>(undefined)
     useEffect(() => {
         if (!editageImageRef.current) {
-            editageImageRef.current = assetService.CreateEditableImage()
+            const editableImage = assetService.CreateEditableImage({Size: VIEWFINDER_IMAGE_SIZE})
+            editageImageRef.current = editableImage
+
+            const content = Content.fromObject(editableImage)
+            contentRef.current = content
+            setViewfinderImage(editableImage)
         }
     }, [])
 
 	return (
         <frame
-            Size={props.size}
-            BackgroundColor3={uiConstants.primaryColor}
+            Size={UDim2.fromOffset(150,150)}
+            BackgroundColor3={uiConstants.cardColor}
         >
-            <frame
-                Size={new UDim2(1,-4, 1, -4)}
-                AnchorPoint={new Vector2(.5, .5)}
-                Position={UDim2.fromScale(.5,.5)}
-                BackgroundColor3={uiConstants.cardColor}
+			<uicorner CornerRadius={new UDim(0, uiConstants.cornerRadius)} />
+			<uistroke
+				Thickness={uiConstants.borderSize}
+				Color={uiConstants.primaryColor}
+				ApplyStrokeMode={Enum.ApplyStrokeMode.Border}
+			/>
+
+			<uipadding PaddingLeft={new UDim(0, 2)} PaddingRight={new UDim(0, 2)} />
+            <imagelabel
+                Size={UDim2.fromScale(1,1)}
+                ImageContent={contentRef.current}
+                BackgroundTransparency={1}
             >
-                <imagelabel
-                    Size={UDim2.fromScale(1,1)}
-                    //ImageContent={editageImageRef.current}
-                    BackgroundColor3={new Color3(1, 0, 0)}
-                >
-                </imagelabel>
-            </frame>
+            </imagelabel>
         </frame>
 	);
 }

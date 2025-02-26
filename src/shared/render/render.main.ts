@@ -1,5 +1,5 @@
 import { Settings } from 'shared/settings/settings.model'
-import { Pixel, RenderConstants } from './render.model'
+import { Pixel, RenderConstants, VIEWFINDER_IMAGE_SIZE } from './render.model'
 import { getImageDimensions } from 'shared/utils'
 import { ImageBuffers } from 'shared/file/file.modal'
 import { WorkerPool } from './actor-pool.handler'
@@ -88,6 +88,65 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
     progressHooks.setCurrentProgress(0)
     progressHooks.setCurrentStatusText("Splicing Mesh Textures...") 
     return output
+}
+
+
+export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
+    previewSettings(settings)
+
+    const imageDimensions = getImageDimensions(settings)
+    const renderConstants = getRenderConstants(settings, imageDimensions)
+
+    const pool = new WorkerPool(settings)
+
+    const calculatedRows: ImageBuffers[] = []
+    const allRowsCompleted: Promise<void>[] = []
+
+    let startTime = tick()
+    let finishedRows = 0
+
+    const meshCalculation: Vector2[] = []
+    let counter = 0
+    const meshPixelsConnection = meshPixels.Event.Connect((positions: Vector2[]) => {
+        counter++
+        positions.forEach(pos => meshCalculation.push(pos))
+    })
+    task.wait(.1) // Allow time for actors to initalize and message recievers to bind to actor parent 
+    for (let row = 0; row < imageDimensions.Y; row++) {
+        startTime = delayForScriptExhuastion(startTime)
+        const actorMessage: ActorMessage = {
+            settings,
+            row,
+            renderConstants
+        }
+        const rowCompleted = new Promise<void>(async (resolve) => {
+            const actor = await pool.getActor(settings)
+            const rowCalculatedEvent = actor.FindFirstChild("rowCalculated") as BindableEvent
+            const binding = rowCalculatedEvent.Event.Connect((data: ImageBuffers) => {
+                startTime = delayForScriptExhuastion(startTime)
+                calculatedRows[row] = data
+                binding.Disconnect()
+                pool.releaseActor(actor)
+                finishedRows++
+                resolve()
+            })
+            actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
+        })
+        allRowsCompleted.push(rowCompleted)
+    }
+    await Promise.all(allRowsCompleted)
+    pool.cleanup()
+    meshPixelsConnection.Disconnect()
+    const output = combineAllBuffers(calculatedRows, settings)
+
+    return output
+}
+
+const previewSettings = (settings: Settings): void => {
+    settings.resolution = settings.mapScale.Z / VIEWFINDER_IMAGE_SIZE.Y
+    settings.actors = 3
+    settings.samples = 0
+    settings.shadows.enabled = false
 }
 
 export function spliceTexturedPixelsIn(buffers: ImageBuffers, pixel: Pixel, position: Vector2, imageSize: Vector2) {

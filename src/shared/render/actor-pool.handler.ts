@@ -29,8 +29,11 @@ export class WorkerPool {
         if (this.actorPoolIntialized) {
             return
         }
+        if (renderSettings.actors < 1) {
+            renderSettings.actors = 1
+        }
         this.actorPoolIntialized = true
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < renderSettings.actors; i++) {
             const clone = actor.Clone()
             clone.Parent = actor.Parent
             clone.Parent = actor.Parent
@@ -39,9 +42,6 @@ export class WorkerPool {
     }
 
     getActor = (renderSettings: Settings): Promise<Actor> => {
-        if (!this.actorPoolIntialized) {
-            this.initializeActors(renderSettings)
-        }
         return new Promise<Actor>((resolve, reject) => {
             const actor = this.pool.shift()
             if (!actor) {

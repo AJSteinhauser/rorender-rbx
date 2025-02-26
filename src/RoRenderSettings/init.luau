@@ -12,6 +12,7 @@ export type Settings = {
     mapCFrame: CFrame,
     resolution: number,
     shadows: ShadowSettings,
+    actors: number
 }
 
 --- Defines a grouping of structures for rendering purposes.
@@ -78,6 +79,8 @@ local settings: Settings = {
         sunDirection = game:GetService("Lighting"):GetSunDirection(),
         darkness = 0.3, -- Areas in shadow will appear 30% darker.
     },
+
+    actors = 50  -- # of actors process spawned (turn down if you are using an under powered machine / experience plugin crashes)
 }
 
 return settings
