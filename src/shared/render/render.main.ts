@@ -92,7 +92,6 @@ export async function render(settings: Settings, progressHooks: ProgressUpdateHo
 
 
 export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
-    previewSettings(settings)
 
     const imageDimensions = getImageDimensions(settings)
     const renderConstants = getRenderConstants(settings, imageDimensions)
@@ -140,13 +139,6 @@ export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
     const output = combineAllBuffers(calculatedRows, settings)
 
     return output
-}
-
-const previewSettings = (settings: Settings): void => {
-    settings.resolution = settings.mapScale.Z / VIEWFINDER_IMAGE_SIZE.Y
-    settings.actors = 3
-    settings.samples = 0
-    settings.shadows.enabled = false
 }
 
 export function spliceTexturedPixelsIn(buffers: ImageBuffers, pixel: Pixel, position: Vector2, imageSize: Vector2) {

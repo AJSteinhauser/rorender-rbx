@@ -1,7 +1,9 @@
 import { renderPreview } from "shared/render/render.main"
 import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model"
 import { Settings } from "shared/settings/settings.model"
+import uiConstants from "./ui-constants"
 
+const MAX_IMAGE_SIZE = new Vector2(1024, 1024)
 
 const selectionService = game.GetService("Selection")
 let loadedRenderRef: ModuleScript | undefined 
@@ -10,6 +12,7 @@ let connections: RBXScriptConnection[] = []
 let imageSizeHook: React.Dispatch<React.SetStateAction<string>> | undefined
 let dataHook: React.Dispatch<React.SetStateAction<string>> | undefined
 let scaleHook: React.Dispatch<React.SetStateAction<string>> | undefined
+let closeScreenHook: (() => void) | undefined
 let lastData = 0
 let lastScale = new Vector3()
 let lastImageSize = new Vector2()
@@ -55,17 +58,20 @@ function throttle<T extends (...args: unknown[]) => void>(func: T, limit: number
     } as T;
 }
 
-
 const updatePreviewImage = () => {
-    print("running")
     if (!loadedRenderRef || !viewFinderImage) return
-    //if (tick() - lastPreviewImageUpdate < .5) return
-    //lastPreviewImageUpdate = tick()
 
     const settings = require(loadedRenderRef.Clone()) as Settings
+    previewSettings(settings)
+    const imageSize = getImageDimensions(settings.resolution, settings.mapScale)
+
+    if (imageSize.X > MAX_IMAGE_SIZE.X || imageSize.Y > MAX_IMAGE_SIZE.Y) {
+        clearViewFinderImage()
+        return
+    }
+
     const imageData = renderPreview(settings)
     imageData.then(data => {
-        const imageSize = getImageDimensions(settings.resolution, settings.mapScale)
         const tempCanvas = game.GetService("AssetService").CreateEditableImage({
             Size: imageSize
         })
@@ -86,9 +92,11 @@ const updatePreviewImage = () => {
 
 
         clearViewFinderImage()
+        const scaleFit = math.min(1, VIEWFINDER_IMAGE_SIZE.X / imageSize.X, VIEWFINDER_IMAGE_SIZE.Y / imageSize.Y);
+
         viewFinderImage?.DrawImageTransformed(
             VIEWFINDER_IMAGE_SIZE.div(2),
-            new Vector2(1,1),
+            new Vector2(scaleFit,scaleFit),
             0,
             tempCanvas,
             {
@@ -108,6 +116,21 @@ const clearViewFinderImage = () => {
         VIEWFINDER_IMAGE_SIZE,
         clearBuff
     )
+    //drawDiagonalLines()
+}
+
+const drawDiagonalLines = () => {
+    if (!viewFinderImage) return
+    const LINE_SPACING = 5
+    for (let x = 0; x <= viewFinderImage.Size.X; x += LINE_SPACING) {
+        viewFinderImage.DrawLine(
+            new Vector2(x, 0),
+            new Vector2(viewFinderImage.Size.X - x, viewFinderImage.Size.Y),
+            uiConstants.primaryColor,
+            0,
+            Enum.ImageCombineType.Overwrite
+        )
+    }
 }
 
 const getRandomRenderSettings = (): boolean => {
@@ -162,6 +185,7 @@ const cleanUpLastLoadedRender = () => {
     imageSizeHook = undefined
     dataHook = undefined
     scaleHook = undefined
+    closeScreenHook = undefined
     connections.forEach(x => x.Disconnect())
     selectionService.Set([])
 }
@@ -169,11 +193,13 @@ const cleanUpLastLoadedRender = () => {
 export const setUpdaters = (
     imageSize: React.Dispatch<React.SetStateAction<string>>,
     scale: React.Dispatch<React.SetStateAction<string>>,
-    data: React.Dispatch<React.SetStateAction<string>>
+    data: React.Dispatch<React.SetStateAction<string>>,
+    closeScreen: () => void
 ): void => {
     imageSizeHook = imageSize
     scaleHook = scale
     dataHook = data
+    closeScreenHook = closeScreen
     lastData = 0;
     lastScale = new Vector3() 
     lastImageSize = new Vector2()
@@ -185,11 +211,13 @@ const setupUpdateConnections = (render: ModuleScript) => {
 
     const c0PositionConnection = c0.GetPropertyChangedSignal("Position")
     const c1PositionConnection = c1.GetPropertyChangedSignal("Position")
-    const centerConnection = c1.GetPropertyChangedSignal("Size")
+    const centerConnection = c1.Changed as RBXScriptSignal
+
 
     connections.push(
         centerConnection.Connect(() => {
             center.Size = new Vector3(1,1,1)
+            updateUI()
         }),
         c0PositionConnection.Connect(() => {
             updateBoxFromHandles(render)
@@ -199,7 +227,8 @@ const setupUpdateConnections = (render: ModuleScript) => {
             updateBoxFromHandles(render)
             updateUI()
         }),
-        render.GetPropertyChangedSignal("Source").Connect(updateUI)
+        render.GetPropertyChangedSignal("Source").Connect(updateUI),
+        center.Destroying.Connect(() => cleanUpLastLoadedRender())
     )
 }
 
@@ -357,3 +386,11 @@ export function autoConfigureBoundingBox(){
     c0.CFrame = centerPos.mul(new CFrame(size.div(-2)))
     c1.CFrame = centerPos.mul(new CFrame(size.div(2)))
 }
+
+const previewSettings = (settings: Settings): void => {
+    settings.resolution = settings.mapScale.Z / VIEWFINDER_IMAGE_SIZE.Y
+    settings.actors = 3
+    settings.samples = 0
+    settings.shadows.enabled = false
+}
+

@@ -31,8 +31,12 @@ export function RenderConfigScreen(props: {
     const [scale, setScale] = useState<string>("")
     const [data, setData] = useState<string>("")
 
+    const closeScreen = () => {
+        props.changeScreen(Screens.Home)
+    }
+
     useEffect(() => {
-        setUpdaters(setImageSize, setScale, setData)
+        setUpdaters(setImageSize, setScale, setData, closeScreen)
     }, [])
 
     const validateUUID = (id: string | undefined): boolean => {
@@ -55,6 +59,7 @@ export function RenderConfigScreen(props: {
                 HorizontalAlignment={Enum.HorizontalAlignment.Center}
                 VerticalAlignment={Enum.VerticalAlignment.Center}
                 Padding={new UDim(0,uiConstants.spacingNormal)}
+                SortOrder={Enum.SortOrder.LayoutOrder}
             />
 
             <textlabel
@@ -95,6 +100,17 @@ export function RenderConfigScreen(props: {
             <frame
                 BackgroundTransparency={1}
                 Size={new UDim2(1,0,0,5)}
+            />
+
+            <textlabel
+                TextColor3={uiConstants.secondayText}
+                BackgroundTransparency={1}
+                Font={uiConstants.boldFont}
+                Text={"Viewfinder"}
+                Size={new UDim2(1,0,0,15)}
+                TextSize={uiConstants.fontSizeNormal}
+                TextXAlignment={Enum.TextXAlignment.Left}
+                AnchorPoint={new Vector2(.5, .5)}
             />
             <ViewFinder size={new UDim2(1, 0, 0, 100)} />
             <Textarea label="Render Id" placeholder="Paste the render id here" size={new UDim2(1,0,0,60)} textChanged={textChanged}/>

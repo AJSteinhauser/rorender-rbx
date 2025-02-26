@@ -34,7 +34,7 @@ export function ViewFinder(props: {
 				ApplyStrokeMode={Enum.ApplyStrokeMode.Border}
 			/>
 
-			<uipadding PaddingLeft={new UDim(0, 2)} PaddingRight={new UDim(0, 2)} />
+			<uipadding PaddingLeft={new UDim(0, 3)} PaddingRight={new UDim(0, 3)} />
             <imagelabel
                 Size={UDim2.fromScale(1,1)}
                 ImageContent={contentRef.current}

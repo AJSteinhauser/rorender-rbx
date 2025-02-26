@@ -27,4 +27,4 @@ export interface ActorHelperRequestPayload {
     assetId: string
 }
 
-export const VIEWFINDER_IMAGE_SIZE = new Vector2(150, 150)
+export const VIEWFINDER_IMAGE_SIZE = new Vector2(100, 100)
