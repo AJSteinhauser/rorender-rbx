@@ -118,8 +118,9 @@ Ensure latest npm and Rojo is installed
 
 - [x] Auto configure render cube 
 - [ ] Allow users to Resend render to another UUID if initial UUID was invalid
-- [ ] Viewfinder for render preview
-- [ ] Beta Testing
+- [x] Viewfinder for render preview
+- [x] Beta Testing
+- [ ] Direct buffer manipulation for RLE & huffman encoding 
 - [ ] Multi-language Support
     - [ ] Chinese
     - [ ] Spanish
