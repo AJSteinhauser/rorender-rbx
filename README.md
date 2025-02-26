@@ -120,6 +120,7 @@ Ensure latest npm and Rojo is installed
 - [ ] Allow users to Resend render to another UUID if initial UUID was invalid
 - [x] Viewfinder for render preview
 - [x] Beta Testing
+- [ ] Advanced config screen
 - [ ] Direct buffer manipulation for RLE & huffman encoding 
 - [ ] Multi-language Support
     - [ ] Chinese
