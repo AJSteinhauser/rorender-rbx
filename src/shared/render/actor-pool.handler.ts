@@ -1,7 +1,7 @@
 import { act } from "@rbxts/react-roblox"
 import { Settings } from "shared/settings/settings.model"
 
-const threads = script.Parent?.Parent?.Parent?.FindFirstChild("threads") as Folder
+const actor = script.Parent?.Parent?.Parent?.FindFirstChild("threads")?.FindFirstChild("actor") as Actor
 
 export class WorkerPool {
     private actorPoolIntialized = false
@@ -33,9 +33,11 @@ export class WorkerPool {
             renderSettings.actors = 1
         }
         this.actorPoolIntialized = true
-        const preInstantiatedActors = threads.GetChildren().filter(x => x.IsA("Actor"))
-        for (let i = 0; i < math.min(renderSettings.actors,preInstantiatedActors.size()) ; i++) {
-            this.pool.push(preInstantiatedActors[i] as Actor)
+        for (let i = 0; i < renderSettings.actors; i++) {
+            const clone = actor.Clone()
+            clone.Parent = actor.Parent
+            clone.Parent = actor.Parent
+            this.pool.push(clone)
         }
     }
 
@@ -56,7 +58,7 @@ export class WorkerPool {
     }
 
     cleanup = () => {
-        //this.pool.forEach(actor => actor.Destroy())
+        this.pool.forEach(actor => actor.Destroy())
         this.pool = []
     }
 }
