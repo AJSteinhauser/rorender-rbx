@@ -48,7 +48,6 @@ export const setViewfinderImage = (image: EditableImage) => {
 function throttle<T extends (...args: unknown[]) => void>(func: T, limit: number): T {
     let initalized = false
     let mostRecentThread: thread
-    let lastUpdate = tick()
 
     return function (...args: Parameters<T>) {
         if (!initalized) {
@@ -56,11 +55,6 @@ function throttle<T extends (...args: unknown[]) => void>(func: T, limit: number
             initalized = true
             return 
         }
-        if (tick() - lastUpdate < .05) {
-            print("Stopped")
-            return
-        }
-        lastUpdate = tick()
         const thread = task.delay(limit, () => {
             if (mostRecentThread === thread) {
                 func(...args)
