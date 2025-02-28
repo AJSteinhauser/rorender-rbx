@@ -1,4 +1,4 @@
-import React, { useState } from "@rbxts/react";
+import React, { useEffect, useState } from "@rbxts/react";
 import { StartScreen } from "./start-screen";
 import { RenderConfigScreen } from "./render-config-screen";
 import { Screens } from "ui/constants";
@@ -55,6 +55,20 @@ export function Main() {
         currentStatusText
     }
 
+    const [pluginDebuggingEnabled, setPluginDebuggingEnabled] = useState(true)
+
+    useEffect(() => {
+        try {
+            const actor = new Instance("Actor")
+            actor.Parent = script.Parent
+            actor.SendMessage("Testing")
+        }
+        catch(e) {
+            setPluginDebuggingEnabled(false)
+        }
+    }, [])
+
+
     const renderedScreen = () => {
         switch(selectedScreen){
             case Screens.Home:
@@ -73,14 +87,16 @@ export function Main() {
             Size={UDim2.fromScale(1,1)}
             BackgroundColor3={uiConstants.groundColor}
         >
-            <textlabel
-                Size={new UDim2(1,0,0,30)}
-                BackgroundColor3={uiConstants.primaryColor}
-                TextColor3={uiConstants.blackText}
-                Font={uiConstants.lessboldFont}
-                Text={"Ensure (File>Studio Settings>Plugin Debugging Enabled) is enabled to use this plugin."}
-                TextScaled={true}
-            />
+            { !pluginDebuggingEnabled &&
+                <textlabel
+                    Size={new UDim2(1,0,0,30)}
+                    BackgroundColor3={uiConstants.primaryColor}
+                    TextColor3={uiConstants.blackText}
+                    Font={uiConstants.lessboldFont}
+                    Text={"Ensure (File>Studio Settings>Plugin Debugging Enabled) is enabled to use this plugin."}
+                    TextScaled={true}
+                />
+            }
             <frame
                 Size={new UDim2(1,-50,1,-50)}
                 Position={UDim2.fromScale(.5,.5)}

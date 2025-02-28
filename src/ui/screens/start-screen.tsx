@@ -20,6 +20,7 @@ export function StartScreen(props: {
         return settings
     }
 
+    const [pluginDebuggingEnabled, setPluginDebuggingEnabled] = useState(true)
     useEffect(() => {
         try {
             const actor = new Instance("Actor")
@@ -27,9 +28,12 @@ export function StartScreen(props: {
             actor.SendMessage("Testing")
         }
         catch(e) {
-            props.errorMessage("\"Plugin Debugging Enabled\" is currently inactive. Please enable it and restart Studio. If the issue persists, restart your computer." )
+            setPluginDebuggingEnabled(false)
         }
     }, [])
+
+    const pluginDebuggerError = () => 
+        props.errorMessage("\"Plugin Debugging Enabled\" is currently inactive. Please enable it ( File > Studio Settings > Studio > Debugger > Plugin Debugger Enabled or use the top search bar within studio settings) and restart Studio. If the issue persists after enabling, please restart your computer." )
 
 	return (
         <frame
@@ -51,11 +55,19 @@ export function StartScreen(props: {
                 TextSize={uiConstants.fontSizeTitle}
             />
             <Button label="Create Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => {
+                if (!pluginDebuggingEnabled) {
+                    pluginDebuggerError()
+                    return
+                }
                 const renderSettings = createSettingsModule()
                 loadRender(renderSettings)
                 props.changeScreen(Screens.Configuration)
             }}/>
             <Button label="Load Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() =>{
+                if (!pluginDebuggingEnabled) {
+                    pluginDebuggerError()
+                    return
+                }
                 try {
                     const success = getRenderSettingsFromSelection()
                     if (success){ 
