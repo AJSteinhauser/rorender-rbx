@@ -73,6 +73,14 @@ export function Main() {
             Size={UDim2.fromScale(1,1)}
             BackgroundColor3={uiConstants.groundColor}
         >
+            <textlabel
+                Size={new UDim2(1,0,0,30)}
+                BackgroundColor3={uiConstants.primaryColor}
+                TextColor3={uiConstants.blackText}
+                Font={uiConstants.lessboldFont}
+                Text={"Ensure (File>Studio Settings>Plugin Debugging Enabled) is enabled to use this plugin."}
+                TextScaled={true}
+            />
             <frame
                 Size={new UDim2(1,-50,1,-50)}
                 Position={UDim2.fromScale(.5,.5)}

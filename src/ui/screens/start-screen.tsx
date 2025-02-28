@@ -1,4 +1,4 @@
-import React, { useState } from "@rbxts/react";
+import React, { useEffect, useState } from "@rbxts/react";
 import { Button, ButtonType } from "ui/button";
 import { getRenderSettingsFromSelection, loadRender } from "ui/config-helper";
 import { Screens } from "ui/constants";
@@ -19,6 +19,18 @@ export function StartScreen(props: {
         selectionService.Set([settings])
         return settings
     }
+
+    useEffect(() => {
+        try {
+            const actor = new Instance("Actor")
+            actor.Parent = script.Parent
+            actor.SendMessage("Testing")
+        }
+        catch(e) {
+            props.errorMessage("\"Plugin Debugging Enabled\" is currently inactive. Please enable it and restart Studio. If the issue persists, restart your computer." )
+        }
+    }, [])
+
 	return (
         <frame
             Size={UDim2.fromScale(1,1)}
