@@ -6,7 +6,7 @@ import {
     autoConfigureBoundingBox,
     getCurrentRender,
     QuickSelect,
-    QuickSelectModule,
+    quickSelectModule,
     setUpdaters,
     unloadRender,
 } from "ui/config-helper";
@@ -91,10 +91,10 @@ export function RenderConfigScreen(props: {
                         FillDirection={Enum.FillDirection.Horizontal}
                         Padding={new UDim(0,uiConstants.spacingNormal)}
                     />
-                    <Button label="Corner 0" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C0)} />
-                    <Button label="Corner 1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => QuickSelectModule(QuickSelect.C1)} />
+                    <Button label="Corner 0" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => quickSelectModule(QuickSelect.C0)} />
+                    <Button label="Corner 1" buttonType={ButtonType.outline} size={new UDim2(.5,-5,0,30)} clicked={() => quickSelectModule(QuickSelect.C1)} />
                 </frame>
-                <Button label="Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => QuickSelectModule(QuickSelect.Module)} />
+                <Button label="Settings Module" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => quickSelectModule(QuickSelect.Module)} />
                 <Button label="Auto Configure" buttonType={ButtonType.outline} size={new UDim2(1,0,0,30)} clicked={() => autoConfigureBoundingBox()} />
             </frame>
             <frame

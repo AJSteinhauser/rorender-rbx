@@ -16,6 +16,7 @@ let closeScreenHook: (() => void) | undefined
 let lastData = 0
 let lastScale = new Vector3()
 let lastImageSize = new Vector2()
+let renderHashCache = ""
 
 export enum QuickSelect {
     C0,
@@ -42,27 +43,37 @@ export const getRenderSettingsFromSelection = (): boolean => {
 
 export const setViewfinderImage = (image: EditableImage) => {
     viewFinderImage = image
-    updatePreviewImage()
 }
 
 function throttle<T extends (...args: unknown[]) => void>(func: T, limit: number): T {
-    let mostRecentId: thread
+    let initalized = false
+    let mostRecentThread: thread
+    let lastUpdate = tick()
 
     return function (...args: Parameters<T>) {
+        if (!initalized) {
+            func(...args)
+            initalized = true
+            return 
+        }
+        if (tick() - lastUpdate < .05) {
+            print("Stopped")
+            return
+        }
+        lastUpdate = tick()
         const thread = task.delay(limit, () => {
-            if (mostRecentId === thread) {
+            if (mostRecentThread === thread) {
                 func(...args)
             }
         })
-        mostRecentId = thread
+        mostRecentThread = thread
     } as T;
 }
 
-const updatePreviewImage = () => {
+const updatePreviewImage = (scale: Vector3, cframe: CFrame) => {
     if (!loadedRenderRef || !viewFinderImage) return
 
-    const settings = require(loadedRenderRef.Clone()) as Settings
-    previewSettings(settings)
+    const settings = previewSettings(scale, cframe)
     const imageSize = getImageDimensions(settings.resolution, settings.mapScale)
 
     if (imageSize.X > MAX_IMAGE_SIZE.X || imageSize.Y > MAX_IMAGE_SIZE.Y) {
@@ -162,7 +173,7 @@ export const unloadRender = () => {
     cleanUpLastLoadedRender()
 }
 
-export const QuickSelectModule = (item: QuickSelect) => {
+export const quickSelectModule = (item: QuickSelect) => {
     if (!loadedRenderRef) {
         return
     }
@@ -207,7 +218,7 @@ export const setUpdaters = (
 }
 
 const setupUpdateConnections = (render: ModuleScript) => {
-    const { c0, c1, center } = getElementsFromSettings(render)
+    const { c0, c1, center, mesh } = getElementsFromSettings(render)
 
     const c0PositionConnection = c0.GetPropertyChangedSignal("Position")
     const c1PositionConnection = c1.GetPropertyChangedSignal("Position")
@@ -247,14 +258,14 @@ export const updateUI = () => {
     if (!settings) {
         return
     }
-    const { mesh } = getElementsFromSettings(renderSettings)
+    const { mesh, center } = getElementsFromSettings(renderSettings)
     updateDepthText()
     updateImageSizeText(resolution, mesh.Scale)
     updateDataText(resolution, mesh.Scale)
-    updatePreviewImageThrottled()
+    updatePreviewImageThrottled(mesh.Scale, center.CFrame)
 }
 
-const updatePreviewImageThrottled = throttle(updatePreviewImage, .3)
+const updatePreviewImageThrottled = throttle(updatePreviewImage as (...args: unknown[]) => any, .3)
 
 function updateDataText(resolution: number, scale: Vector3) {
     if (!dataHook) {
@@ -387,10 +398,26 @@ export function autoConfigureBoundingBox(){
     c1.CFrame = centerPos.mul(new CFrame(size.div(2)))
 }
 
-const previewSettings = (settings: Settings): void => {
-    settings.resolution = settings.mapScale.Z / VIEWFINDER_IMAGE_SIZE.Y
-    settings.actors = 3
-    settings.samples = 0
-    settings.shadows.enabled = false
+const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
+    const resolution = mapScale.Z / VIEWFINDER_IMAGE_SIZE.Y
+    return {
+        mapScale,
+        mapCFrame,
+        resolution,
+        terrain: [],
+        buildingGroups: [],
+        roadGroups: [],
+        water: {
+            name: "water",
+            materials: [Enum.Material.Water]
+        },
+        samples: 0,
+        shadows: {
+            enabled: false,
+            sunDirection: new Vector3(),
+            darkness: .3
+        },
+        actors: 3
+    }
 }
 
