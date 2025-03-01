@@ -24,5 +24,7 @@
 		"baseUrl": "src",
 		"incremental": true,
 		"tsBuildInfoFile": "out/tsconfig.tsbuildinfo"
-	}
+	},
+    "include": ["src"], // Only include the `src` directory
+    "exclude": ["prebuild.ts"] // Exclude `prebuild.ts`
 }

@@ -22,12 +22,16 @@ export function getEditableImage(imageId: string): EditableImage {
     return getEditableFromId(imageId, imageCacheStore, getEditableImageFromRoblox)
 }
 
+function createContentFromID(assetId: string): Content { 
+    return Content.fromUri("rbxassetid://" + assetId)
+}
+
 function getEditableMeshFromRoblox(assetId: string): EditableMesh {
-    return ASSET_SERVICE.CreateEditableMeshAsync(assetId)
+    return ASSET_SERVICE.CreateEditableMeshAsync(createContentFromID(assetId))
 }
 
 function getEditableImageFromRoblox(assetId: string): EditableImage {
-    return ASSET_SERVICE.CreateEditableImageAsync(assetId)
+    return ASSET_SERVICE.CreateEditableImageAsync(createContentFromID(assetId))
 }
 
 function getEditableFromId<T extends EditableClass>(

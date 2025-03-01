@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "@rbxts/react";
+import { getFFlagStatus } from "fflags/fflags";
 import { Button, ButtonType } from "ui/button";
 import { getRenderSettingsFromSelection, loadRender } from "ui/config-helper";
 import { Screens } from "ui/constants";
@@ -30,7 +31,10 @@ export function StartScreen(props: {
         catch(e) {
             setPluginDebuggingEnabled(false)
         }
+        const flagStatus = getFFlagStatus("earlyRelease", "localPluginActive")
+        print("Prod build flag", flagStatus)
     }, [])
+
 
     const pluginDebuggerError = () => 
         props.errorMessage("\"Plugin Debugging Enabled\" is currently inactive. Please enable it ( File > Studio Settings > Studio > Debugger > Plugin Debugger Enabled or use the top search bar within studio settings) and restart Studio. If the issue persists after enabling, please restart your computer." )
