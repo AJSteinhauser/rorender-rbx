@@ -22,6 +22,7 @@ export function StartScreen(props: {
     }
 
     const [pluginDebuggingEnabled, setPluginDebuggingEnabled] = useState(true)
+    const [earlyReleaseEnabled, setEarlyReleaseEnabled] = useState(true)
     useEffect(() => {
         try {
             const actor = new Instance("Actor")
@@ -31,10 +32,12 @@ export function StartScreen(props: {
         catch(e) {
             setPluginDebuggingEnabled(false)
         }
-        const flagStatus = getFFlagStatus("earlyRelease", "localPluginActive")
-        print("Prod build flag", flagStatus)
+        setEarlyReleaseEnabled(getFFlagStatus("earlyRelease", "localPluginActive"))
     }, [])
 
+
+    const pluginEarlyReleaseError = () => 
+        props.errorMessage("The Early Release plugin has been disabled. To access the latest active version, please visit https://rorender.com/plugin")
 
     const pluginDebuggerError = () => 
         props.errorMessage("\"Plugin Debugging Enabled\" is currently inactive. Please enable it ( File > Studio Settings > Studio > Debugger > Plugin Debugger Enabled or use the top search bar within studio settings) and restart Studio. If the issue persists after enabling, please restart your computer." )
@@ -63,6 +66,11 @@ export function StartScreen(props: {
                     pluginDebuggerError()
                     return
                 }
+                if (!earlyReleaseEnabled) {
+                    pluginEarlyReleaseError()
+                    return
+                }
+
                 const renderSettings = createSettingsModule()
                 loadRender(renderSettings)
                 props.changeScreen(Screens.Configuration)
@@ -72,6 +80,11 @@ export function StartScreen(props: {
                     pluginDebuggerError()
                     return
                 }
+                if (!earlyReleaseEnabled) {
+                    pluginEarlyReleaseError()
+                    return
+                }
+
                 try {
                     const success = getRenderSettingsFromSelection()
                     if (success){ 
