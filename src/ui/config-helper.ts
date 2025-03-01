@@ -411,7 +411,7 @@ const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
             sunDirection: new Vector3(),
             darkness: .3
         },
-        actors: 3
+        actors: 50 
     }
 }
 
