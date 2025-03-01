@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "@rbxts/react";
+import React, { useBinding, useEffect, useRef, useState } from "@rbxts/react";
 import { runRender } from "server/render-runner";
 import { Settings } from "shared/settings/settings.model";
 import { Button, ButtonType } from "ui/button";
@@ -26,10 +26,35 @@ export function RenderConfigScreen(props: {
     progressHooks: ProgressUpdateHooks
     errorOccured: (message: string) => void
 }) {
+    const scrollingFrameRef = useRef<ScrollingFrame>(undefined!);
     const [renderId, setRenderId] = useState<undefined | string>(undefined)
     const [imageSize, setImageSize] = useState<string>("")
     const [scale, setScale] = useState<string>("")
     const [data, setData] = useState<string>("")
+    const [needsScroll, setNeedsScroll] = useState(false);
+
+
+    useEffect(() => {
+        const scrollingFrame = scrollingFrameRef.current;
+        if (!scrollingFrame) return;
+
+        const checkScrolling = () => {
+            const contentHeight = scrollingFrame.AbsoluteCanvasSize.Y;
+            const frameHeight = scrollingFrame.AbsoluteSize.Y;
+            setNeedsScroll(contentHeight > frameHeight);
+        };
+
+        const sizeConnection = scrollingFrame.GetPropertyChangedSignal("AbsoluteSize").Connect(checkScrolling);
+        const canvasConnection = scrollingFrame.GetPropertyChangedSignal("AbsoluteCanvasSize").Connect(checkScrolling);
+
+        // Initial check with a small delay to let the layout calculations complete
+        task.delay(0.1, checkScrolling);
+
+        return () => {
+            sizeConnection.Disconnect();
+            canvasConnection.Disconnect();
+        };
+    }, []);
 
     const closeScreen = () => {
         props.changeScreen(Screens.Home)
@@ -51,13 +76,26 @@ export function RenderConfigScreen(props: {
     }
 
 	return (
-        <frame
+        <scrollingframe
+            ref={scrollingFrameRef}
             Size={UDim2.fromScale(1,1)}
             BackgroundTransparency={1}
+            CanvasSize = {UDim2.fromScale(1, 0)}
+            AutomaticCanvasSize = {Enum.AutomaticSize.Y}
+            ScrollBarThickness={8}
+            ScrollBarImageColor3={uiConstants.borderColor}
+            BorderSizePixel={0}
+            ScrollingDirection={Enum.ScrollingDirection.Y}
         >
+            <uipadding
+                PaddingLeft={new UDim(0,1)}
+                PaddingTop={new UDim(0,10)}
+                PaddingBottom={new UDim(0,10)}
+                PaddingRight={new UDim(0, needsScroll ? 14 : 1)}
+            />
             <uilistlayout
                 HorizontalAlignment={Enum.HorizontalAlignment.Center}
-                VerticalAlignment={Enum.VerticalAlignment.Center}
+                VerticalAlignment={needsScroll ? Enum.VerticalAlignment.Top : Enum.VerticalAlignment.Center}
                 Padding={new UDim(0,uiConstants.spacingNormal)}
                 SortOrder={Enum.SortOrder.LayoutOrder}
             />
@@ -167,6 +205,6 @@ export function RenderConfigScreen(props: {
                     <RenderProperty size={new UDim2(1,0,0,20)} property="Raw Data" value={data} />
                 </frame>
             </frame>
-        </frame>
+        </scrollingframe>
 	);
 }
