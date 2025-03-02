@@ -37,7 +37,7 @@ export function StartScreen(props: {
 
 
     const pluginEarlyReleaseError = () => 
-        props.errorMessage("The Early Release plugin has been disabled. To access the latest active version, please visit https://rorender.com/plugin")
+        props.errorMessage("The Early Release plugin has been disabled. To access the latest active version, please visit https://rorender.com/redirects/plugin")
 
     const pluginDebuggerError = () => 
         props.errorMessage("\"Plugin Debugging Enabled\" is currently inactive. Please enable it ( File > Studio Settings > Studio > Debugger > Plugin Debugger Enabled or use the top search bar within studio settings) and restart Studio. If the issue persists after enabling, please restart your computer." )
