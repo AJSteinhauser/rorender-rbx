@@ -24,6 +24,7 @@
 [![Issues][issues-shield]][issues-url]
 [![Unlicense License][license-shield]][license-url]
 
+
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
@@ -36,14 +37,16 @@
   <p align="center">
     A Roblox plugin to generate maps for RoRenderV4
     <br />
-    <a href="https://rorender.com/plugin"><strong>RoRender Plugin</strong></a>
+    <a href="https://rorender.com/redirect/plugin"><strong>RoRender Plugin</strong></a>
     &middot;
     <a href="https://rorender.com"><strong>RoRender Website</strong></a>
     <br />
     <br />
-    <a href="https://rorender.com">View Demo</a>
+    <a href="https://rorender.com/demo/village">View Demo</a>
     &middot;
     <a href="https://github.com/AJSteinhauser/rorender-rbx/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    &middot;
+    <a href="https://github.com/AJSteinhauser/rorender-rbx/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
     &middot;
     <a href="https://github.com/AJSteinhauser/rorender-rbx/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
@@ -199,6 +202,7 @@ Project Link: [https://github.com/AJSteinhauser/rorender-rbx](https://github.com
 Project Link: [https://github.com/AJSteinhauser/rorender-rbx](https://github.com/AJSteinhauser/rorender-rbx)
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[Discord-shield]: https://img.shields.io/discord/1330005977021546526
 [contributors-shield]: https://img.shields.io/github/contributors/AJSteinhauser/rorender-rbx.svg?style=for-the-badge
 [contributors-url]: https://github.com/AJSteinhauser/rorender-rbx/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/AJSteinhauser/rorender-rbx.svg?style=for-the-badge
