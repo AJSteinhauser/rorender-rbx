@@ -37,7 +37,7 @@
   <p align="center">
     A Roblox plugin to generate maps for RoRenderV4
     <br />
-    <a href="https://rorender.com/redirect/plugin"><strong>RoRender Plugin</strong></a>
+    <a href="https://rorender.com/redirect/plugin"><strong>Roblox Plugin</strong></a>
     &middot;
     <a href="https://rorender.com"><strong>RoRender Website</strong></a>
     <br />
