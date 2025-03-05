@@ -23,7 +23,7 @@ export function getEditableImage(imageId: string): EditableImage {
 }
 
 function createContentFromID(assetId: string): Content { 
-    return Content.fromUri("rbxassetid://" + assetId)
+    return Content.fromUri(assetId)
 }
 
 function getEditableMeshFromRoblox(assetId: string): EditableMesh {
