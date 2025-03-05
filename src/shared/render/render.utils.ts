@@ -79,7 +79,7 @@ export function computePixel(
 
     // Compute color
     let color = averageColorSamples(results);
-    color = averageShadeSamples(results, color);
+    color = averageShadeSamples(results, color, settings);
     color = gammaNormalizeSamples(color);
     if (settings.shadows.enabled) {
         color = applyShadowsSamples(results, color, settings)
@@ -318,16 +318,16 @@ function showDebugRayPosition(position: Vector3): Part {
     return part
 } 
 
-function averageShadeSamples(rayCastResults: RaycastResult[], inputColor: Vector3): Vector3 {
+function averageShadeSamples(rayCastResults: RaycastResult[], inputColor: Vector3, settings: Settings): Vector3 {
     let color = new Vector3(0, 0, 0)
     rayCastResults.forEach((result: RaycastResult) => {
-        color = color.add(convertVector3SrgbToLinear(shadeColor(inputColor,result)))
+        color = color.add(convertVector3SrgbToLinear(shadeColor(inputColor,result, settings)))
     })
     return convertVector3LinearToSrgb(color.div(rayCastResults.size()))
 }
 
-function shadeColor(color: Vector3, result: RaycastResult): Vector3 {
-    const recievedIlluminance = math.max(result.Normal.Dot(SUN_POSITION), 0)
+function shadeColor(color: Vector3, result: RaycastResult, settings: Settings): Vector3 {
+    const recievedIlluminance = math.max(result.Normal.Dot(settings.shadows.sunDirection), 0)
     return color.mul(0.2 + recievedIlluminance * 0.8)
 }
 

@@ -1,11 +1,16 @@
-import { renderPreview } from "shared/render/render.main"
+import { render, renderPreview } from "shared/render/render.main"
 import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model"
 import { Settings } from "shared/settings/settings.model"
 import uiConstants from "./ui-constants"
 
-const MAX_IMAGE_SIZE = new Vector2(1024, 1024)
-
+const lighting = game.GetService('Lighting')
 const selectionService = game.GetService("Selection")
+const assetService = game.GetService('AssetService')
+
+const MAX_IMAGE_SIZE = new Vector2(1024, 1024)
+const WATER_COLOR = Color3.fromRGB(66, 135, 245)
+const WATER_OPACITY = .7
+
 let loadedRenderRef: ModuleScript | undefined 
 let viewFinderImage: EditableImage | undefined = undefined
 let connections: RBXScriptConnection[] = []
@@ -16,7 +21,7 @@ let closeScreenHook: (() => void) | undefined
 let lastData = 0
 let lastScale = new Vector3()
 let lastImageSize = new Vector2()
-let renderHashCache = ""
+let renderWater = false
 
 export enum QuickSelect {
     C0,
@@ -41,9 +46,15 @@ export const getRenderSettingsFromSelection = (): boolean => {
     return true
 }
 
-export const setViewfinderImage = (image: EditableImage) => {
+export const setViewfinderSettings = (image: EditableImage) => {
     viewFinderImage = image
 }
+
+export const updateShowWater = (show: boolean) => {
+    renderWater = show
+    updateUI()
+}
+
 
 function throttle<T extends (...args: unknown[]) => void>(func: T, limit: number): T {
     let initalized = false
@@ -77,16 +88,30 @@ const updatePreviewImage = (scale: Vector3, cframe: CFrame) => {
 
     const imageData = renderPreview(settings)
     imageData.then(data => {
-        const tempCanvas = game.GetService("AssetService").CreateEditableImage({
+        const tempCanvas = assetService.CreateEditableImage({
             Size: imageSize
         })
         const imageSizeTotal = imageSize.X * imageSize.Y
         const imageBuff = buffer.create(imageSize.X * imageSize.Y * 4)
         for (let i = 0; i < imageSizeTotal; i++) {
             const baseIdx = i * 4
-            buffer.writeu8(imageBuff, baseIdx, buffer.readu8(data.red, i))
-            buffer.writeu8(imageBuff, baseIdx + 1, buffer.readu8(data.green, i))
-            buffer.writeu8(imageBuff, baseIdx + 2, buffer.readu8(data.blue, i))
+            let outputColor = new Vector3(
+                buffer.readu8(data.red, i),
+                buffer.readu8(data.green, i),
+                buffer.readu8(data.blue, i)
+            )
+            if (renderWater) {
+                if (buffer.readu8(data.water, i) > 0) {
+                    outputColor = new Vector3(
+                        (1 - WATER_OPACITY) * outputColor.X + WATER_OPACITY * WATER_COLOR.R * 255,
+                        (1 - WATER_OPACITY) * outputColor.Y + WATER_OPACITY * WATER_COLOR.G * 255,
+                        (1 - WATER_OPACITY) * outputColor.Z + WATER_OPACITY * WATER_COLOR.B * 255,
+                    )
+                }
+            }
+            buffer.writeu8(imageBuff, baseIdx, outputColor.X)
+            buffer.writeu8(imageBuff, baseIdx + 1, outputColor.Y)
+            buffer.writeu8(imageBuff, baseIdx + 2, outputColor.Z)
             buffer.writeu8(imageBuff, baseIdx + 3, 255)
         }
         tempCanvas?.WritePixelsBuffer(
@@ -233,6 +258,7 @@ const setupUpdateConnections = (render: ModuleScript) => {
             updateUI()
         }),
         render.GetPropertyChangedSignal("Source").Connect(updateUI),
+        lighting.GetPropertyChangedSignal('ClockTime').Connect(() => updateUI()),
         center.Destroying.Connect(() => cleanUpLastLoadedRender())
     )
 }
@@ -408,7 +434,7 @@ const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
         samples: 0,
         shadows: {
             enabled: false,
-            sunDirection: new Vector3(),
+            sunDirection: lighting.GetSunDirection(),
             darkness: .3
         },
         actors: 50 
