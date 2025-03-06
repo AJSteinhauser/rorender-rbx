@@ -1,7 +1,7 @@
 import mount from "ui/mount";
-
-const toolbar = plugin.CreateToolbar("RoRender V4");
-const button = toolbar.CreateButton("RoRender V4", "Open/Close RoRender UI", "rbxassetid://75392948701753");
+const Name = "RoRender V4"
+const toolbar = plugin.CreateToolbar(Name);
+const button = toolbar.CreateButton(Name, "Open/Close RoRender UI", "rbxassetid://75392948701753");
 const dockSettings = new DockWidgetPluginGuiInfo(
     Enum.InitialDockState.Left,
     false,
@@ -12,9 +12,23 @@ const dockSettings = new DockWidgetPluginGuiInfo(
     800
 )
 
-const dockWindow = plugin.CreateDockWidgetPluginGui("RoRender V4", dockSettings)
-dockWindow.Name = "RoRender V4"
-//dockWindow.Title = "RoRender V4"
+const dockSettingsPreview = new DockWidgetPluginGuiInfo(
+    Enum.InitialDockState.Float,
+    false,
+    true,
+    500,
+    500,
+    500,
+    500
+)
+
+const dockWindow = plugin.CreateDockWidgetPluginGui(Name, dockSettings)
+dockWindow.Name = Name
+dockWindow.Title = Name
+
+const dockWindowPreview = plugin.CreateDockWidgetPluginGui(`${Name} Preview`, dockSettingsPreview)
+dockWindowPreview.Name = `${Name} Preview`
+dockWindowPreview.Title = `${Name} Preview`
 
 button.Click.Connect(() => {
     dockWindow.Enabled = !dockWindow.Enabled

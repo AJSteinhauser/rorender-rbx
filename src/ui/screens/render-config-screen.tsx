@@ -44,11 +44,21 @@ export function RenderConfigScreen(props: {
             setNeedsScroll(contentHeight > frameHeight);
         };
 
+        const NameToLayoutOrder = () => {
+            const children = scrollingFrame.GetChildren();
+            children.forEach((child, index) => {
+                if (child.IsA("GuiObject")) {
+                    child.LayoutOrder = index;
+                }
+            });
+        }
+
         const sizeConnection = scrollingFrame.GetPropertyChangedSignal("AbsoluteSize").Connect(checkScrolling);
         const canvasConnection = scrollingFrame.GetPropertyChangedSignal("AbsoluteCanvasSize").Connect(checkScrolling);
 
         // Initial check with a small delay to let the layout calculations complete
         task.delay(0.1, checkScrolling);
+        task.delay(0.1, NameToLayoutOrder);
 
         return () => {
             sizeConnection.Disconnect();
