@@ -3,10 +3,10 @@ import { setViewfinderSettings, updateShowWater } from './config-helper';
 import uiConstants from './ui-constants';
 import React, { useEffect, useRef, useState } from '@rbxts/react';
 import { CheckBox } from './checkbox';
-import { Button, ButtonType } from './button';
 
 const assetService = game.GetService('AssetService');
 const pluginGuiService = game.GetService('PluginGuiService');
+const popoutPadding = new UDim(0, 3);
 
 export function ViewFinder(props: { size: UDim2 }) {
 	const editageImageRef = useRef<EditableImage | undefined>(undefined);
@@ -33,25 +33,30 @@ export function ViewFinder(props: { size: UDim2 }) {
 	}, []);
 
 	useEffect(() => {
-		let dockWindowPreviewcloseconnection: RBXScriptConnection;
+		let dockWindowPreviewCloseConnection: RBXScriptConnection;
 
 		if (dockWindowPreview) {
-			dockWindowPreviewcloseconnection = dockWindowPreview
+			dockWindowPreviewCloseConnection = dockWindowPreview
 				.GetPropertyChangedSignal('Enabled')
 				.Connect(() => {
 					setPopout(dockWindowPreview.Enabled);
 					if (!dockWindowPreview.Enabled && oldParent && finderRef.current) {
+						const holder = finderRef.current.FindFirstChild(
+							'Holder'
+						) as GuiObject;
 						finderRef.current.Parent = oldParent;
-                        finderRef.current.BackgroundTransparency = 1;
-                        finderRef.current.Size = UDim2.fromOffset(180, 180)
-                        if (finderRef.current.FindFirstChild("Holder")) (finderRef.current.FindFirstChild("Holder") as GuiObject).Size = UDim2.fromOffset(150, 150);
+						finderRef.current.BackgroundTransparency = 1;
+						finderRef.current.Size = UDim2.fromOffset(180, 180);
+						if (holder) {
+							holder.Size = UDim2.fromOffset(150, 150);
+						}
 					}
 				});
 		}
 
 		return () => {
-			if (dockWindowPreviewcloseconnection)
-				dockWindowPreviewcloseconnection.Disconnect();
+			if (dockWindowPreviewCloseConnection)
+				dockWindowPreviewCloseConnection.Disconnect();
 		};
 	}, [popout === true, finderRef.current !== undefined]);
 
@@ -65,19 +70,24 @@ export function ViewFinder(props: { size: UDim2 }) {
 			BackgroundColor3={uiConstants.groundColor}
 			BackgroundTransparency={1}
 			ref={finderRef}
-        >
-			<uipadding PaddingLeft={new UDim(0, 3)} PaddingRight={new UDim(0, 3)} PaddingBottom={new UDim(0, 3)} PaddingTop={new UDim(0, 3)} />
+		>
+			<uipadding
+				PaddingLeft={popoutPadding}
+				PaddingRight={popoutPadding}
+				PaddingBottom={popoutPadding}
+				PaddingTop={popoutPadding}
+			/>
 			<uilistlayout
 				HorizontalAlignment={Enum.HorizontalAlignment.Center}
 				VerticalAlignment={Enum.VerticalAlignment.Center}
 				Padding={new UDim(0, uiConstants.spacingNormal)}
 			/>
 			<frame
-                Size={UDim2.fromOffset(150, 150)}
-                BackgroundColor3={uiConstants.cardColor}
-                key={"Holder"}
-            >
-                <uiaspectratioconstraint />
+				Size={UDim2.fromOffset(150, 150)}
+				BackgroundColor3={uiConstants.cardColor}
+				key={'Holder'}
+			>
+				<uiaspectratioconstraint />
 				<uicorner CornerRadius={new UDim(0, uiConstants.cornerRadius)} />
 				<uistroke
 					Thickness={uiConstants.borderSize}
@@ -146,25 +156,30 @@ export function ViewFinder(props: { size: UDim2 }) {
 							Activated: () => {
 								dockWindowPreview.Enabled = true;
 								if (finderRef.current) {
+									const holder = finderRef.current.FindFirstChild(
+										'Holder'
+									) as GuiObject;
 									setOldParent(finderRef.current?.Parent);
 									finderRef.current.Parent = dockWindowPreview;
 									finderRef.current.BackgroundTransparency = 0;
-                                    finderRef.current.Size = UDim2.fromScale(1, 1);
-                                    if (finderRef.current.FindFirstChild("Holder")) (finderRef.current.FindFirstChild("Holder") as GuiObject).Size = new UDim2(1, 0, 1, -(25 + uiConstants.spacingNormal));
-                                }
-                                setHover(false)
+									finderRef.current.Size = UDim2.fromScale(1, 1);
+									if (holder) {
+										holder.Size = UDim2.fromOffset(150, 150);
+									}
+								}
+								setHover(false);
 								setPopout(true);
 							},
 						}}
 					></imagebutton>
 				</imagelabel>
 			</frame>
-            <CheckBox
-                key={"show"}
+			<CheckBox
+				key={'show'}
 				size={new UDim2(1, 0, 0, 25)}
 				onChange={setShowWater}
 				isChecked={showWater}
-                label="Show Water in Preview"
+				label="Show Water in Preview"
 			/>
 		</frame>
 	);
