@@ -190,7 +190,11 @@ function castRay(
     rayParams: RaycastParams = castParams
 ): RaycastResult | undefined {
     rayParams.IgnoreWater = ignoreWater
-    return game.Workspace.Raycast(rayPosition, rayVector, rayParams)
+    const results = game.Workspace.Raycast(rayPosition, rayVector, rayParams)
+    if (!results) return results
+    if (results.Instance.Transparency < 1) return results
+    rayParams.AddToFilter(results.Instance)
+    return castRay(rayPosition, rayVector, ignoreWater, rayParams)
 }
 
 function checkSunShadow(hit: RaycastResult, settings: Settings): boolean {

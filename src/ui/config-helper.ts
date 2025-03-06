@@ -186,6 +186,7 @@ export const loadRender = (render: ModuleScript) => {
     setupUpdateConnections(render)
 
     loadedRenderRef = render
+    offsetHandles(loadedRenderRef)
 }
 
 export const unloadRender = () => {
@@ -353,6 +354,15 @@ const getElementsFromSettings = (settings: ModuleScript) => {
     }
     return {
         box, center, mesh, c0, c1
+    }
+}
+
+const offsetHandles = (settings: ModuleScript) => {
+    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
+
+    if (c0.Position === c1.Position) {
+        c0.CFrame = new CFrame(center.CFrame.mul(mesh.Scale.mul(new Vector3(-.5,-.5,-.5))))
+        c1.CFrame = new CFrame(center.CFrame.mul(mesh.Scale.mul(new Vector3(.5,.5,.5))))
     }
 }
 
