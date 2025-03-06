@@ -193,9 +193,7 @@ function castRay(
     const results = game.Workspace.Raycast(rayPosition, rayVector, rayParams)
     if (!results) return results
     if (results.Instance.Transparency < 1) return results
-    task.synchronize()
-    results.Instance.CanQuery = false
-    task.desynchronize()
+    rayParams.AddToFilter(results.Instance)
     return castRay(rayPosition, rayVector, ignoreWater, rayParams)
 }
 

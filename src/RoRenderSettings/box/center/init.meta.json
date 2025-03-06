@@ -6,6 +6,8 @@
         "CastShadow": false,
         "Color": [0.984, 0.749, 0.141],
         "Locked": true,
-        "Position": [0,50,0]
+        "Position": [0,50,0],
+        "CanCollide": false,
+        "CanQuery": false
     }
 }
