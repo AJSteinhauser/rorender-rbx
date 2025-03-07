@@ -18,7 +18,8 @@
     "@rbxts/types": "^1.0.813",
     "roblox-ts": "^3.0.0",
     "typescript": "^5.7.2",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "@types/node": "^22.13.9"
   },
   "dependencies": {
     "@rbxts/react": "^17.2.3",

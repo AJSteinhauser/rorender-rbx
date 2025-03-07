@@ -1,0 +1,3 @@
+interface DockWidgetPluginGui {
+    Title: string;
+}
