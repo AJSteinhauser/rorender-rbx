@@ -40,20 +40,8 @@ export function computePixel(
         math.floor(((y - rayBottom) / renderConstants.startingPosition.Y) * 255)
 
     // Initial raycast
-    let primary = castRay(rayCenter, renderConstants.rayVector, settings)
-    if (!primary) {
-        return {
-            r: 0,
-            g: 0,
-            b: 0,
-            h: 0,
-            material: 0,
-            road: 0,
-            building: 0,
-            water: waterHeight
-        }
-    }
-
+    let primary = castRay(rayCenter, renderConstants.rayVector)
+    if (!primary) return
     if (isParallel) {
         if (primary.Instance.IsA("MeshPart") && !!primary.Instance.TextureID) {
             return "texture"
@@ -63,8 +51,27 @@ export function computePixel(
     // Handle water material
     if (checkIfRayIsWater(primary, settings)) {
         waterHeight = calculateHeight(primary.Position.Y)
-        primary = castRay(rayCenter, renderConstants.rayVector, settings, true)
-        if (!primary) return
+        primary = castRay(rayCenter, renderConstants.rayVector, true)
+        if (!primary) {
+            const castFromBottom = game.Workspace.Raycast(
+                rayCenter.sub(settings.mapScale.mul(new Vector3(0, 1, 0))),
+                renderConstants.rayVector.mul(-1),
+                castParams
+            )
+            if (castFromBottom) {
+                waterHeight = calculateHeight(castFromBottom.Position.Y)
+            }
+            return {
+                r: 0,
+                g: 0,
+                b: 0,
+                h: 0,
+                material: 0,
+                road: 0,
+                building: 0,
+                water: waterHeight
+            }
+        }
     }
 
     results.push(primary)
@@ -76,12 +83,7 @@ export function computePixel(
             position,
             settings.resolution
         )
-        const result = castRay(
-            samplePosition,
-            renderConstants.rayVector,
-            settings,
-            true
-        )
+        const result = castRay(samplePosition, renderConstants.rayVector, true)
         if (result) {
             results.push(result)
         }
@@ -103,7 +105,6 @@ export function computePixel(
             primary,
             rayCenter,
             renderConstants.rayVector,
-            settings,
             settings.terrain
         ) || primary
 
@@ -230,25 +231,20 @@ function getSamplePosition(
 function castRay(
     rayPosition: Vector3,
     rayVector: Vector3,
-    settings: Settings,
     ignoreWater: boolean = false,
     rayParams: RaycastParams = castParams
 ): RaycastResult | undefined {
     rayParams.IgnoreWater = ignoreWater
     const results = game.Workspace.Raycast(rayPosition, rayVector, rayParams)
     if (!results) return results
-    if (
-        results.Instance.Transparency < 1 &&
-        !checkIfRayIsWater(results, settings)
-    )
-        return results
+    if (results.Instance.Transparency < 1) return results
     rayParams.AddToFilter(results.Instance)
-    return castRay(rayPosition, rayVector, settings, ignoreWater, rayParams)
+    return castRay(rayPosition, rayVector, ignoreWater, rayParams)
 }
 
 function checkSunShadow(hit: RaycastResult, settings: Settings): boolean {
     let direction = settings.shadows.sunDirection // Multiple samples at different positions act as shadow sample offsettings
-    const occluded = castRay(hit.Position, direction.mul(3000), settings)
+    const occluded = castRay(hit.Position, direction.mul(3000))
     return !!occluded
 }
 
@@ -256,7 +252,6 @@ function getTerrainHit(
     RaycastResult: RaycastResult,
     rayPosition: Vector3,
     rayVector: Vector3,
-    settings: Settings,
     terrain: Instance[] = [game.Workspace.Terrain]
 ): RaycastResult | undefined {
     if (
@@ -268,7 +263,7 @@ function getTerrainHit(
     params.FilterType = Enum.RaycastFilterType.Include
     params.AddToFilter(terrain)
 
-    const result = castRay(rayPosition, rayVector, settings, true, params)
+    const result = castRay(rayPosition, rayVector, true, params)
     return result
 }
 
