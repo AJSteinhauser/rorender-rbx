@@ -1,4 +1,3 @@
-
 export type Environment = "development" | "production";
 
 type EnvironmentOverrides = {
@@ -25,7 +24,6 @@ export type FeatureFlagSchema = {
 };
 
 export interface LocalCacheFeatureFlags {
-    createdAt: number // tick()
-    fflags: FeatureFlagSchema
+  createdAt: number; // tick()
+  fflags: FeatureFlagSchema;
 }
-

@@ -7,7 +7,9 @@
     "build": "rbxtsc && rojo build --plugin rorender.rbxm",
     "watch": "rbxtsc -w",
     "prebuild": "npx ts-node --project tsconfig.node.json prebuild.ts",
-    "build:prod": "npm run prebuild && rbxtsc && rm -rf ./dist && mkdir dist && rojo build -o dist/rorender.rbxm"
+    "build:prod": "npm run prebuild && rbxtsc && rm -rf ./dist && mkdir dist && rojo build -o dist/rorender.rbxm",
+    "prettier": "npx prettier src --write",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +18,9 @@
   "devDependencies": {
     "@rbxts/compiler-types": "^3.0.0-types.0",
     "@rbxts/types": "^1.0.813",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.3",
     "roblox-ts": "^3.0.0",
     "typescript": "^5.7.2",
     "ts-node": "^10.9.2",
@@ -27,5 +32,8 @@
     "@rbxts/testez": "^0.4.2-ts.0",
     "npm": "^11.0.0",
     "rbxts-transformer-services": "^1.1.1"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx,json,css,md}": "prettier src --write"
   }
 }

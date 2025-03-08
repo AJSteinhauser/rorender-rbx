@@ -1,3 +1,3 @@
 interface DockWidgetPluginGui {
-    Title: string;
+  Title: string;
 }
