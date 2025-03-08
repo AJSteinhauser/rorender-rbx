@@ -87,11 +87,17 @@ export function ViewFinder(props: { size: UDim2 }) {
                 Padding={new UDim(0, uiConstants.spacingNormal)}
             />
             <frame
-                Size={UDim2.fromOffset(150, 150)}
+                Size={
+                    popout
+                        ? new UDim2(0.8, 0, 0, 150)
+                        : UDim2.fromOffset(150, 150)
+                }
                 BackgroundColor3={uiConstants.cardColor}
                 key={"Holder"}
             >
-                <uiaspectratioconstraint />
+                <uiaspectratioconstraint
+                    AspectType={Enum.AspectType.ScaleWithParentSize}
+                />
                 <uicorner
                     CornerRadius={new UDim(0, uiConstants.cornerRadius)}
                 />
