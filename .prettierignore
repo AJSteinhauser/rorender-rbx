@@ -2,4 +2,5 @@
 build
 coverage
 out
+buildConfig.ts
 .DS_Store
