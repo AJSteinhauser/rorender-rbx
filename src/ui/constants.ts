@@ -1,6 +1,6 @@
 export enum Screens {
-  Home,
-  Configuration,
-  Rendering,
-  Error,
+    Home,
+    Configuration,
+    Rendering,
+    Error
 }
