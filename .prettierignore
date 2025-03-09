@@ -4,3 +4,4 @@ coverage
 out
 buildConfig.ts
 .DS_Store
+fflag.json
