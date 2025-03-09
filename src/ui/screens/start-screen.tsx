@@ -24,7 +24,6 @@ export function StartScreen(props: {
     }
 
     const [pluginDebuggingEnabled, setPluginDebuggingEnabled] = useState(true)
-    const [earlyReleaseEnabled, setEarlyReleaseEnabled] = useState(true)
     useEffect(() => {
         try {
             const actor = new Instance("Actor")
@@ -33,9 +32,6 @@ export function StartScreen(props: {
         } catch (e) {
             setPluginDebuggingEnabled(false)
         }
-        setEarlyReleaseEnabled(
-            getFFlagStatus("earlyRelease", "localPluginActive")
-        )
     }, [])
 
     const pluginEarlyReleaseError = () =>
@@ -73,11 +69,6 @@ export function StartScreen(props: {
                         pluginDebuggerError()
                         return
                     }
-                    if (!earlyReleaseEnabled) {
-                        pluginEarlyReleaseError()
-                        return
-                    }
-
                     const renderSettings = createSettingsModule()
                     loadRender(renderSettings)
                     props.changeScreen(Screens.Configuration)
@@ -92,11 +83,6 @@ export function StartScreen(props: {
                         pluginDebuggerError()
                         return
                     }
-                    if (!earlyReleaseEnabled) {
-                        pluginEarlyReleaseError()
-                        return
-                    }
-
                     try {
                         const success = getRenderSettingsFromSelection()
                         if (success) {
