@@ -3,3 +3,4 @@ node_modules
 *.rbxm
 aftman.toml
 dist
+.DS_Store
