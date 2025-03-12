@@ -291,36 +291,50 @@ function getColorFromMesh(result: RaycastResult): Vector3 {
             result.Position
         ).mul(scale)
 
-        const [faceId, _surfacePoint, baryCoordinates] =
-            mesh.FindClosestPointOnSurface(relativePoint)
-        const uvs: number[] = mesh.GetFaceUVs(faceId) as number[]
-        const uvCoordinates = uvs.map((x) => mesh.GetUV(x) as Vector2)
-
-        const u =
-            baryCoordinates.X * uvCoordinates[0]?.X +
-            baryCoordinates.Y * uvCoordinates[1]?.X +
-            baryCoordinates.Z * uvCoordinates[2]?.X
-        const v =
-            baryCoordinates.X * uvCoordinates[0]?.Y +
-            baryCoordinates.Y * uvCoordinates[1]?.Y +
-            baryCoordinates.Z * uvCoordinates[2]?.Y
-
-        const samplePoint = new Vector2(
-            math.floor(u * image.Size.X),
-            math.floor(v * image.Size.Y)
-        )
-        const colorBuf = image.ReadPixelsBuffer(samplePoint, new Vector2(1, 1))
-
-        const color = Color3.fromRGB(
-            buffer.readu8(colorBuf, 0),
-            buffer.readu8(colorBuf, 1),
-            buffer.readu8(colorBuf, 2)
+        const color = getColorFromPoint(
+            editableMesh,
+            editableImage,
+            relativePoint
         )
 
         return color3ToVector3(color)
     } catch (e) {
         return color3ToVector3(result.Instance.Color)
     }
+}
+
+function getColorFromPoint(
+    mesh: EditableMesh,
+    image: EditableImage,
+    position: Vector3
+): Color3 {
+    const [faceId, _surfacePoint, baryCoordinates] =
+        mesh.FindClosestPointOnSurface(position)
+    const uvs: number[] = mesh.GetFaceUVs(faceId) as number[]
+    const uvCoordinates = uvs.map((x) => mesh.GetUV(x) as Vector2)
+
+    const u =
+        baryCoordinates.X * uvCoordinates[0]?.X +
+        baryCoordinates.Y * uvCoordinates[1]?.X +
+        baryCoordinates.Z * uvCoordinates[2]?.X
+    const v =
+        baryCoordinates.X * uvCoordinates[0]?.Y +
+        baryCoordinates.Y * uvCoordinates[1]?.Y +
+        baryCoordinates.Z * uvCoordinates[2]?.Y
+
+    const samplePoint = new Vector2(
+        math.floor(u * image.Size.X),
+        math.floor(v * image.Size.Y)
+    )
+    const colorBuf = image.ReadPixelsBuffer(samplePoint, new Vector2(1, 1))
+
+    const color = Color3.fromRGB(
+        buffer.readu8(colorBuf, 0),
+        buffer.readu8(colorBuf, 1),
+        buffer.readu8(colorBuf, 2)
+    )
+
+    return color
 }
 
 function getColorFromResult(result: RaycastResult): Vector3 {
