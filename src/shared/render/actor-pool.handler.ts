@@ -22,7 +22,7 @@ export class WorkerPool {
                     this.waitingPool.push(resolve)
                     return
                 }
-                resolve(actor)
+                task.spawn(() => resolve(actor))
             }
         })
     }
