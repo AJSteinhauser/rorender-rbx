@@ -9,6 +9,7 @@ const TERRAIN = game.Workspace.Terrain
 const DELAY_TIME = 3
 
 const SUN_POSITION = LIGHTING.GetSunDirection()
+const MAX_SURFACE_APPEREANCE_RECASTS = 10
 
 const rand = new Random()
 
@@ -105,7 +106,7 @@ export function computePixel(
         ) || primary
 
     // Compute color
-    let color = averageColorSamples(results)
+    let color = averageColorSamples(results, renderConstants.rayVector)
     color = averageShadeSamples(results, color, settings)
     color = gammaNormalizeSamples(color)
     if (settings.shadows.enabled) {
@@ -259,18 +260,21 @@ function getTerrainHit(
     return result
 }
 
-function getColorFromMesh(result: RaycastResult): Vector3 {
+function getColorFromMesh(result: RaycastResult, downVector: Vector3): Vector3 {
     const instance = result.Instance as MeshPart
     const surfaceAppearance =
         result.Instance.FindFirstChildWhichIsA("SurfaceAppearance")
 
     const surfaceAppearanceHasTexture =
         surfaceAppearance && surfaceAppearance.ColorMap
-    if (!instance.TextureID && !surfaceAppearanceHasTexture) {
+
+    const noTextureFound = !surfaceAppearanceHasTexture && !instance.TextureID
+    if (noTextureFound) {
         return color3ToVector3(result.Instance.Color)
     }
 
     if (!surfaceAppearance) {
+        // Handles case where no texture is found
         return getSimpleTextureFromMesh(result, instance.TextureID)
     }
 
@@ -281,7 +285,85 @@ function getColorFromMesh(result: RaycastResult): Vector3 {
         return getOverlayTextureFromMesh(result, surfaceAppearance)
     }
 
+    const surfaceAppearanceUsesAlphaBlend =
+        surfaceAppearance.ColorMap &&
+        surfaceAppearance.AlphaMode === Enum.AlphaMode.Transparency
+    if (surfaceAppearanceUsesAlphaBlend) {
+        return getSurfaceOpacityTextureFromMesh(
+            result,
+            surfaceAppearance,
+            downVector
+        )
+    }
+
     return color3ToVector3(result.Instance.Color)
+}
+
+function getSurfaceOpacityTextureFromMesh(
+    result: RaycastResult,
+    surfaceAppearance: SurfaceAppearance,
+    downVector: Vector3
+): Vector3 {
+    const editableMesh = getEditableMesh((result.Instance as MeshPart).MeshId)
+    const editableImage = getEditableImage(surfaceAppearance.ColorMap)
+    const recastParams = new RaycastParams()
+    recastParams.FilterType = Enum.RaycastFilterType.Include
+    recastParams.AddToFilter(result.Instance)
+
+    const underlyingParams = new RaycastParams()
+    underlyingParams.FilterType = Enum.RaycastFilterType.Exclude
+    underlyingParams.AddToFilter(result.Instance)
+    underlyingParams.IgnoreWater = true
+
+    const underlyingInstance = castRay(
+        result.Position,
+        downVector,
+        true,
+        underlyingParams
+    )
+    const underlyingColor = getColorFromResult(underlyingInstance, downVector)
+
+    const getColorFromTransparency = (
+        result: RaycastResult,
+        attempts: number = 0
+    ): Vector3 => {
+        if (attempts > MAX_SURFACE_APPEREANCE_RECASTS) {
+            return underlyingColor
+        }
+        const relativePoint = getRelativePointOnMesh(result)
+        const [color, opacity] = getColorFromPoint(
+            editableMesh,
+            editableImage,
+            relativePoint
+        )
+        if (opacity > 0) {
+            return color3ToVector3(color)
+        }
+
+        const recast = castRay(
+            result.Position.add(downVector.Unit.mul(0.2)),
+            downVector,
+            true,
+            recastParams
+        )
+        if (!recast) {
+            return underlyingColor
+        } else {
+            return getColorFromTransparency(recast, attempts + 1)
+        }
+    }
+    return getColorFromTransparency(result)
+}
+
+function getRelativePointOnMesh(result: RaycastResult): Vector3 {
+    const scale = (result.Instance as MeshPart).MeshSize.div(
+        result.Instance.Size
+    )
+    const relativePoint = result.Instance.CFrame.PointToObjectSpace(
+        result.Position
+    ).mul(scale)
+
+    return relativePoint
 }
 
 function getOverlayTextureFromMesh(
@@ -316,17 +398,14 @@ function getOverlayTextureFromMesh(
 }
 
 function overlayBlend(base: Color3, overlay: Color3, opacity: number): Color3 {
-    // Helper function to blend a single channel
     const blendChannel = (cb: number, co: number): number => {
         return cb <= 0.5 ? 2 * cb * co : 1 - 2 * (1 - cb) * (1 - co)
     }
 
-    // Blend each channel using the Overlay formula
     const r = blendChannel(base.R, overlay.R)
     const g = blendChannel(base.G, overlay.G)
     const b = blendChannel(base.B, overlay.B)
 
-    // Apply opacity to the overlay color
     return new Color3(
         base.R * (1 - opacity) + r * opacity,
         base.G * (1 - opacity) + g * opacity,
@@ -374,15 +453,21 @@ function getColorFromPoint(
         baryCoordinates.X * uvCoordinates[0]?.X +
         baryCoordinates.Y * uvCoordinates[1]?.X +
         baryCoordinates.Z * uvCoordinates[2]?.X
+
     const v =
         baryCoordinates.X * uvCoordinates[0]?.Y +
         baryCoordinates.Y * uvCoordinates[1]?.Y +
         baryCoordinates.Z * uvCoordinates[2]?.Y
 
-    const samplePoint = new Vector2(
+    let samplePoint = new Vector2(
         math.floor(u * image.Size.X),
         math.floor(v * image.Size.Y)
     )
+    samplePoint = new Vector2(
+        math.max(0, math.min(samplePoint.X, image.Size.X - 1)),
+        math.max(0, math.min(samplePoint.Y, image.Size.Y - 1))
+    )
+
     const colorBuf = image.ReadPixelsBuffer(samplePoint, new Vector2(1, 1))
 
     const color = Color3.fromRGB(
@@ -395,10 +480,16 @@ function getColorFromPoint(
     return [color, opacity]
 }
 
-function getColorFromResult(result: RaycastResult): Vector3 {
+function getColorFromResult(
+    result: RaycastResult | undefined,
+    downVector: Vector3
+): Vector3 {
+    if (!result) {
+        return new Vector3(0, 0, 0)
+    }
     if (result.Instance !== game.Workspace.Terrain) {
         if (result.Instance.IsA("MeshPart")) {
-            return getColorFromMesh(result)
+            return getColorFromMesh(result, downVector)
         } else {
             return color3ToVector3(result.Instance.Color)
         }
@@ -441,11 +532,14 @@ function convertVector3LinearToSrgb(vector: Vector3): Vector3 {
     )
 }
 
-function averageColorSamples(rayCastResults: RaycastResult[]): Vector3 {
+function averageColorSamples(
+    rayCastResults: RaycastResult[],
+    downVector: Vector3
+): Vector3 {
     let color = new Vector3(0, 0, 0)
 
     for (const result of rayCastResults) {
-        const sampleColor = getColorFromResult(result) // Await works here
+        const sampleColor = getColorFromResult(result, downVector) // Await works here
         color = color.add(convertVector3SrgbToLinear(sampleColor))
     }
     return convertVector3LinearToSrgb(color.div(rayCastResults.size()))
