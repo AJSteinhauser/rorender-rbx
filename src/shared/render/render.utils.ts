@@ -13,6 +13,11 @@ const MAX_SURFACE_APPEREANCE_RECASTS = 10
 
 const rand = new Random()
 
+type ReplacementRayCastFunc = (
+    orginal: RaycastResult,
+    replacement: RaycastResult
+) => void
+
 const castParams = new RaycastParams()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
 castParams.FilterDescendantsInstances = []
@@ -260,7 +265,11 @@ function getTerrainHit(
     return result
 }
 
-function getColorFromMesh(result: RaycastResult, downVector: Vector3): Vector3 {
+function getColorFromMesh(
+    result: RaycastResult,
+    downVector: Vector3,
+    replaceRaycastResult: ReplacementRayCastFunc
+): Vector3 {
     const instance = result.Instance as MeshPart
     const surfaceAppearance =
         result.Instance.FindFirstChildWhichIsA("SurfaceAppearance")
@@ -292,7 +301,8 @@ function getColorFromMesh(result: RaycastResult, downVector: Vector3): Vector3 {
         return getSurfaceOpacityTextureFromMesh(
             result,
             surfaceAppearance,
-            downVector
+            downVector,
+            replaceRaycastResult
         )
     }
 
@@ -300,34 +310,48 @@ function getColorFromMesh(result: RaycastResult, downVector: Vector3): Vector3 {
 }
 
 function getSurfaceOpacityTextureFromMesh(
-    result: RaycastResult,
+    originalResult: RaycastResult,
     surfaceAppearance: SurfaceAppearance,
-    downVector: Vector3
+    downVector: Vector3,
+    replaceRaycastResult: ReplacementRayCastFunc
 ): Vector3 {
-    const editableMesh = getEditableMesh((result.Instance as MeshPart).MeshId)
+    const editableMesh = getEditableMesh(
+        (originalResult.Instance as MeshPart).MeshId
+    )
     const editableImage = getEditableImage(surfaceAppearance.ColorMap)
     const recastParams = new RaycastParams()
     recastParams.FilterType = Enum.RaycastFilterType.Include
-    recastParams.AddToFilter(result.Instance)
+    recastParams.AddToFilter(originalResult.Instance)
 
     const underlyingParams = new RaycastParams()
     underlyingParams.FilterType = Enum.RaycastFilterType.Exclude
-    underlyingParams.AddToFilter(result.Instance)
+    underlyingParams.AddToFilter(originalResult.Instance)
     underlyingParams.IgnoreWater = true
 
     const underlyingInstance = castRay(
-        result.Position,
+        originalResult.Position,
         downVector,
         true,
         underlyingParams
     )
-    const underlyingColor = getColorFromResult(underlyingInstance, downVector)
+    const underlyingColor = getColorFromResult(
+        underlyingInstance,
+        downVector,
+        replaceRaycastResult
+    )
+    const replaceResultWithUnderlyingInstance = () => {
+        if (underlyingInstance) {
+            replaceRaycastResult(originalResult, underlyingInstance)
+        }
+    }
 
     const getColorFromTransparency = (
         result: RaycastResult,
         attempts: number = 0
     ): Vector3 => {
         if (attempts > MAX_SURFACE_APPEREANCE_RECASTS) {
+            replaceResultWithUnderlyingInstance()
+            replaceRaycastResult(originalResult, result)
             return underlyingColor
         }
         const relativePoint = getRelativePointOnMesh(result)
@@ -337,6 +361,7 @@ function getSurfaceOpacityTextureFromMesh(
             relativePoint
         )
         if (opacity > 0) {
+            replaceRaycastResult(originalResult, result)
             return color3ToVector3(color)
         }
 
@@ -347,12 +372,13 @@ function getSurfaceOpacityTextureFromMesh(
             recastParams
         )
         if (!recast) {
+            replaceResultWithUnderlyingInstance()
             return underlyingColor
         } else {
             return getColorFromTransparency(recast, attempts + 1)
         }
     }
-    return getColorFromTransparency(result)
+    return getColorFromTransparency(originalResult)
 }
 
 function getRelativePointOnMesh(result: RaycastResult): Vector3 {
@@ -482,14 +508,15 @@ function getColorFromPoint(
 
 function getColorFromResult(
     result: RaycastResult | undefined,
-    downVector: Vector3
+    downVector: Vector3,
+    replaceRaycastResult: ReplacementRayCastFunc
 ): Vector3 {
     if (!result) {
         return new Vector3(0, 0, 0)
     }
     if (result.Instance !== game.Workspace.Terrain) {
         if (result.Instance.IsA("MeshPart")) {
-            return getColorFromMesh(result, downVector)
+            return getColorFromMesh(result, downVector, replaceRaycastResult)
         } else {
             return color3ToVector3(result.Instance.Color)
         }
@@ -537,9 +564,20 @@ function averageColorSamples(
     downVector: Vector3
 ): Vector3 {
     let color = new Vector3(0, 0, 0)
+    const replaceResultSample: ReplacementRayCastFunc = (
+        originalResult: RaycastResult,
+        replacement: RaycastResult
+    ) => {
+        const index = rayCastResults.findIndex((x) => originalResult === x)
+        rayCastResults[index] = replacement
+    }
 
     for (const result of rayCastResults) {
-        const sampleColor = getColorFromResult(result, downVector) // Await works here
+        const sampleColor = getColorFromResult(
+            result,
+            downVector,
+            replaceResultSample
+        ) // Await works here
         color = color.add(convertVector3SrgbToLinear(sampleColor))
     }
     return convertVector3LinearToSrgb(color.div(rayCastResults.size()))
