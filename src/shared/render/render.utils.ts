@@ -43,7 +43,7 @@ export function computePixel(
     let primary = castRay(rayCenter, renderConstants.rayVector)
     if (!primary) return
     if (isParallel) {
-        if (primary.Instance.IsA("MeshPart") && !!primary.Instance.TextureID) {
+        if (primary.Instance.IsA("MeshPart")) {
             return "texture"
         }
     }
@@ -78,11 +78,7 @@ export function computePixel(
 
     // Collect additional samples
     for (let i = 1; i < settings.samples; i++) {
-        const samplePosition = getSamplePosition(
-            rayCFrame,
-            position,
-            settings.resolution
-        )
+        const samplePosition = getSamplePosition(rayCFrame, settings.resolution)
         const result = castRay(samplePosition, renderConstants.rayVector, true)
         if (result) {
             results.push(result)
@@ -215,11 +211,7 @@ function applyShadowsSamples(
     return color.mul(1 - shadowDarkness)
 }
 
-function getSamplePosition(
-    rayCenter: CFrame,
-    position: Vector2,
-    resolution: number
-): Vector3 {
+function getSamplePosition(rayCenter: CFrame, resolution: number): Vector3 {
     const randomOffset = new CFrame(
         (rand.NextNumber() - 0.5) * resolution,
         0,
@@ -268,21 +260,39 @@ function getTerrainHit(
 }
 
 function getColorFromMesh(result: RaycastResult): Vector3 {
-    if (!(result.Instance as MeshPart).TextureID) {
+    const instance = result.Instance as MeshPart
+    const surfaceAppearance =
+        result.Instance.FindFirstChildWhichIsA("SurfaceAppearance")
+
+    const surfaceAppearanceHasTexture =
+        surfaceAppearance && surfaceAppearance.ColorMap
+    if (!instance.TextureID && !surfaceAppearanceHasTexture) {
         return color3ToVector3(result.Instance.Color)
     }
 
-    let editableMesh: EditableMesh | undefined = undefined
-    let editableImage: EditableImage | undefined = undefined
+    if (!surfaceAppearance) {
+        return getSimpleTextureFromMesh(result, instance.TextureID)
+    }
 
+    const surfaceAppearanceUsesOverlay =
+        surfaceAppearance.ColorMap &&
+        surfaceAppearance.AlphaMode === Enum.AlphaMode.Overlay
+    if (surfaceAppearanceUsesOverlay) {
+        return getOverlayTextureFromMesh(result, surfaceAppearance)
+    }
+
+    return color3ToVector3(result.Instance.Color)
+}
+
+function getOverlayTextureFromMesh(
+    result: RaycastResult,
+    surfaceAppearance: SurfaceAppearance
+): Vector3 {
     try {
-        editableMesh = getEditableMesh((result.Instance as MeshPart).MeshId)
-        editableImage = getEditableImage(
-            (result.Instance as MeshPart).TextureID
+        const editableMesh = getEditableMesh(
+            (result.Instance as MeshPart).MeshId
         )
-
-        const mesh = editableMesh as EditableMesh
-        const image = editableImage as EditableImage
+        const editableImage = getEditableImage(surfaceAppearance.ColorMap)
 
         const scale = (result.Instance as MeshPart).MeshSize.div(
             result.Instance.Size
@@ -291,7 +301,54 @@ function getColorFromMesh(result: RaycastResult): Vector3 {
             result.Position
         ).mul(scale)
 
-        const color = getColorFromPoint(
+        const [color, opacity] = getColorFromPoint(
+            editableMesh,
+            editableImage,
+            relativePoint
+        )
+
+        return color3ToVector3(
+            overlayBlend(result.Instance.Color, color, opacity)
+        )
+    } catch (e) {
+        return color3ToVector3(result.Instance.Color)
+    }
+}
+
+function overlayBlend(base: Color3, overlay: Color3, opacity: number): Color3 {
+    // Helper function to blend a single channel
+    const blendChannel = (cb: number, co: number): number => {
+        return cb <= 0.5 ? 2 * cb * co : 1 - 2 * (1 - cb) * (1 - co)
+    }
+
+    // Blend each channel using the Overlay formula
+    const r = blendChannel(base.R, overlay.R)
+    const g = blendChannel(base.G, overlay.G)
+    const b = blendChannel(base.B, overlay.B)
+
+    // Apply opacity to the overlay color
+    return new Color3(
+        base.R * (1 - opacity) + r * opacity,
+        base.G * (1 - opacity) + g * opacity,
+        base.B * (1 - opacity) + b * opacity
+    )
+}
+
+function getSimpleTextureFromMesh(result: RaycastResult, imageId: string) {
+    try {
+        const editableMesh = getEditableMesh(
+            (result.Instance as MeshPart).MeshId
+        )
+        const editableImage = getEditableImage(imageId)
+
+        const scale = (result.Instance as MeshPart).MeshSize.div(
+            result.Instance.Size
+        )
+        const relativePoint = result.Instance.CFrame.PointToObjectSpace(
+            result.Position
+        ).mul(scale)
+
+        const [color] = getColorFromPoint(
             editableMesh,
             editableImage,
             relativePoint
@@ -307,7 +364,7 @@ function getColorFromPoint(
     mesh: EditableMesh,
     image: EditableImage,
     position: Vector3
-): Color3 {
+): [Color3, number] {
     const [faceId, _surfacePoint, baryCoordinates] =
         mesh.FindClosestPointOnSurface(position)
     const uvs: number[] = mesh.GetFaceUVs(faceId) as number[]
@@ -333,8 +390,9 @@ function getColorFromPoint(
         buffer.readu8(colorBuf, 1),
         buffer.readu8(colorBuf, 2)
     )
+    const opacity = buffer.readu8(colorBuf, 3) / 255
 
-    return color
+    return [color, opacity]
 }
 
 function getColorFromResult(result: RaycastResult): Vector3 {
