@@ -28,3 +28,17 @@ export interface ActorHelperRequestPayload {
 }
 
 export const VIEWFINDER_IMAGE_SIZE = new Vector2(100, 100)
+
+export type ReplacementRayCastFunc = (
+    orginal: RaycastResult,
+    replacement: RaycastResult
+) => void
+
+interface SurfaceAppearanceModifiers {
+    normalMap: string
+    metalnessMap: string
+    roughnessMap: string
+    color: Color3
+}
+
+export type SurfaceOptions = Partial<SurfaceAppearanceModifiers>

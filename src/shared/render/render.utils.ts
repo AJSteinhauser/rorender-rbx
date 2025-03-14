@@ -1,5 +1,11 @@
 import { Settings, StructureGrouping } from "shared/settings/settings.model"
-import { ActorHelperRequest, Pixel, RenderConstants } from "./render.model"
+import {
+    ActorHelperRequest,
+    Pixel,
+    RenderConstants,
+    ReplacementRayCastFunc,
+    SurfaceOptions
+} from "./render.model"
 import { color3ToVector3 } from "shared/utils"
 import { getEditableImage, getEditableMesh } from "./editable-cache"
 
@@ -12,11 +18,6 @@ const SUN_POSITION = LIGHTING.GetSunDirection()
 const MAX_SURFACE_APPEREANCE_RECASTS = 10
 
 const rand = new Random()
-
-type ReplacementRayCastFunc = (
-    orginal: RaycastResult,
-    replacement: RaycastResult
-) => void
 
 const castParams = new RaycastParams()
 castParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -284,14 +285,14 @@ function getColorFromMesh(
 
     if (!surfaceAppearance) {
         // Handles case where no texture is found
-        return getSimpleTextureFromMesh(result, instance.TextureID)
+        return getSimpleTextureFromMesh(result, instance.TextureID, downVector)
     }
 
     const surfaceAppearanceUsesOverlay =
         surfaceAppearance.ColorMap &&
         surfaceAppearance.AlphaMode === Enum.AlphaMode.Overlay
     if (surfaceAppearanceUsesOverlay) {
-        return getOverlayTextureFromMesh(result, surfaceAppearance)
+        return getOverlayTextureFromMesh(result, surfaceAppearance, downVector)
     }
 
     const surfaceAppearanceUsesAlphaBlend =
@@ -358,7 +359,14 @@ function getSurfaceOpacityTextureFromMesh(
         const [color, opacity] = getColorFromPoint(
             editableMesh,
             editableImage,
-            relativePoint
+            relativePoint,
+            downVector,
+            {
+                color: surfaceAppearance.Color,
+                normalMap: surfaceAppearance.NormalMap,
+                metalnessMap: surfaceAppearance.MetalnessMap,
+                roughnessMap: surfaceAppearance.RoughnessMap
+            }
         )
         if (opacity > 0) {
             replaceRaycastResult(originalResult, result)
@@ -394,7 +402,8 @@ function getRelativePointOnMesh(result: RaycastResult): Vector3 {
 
 function getOverlayTextureFromMesh(
     result: RaycastResult,
-    surfaceAppearance: SurfaceAppearance
+    surfaceAppearance: SurfaceAppearance,
+    downVector: Vector3
 ): Vector3 {
     try {
         const editableMesh = getEditableMesh(
@@ -412,7 +421,8 @@ function getOverlayTextureFromMesh(
         const [color, opacity] = getColorFromPoint(
             editableMesh,
             editableImage,
-            relativePoint
+            relativePoint,
+            downVector
         )
 
         return color3ToVector3(
@@ -439,7 +449,11 @@ function overlayBlend(base: Color3, overlay: Color3, opacity: number): Color3 {
     )
 }
 
-function getSimpleTextureFromMesh(result: RaycastResult, imageId: string) {
+function getSimpleTextureFromMesh(
+    result: RaycastResult,
+    imageId: string,
+    downVector: Vector3
+) {
     try {
         const editableMesh = getEditableMesh(
             (result.Instance as MeshPart).MeshId
@@ -456,7 +470,8 @@ function getSimpleTextureFromMesh(result: RaycastResult, imageId: string) {
         const [color] = getColorFromPoint(
             editableMesh,
             editableImage,
-            relativePoint
+            relativePoint,
+            downVector
         )
 
         return color3ToVector3(color)
@@ -468,10 +483,21 @@ function getSimpleTextureFromMesh(result: RaycastResult, imageId: string) {
 function getColorFromPoint(
     mesh: EditableMesh,
     image: EditableImage,
-    position: Vector3
+    position: Vector3,
+    downVector: Vector3,
+    surfaceOptions: SurfaceOptions = {}
 ): [Color3, number] {
-    const [faceId, _surfacePoint, baryCoordinates] =
-        mesh.FindClosestPointOnSurface(position)
+    //const [faceId, _surfacePoint, baryCoordinates] =
+    //    mesh.FindClosestPointOnSurface(position.add(downVector.Unit.mul(-.1)))
+
+    const [faceId, _surfacePoint, baryCoordinates] = mesh.RaycastLocal(
+        position.add(downVector.Unit.mul(-0.1)),
+        downVector
+    )
+    if (!faceId) {
+        return [new Color3(0, 0, 0), 0]
+    }
+
     const uvs: number[] = mesh.GetFaceUVs(faceId) as number[]
     const uvCoordinates = uvs.map((x) => mesh.GetUV(x) as Vector2)
 
@@ -496,13 +522,20 @@ function getColorFromPoint(
 
     const colorBuf = image.ReadPixelsBuffer(samplePoint, new Vector2(1, 1))
 
-    const color = Color3.fromRGB(
+    let color = Color3.fromRGB(
         buffer.readu8(colorBuf, 0),
         buffer.readu8(colorBuf, 1),
         buffer.readu8(colorBuf, 2)
     )
     const opacity = buffer.readu8(colorBuf, 3) / 255
 
+    if (surfaceOptions.color) {
+        color = new Color3(
+            color.R * surfaceOptions.color.R,
+            color.G * surfaceOptions.color.G,
+            color.B * surfaceOptions.color.B
+        )
+    }
     return [color, opacity]
 }
 
@@ -624,7 +657,7 @@ function shadeColor(
 ): Vector3 {
     const recievedIlluminance = math.max(
         result.Normal.Dot(settings.shadows.sunDirection),
-        0
+        0.3
     )
     return color.mul(0.2 + recievedIlluminance * 0.8)
 }
