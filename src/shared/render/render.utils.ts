@@ -487,13 +487,22 @@ function getColorFromPoint(
     downVector: Vector3,
     surfaceOptions: SurfaceOptions = {}
 ): [Color3, number] {
-    //const [faceId, _surfacePoint, baryCoordinates] =
-    //    mesh.FindClosestPointOnSurface(position.add(downVector.Unit.mul(-.1)))
+    let faceId: number
+    let baryCoordinates: Vector3
+    let _surfacePoint: Vector3
 
-    const [faceId, _surfacePoint, baryCoordinates] = mesh.RaycastLocal(
-        position.add(downVector.Unit.mul(-0.1)),
-        downVector
-    )
+    if (!surfaceOptions.color) {
+        ;[faceId, _surfacePoint, baryCoordinates] =
+            mesh.FindClosestPointOnSurface(
+                position.add(downVector.Unit.mul(-0.1))
+            )
+    } else {
+        ;[faceId, _surfacePoint, baryCoordinates] = mesh.RaycastLocal(
+            position.add(downVector.Unit.mul(-0.1)),
+            downVector.Unit.mul(0.2)
+        )
+    }
+
     if (!faceId) {
         return [new Color3(0, 0, 0), 0]
     }
