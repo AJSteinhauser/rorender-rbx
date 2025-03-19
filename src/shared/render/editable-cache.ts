@@ -1,4 +1,4 @@
-const MAX_CREATE_ATTEMPTS = 3
+const MAX_CREATE_ATTEMPTS = 2
 const ASSET_SERVICE = game.GetService("AssetService")
 
 type EditableClass = EditableImage | EditableMesh
@@ -55,7 +55,7 @@ function getEditableFromId<T extends EditableClass>(
     const assetDoesNotExistsAndRetryLimitNotHit =
         editableCache &&
         !editableCache.object &&
-        editableCache.creationAttempts <= MAX_CREATE_ATTEMPTS
+        editableCache.creationAttempts < MAX_CREATE_ATTEMPTS
     if (editableCache?.object) {
         return editableCache.object
     }

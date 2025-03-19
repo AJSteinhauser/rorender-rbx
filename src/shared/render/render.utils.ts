@@ -46,13 +46,25 @@ export function computePixel(
     const calculateHeight = (y: number) =>
         math.floor(((y - rayBottom) / renderConstants.startingPosition.Y) * 255)
 
+    // Helper function to deal deal with textured parts
+    const bailTextureCalulations = (hit: RaycastResult): boolean => {
+        if (isParallel) {
+            const isMesh = hit.Instance.IsA("MeshPart")
+            if (isMesh) {
+                const meshHasTexture =
+                    !!hit.Instance.TextureID ||
+                    !!hit.Instance.FindFirstChildOfClass("SurfaceAppearance")
+                return meshHasTexture
+            }
+        }
+        return false
+    }
+
     // Initial raycast
     let primary = castRay(rayCenter, renderConstants.rayVector)
     if (!primary) return
-    if (isParallel) {
-        if (primary.Instance.IsA("MeshPart")) {
-            return "texture"
-        }
+    if (bailTextureCalulations(primary)) {
+        return "texture"
     }
 
     // Handle water material
@@ -89,16 +101,9 @@ export function computePixel(
         const result = castRay(samplePosition, renderConstants.rayVector, true)
         if (result) {
             results.push(result)
-        }
-    }
-
-    if (isParallel) {
-        if (
-            results.some(
-                (x) => x.Instance.IsA("MeshPart") && !!x.Instance.TextureID
-            )
-        ) {
-            return "texture"
+            if (bailTextureCalulations(result)) {
+                return "texture"
+            }
         }
     }
 
@@ -271,40 +276,53 @@ function getColorFromMesh(
     downVector: Vector3,
     replaceRaycastResult: ReplacementRayCastFunc
 ): Vector3 {
-    const instance = result.Instance as MeshPart
-    const surfaceAppearance =
-        result.Instance.FindFirstChildWhichIsA("SurfaceAppearance")
+    try {
+        const instance = result.Instance as MeshPart
+        const surfaceAppearance =
+            result.Instance.FindFirstChildWhichIsA("SurfaceAppearance")
 
-    const surfaceAppearanceHasTexture =
-        surfaceAppearance && surfaceAppearance.ColorMap
+        const surfaceAppearanceHasTexture =
+            surfaceAppearance && surfaceAppearance.ColorMap
 
-    const noTextureFound = !surfaceAppearanceHasTexture && !instance.TextureID
-    if (noTextureFound) {
-        return color3ToVector3(result.Instance.Color)
-    }
+        const noTextureFound =
+            !surfaceAppearanceHasTexture && !instance.TextureID
+        if (noTextureFound) {
+            return color3ToVector3(result.Instance.Color)
+        }
 
-    if (!surfaceAppearance) {
-        // Handles case where no texture is found
-        return getSimpleTextureFromMesh(result, instance.TextureID, downVector)
-    }
+        if (!surfaceAppearance) {
+            // Handles case where no texture is found
+            return getSimpleTextureFromMesh(
+                result,
+                instance.TextureID,
+                downVector
+            )
+        }
 
-    const surfaceAppearanceUsesOverlay =
-        surfaceAppearance.ColorMap &&
-        surfaceAppearance.AlphaMode === Enum.AlphaMode.Overlay
-    if (surfaceAppearanceUsesOverlay) {
-        return getOverlayTextureFromMesh(result, surfaceAppearance, downVector)
-    }
+        const surfaceAppearanceUsesOverlay =
+            surfaceAppearance.ColorMap &&
+            surfaceAppearance.AlphaMode === Enum.AlphaMode.Overlay
+        if (surfaceAppearanceUsesOverlay) {
+            return getOverlayTextureFromMesh(
+                result,
+                surfaceAppearance,
+                downVector
+            )
+        }
 
-    const surfaceAppearanceUsesAlphaBlend =
-        surfaceAppearance.ColorMap &&
-        surfaceAppearance.AlphaMode === Enum.AlphaMode.Transparency
-    if (surfaceAppearanceUsesAlphaBlend) {
-        return getSurfaceOpacityTextureFromMesh(
-            result,
-            surfaceAppearance,
-            downVector,
-            replaceRaycastResult
-        )
+        const surfaceAppearanceUsesAlphaBlend =
+            surfaceAppearance.ColorMap &&
+            surfaceAppearance.AlphaMode === Enum.AlphaMode.Transparency
+        if (surfaceAppearanceUsesAlphaBlend) {
+            return getSurfaceOpacityTextureFromMesh(
+                result,
+                surfaceAppearance,
+                downVector,
+                replaceRaycastResult
+            )
+        }
+    } catch (e) {
+        warn(e)
     }
 
     return color3ToVector3(result.Instance.Color)
