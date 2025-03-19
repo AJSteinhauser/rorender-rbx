@@ -72,7 +72,7 @@ local settings: Settings = {
         },
     },
 
-    samples = 5, -- Number of samples used for rendering calculations.
+    samples = 0, -- Number of samples used for rendering calculations.
 
     shadows = {
         enabled = false, -- Shadows are disabled by default for better performance.
