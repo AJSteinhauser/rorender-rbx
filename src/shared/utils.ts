@@ -9,7 +9,7 @@ export const MAX_PIXEL_SIZE = math.floor(math.sqrt(MAX_IMAGE_SIZE / 8))
 const SIZE_ERROR_MESSAGE = `Current max image size is ${string.format(
     "%.2fGB",
     MAX_IMAGE_SIZE / 1000000000
-)}GB, or ${MAX_PIXEL_SIZE}px x ${MAX_PIXEL_SIZE}px. If your use case requires a larger image, please make a feature request at rorender.com/support. In the meantime consider tiling your map into smaller chunks to achieve desired resolution.`
+)}GB, or ${MAX_PIXEL_SIZE}px x ${MAX_PIXEL_SIZE}px. Please modify the resolution value in the RenderSettings ModuleScript to adjust output image size.`
 
 export function getImageDimensions(settings: Settings): Vector2 {
     return new Vector2(
