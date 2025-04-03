@@ -4,10 +4,16 @@ import {
     RUN_LENGTH_BYTE_SIZE,
     RunLengthSequence
 } from "./run-length.model"
+import { ScalingBuffer } from "../autoscaling-buffer.util"
 
 export const runLengthEncode = (image: buffer): buffer => {
     let idx = 0
-    const runs: RunLengthSequence[] = []
+    const scalingBuffer = new ScalingBuffer()
+
+    const addRunLength = (length: number, value: number) => {
+        scalingBuffer.push_u16(length)
+        scalingBuffer.push_u8(value)
+    }
 
     let current = buffer.readu8(image, idx)
     let count = 1
@@ -21,7 +27,7 @@ export const runLengthEncode = (image: buffer): buffer => {
         if (current === nextValue && count < MAX_RUN_LENGTH) {
             count++
         } else {
-            runs.push({ value: current, length: count })
+            addRunLength(count, current)
             if (count < 128) {
                 wastedCount += 1
             }
@@ -30,8 +36,9 @@ export const runLengthEncode = (image: buffer): buffer => {
         }
         idx++
     }
-    runs.push({ value: current, length: count })
-    return convertRunLengthSequenceToEncodedBuffer(runs)
+
+    addRunLength(count, current)
+    return scalingBuffer.getBuffer()
 }
 
 export const readRunLengthSequence = (

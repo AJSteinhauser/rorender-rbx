@@ -6,10 +6,10 @@ export const HEADER_DATA_SIZE = 6 // 3 of 2byte u16int values
 const MAX_IMAGE_SIZE = 7000 * 7000 * 8
 export const MAX_PIXEL_SIZE = math.floor(math.sqrt(MAX_IMAGE_SIZE / 8))
 
-const SIZE_ERROR_MESSAGE = `Current max image size is ${string.format(
+const SIZE_ERROR_MESSAGE = `\nCurrent max image size is ${string.format(
     "%.2fGB",
     MAX_IMAGE_SIZE / 1000000000
-)}GB, or ${MAX_PIXEL_SIZE}px x ${MAX_PIXEL_SIZE}px. Please modify the resolution value in the RenderSettings ModuleScript to adjust output image size.`
+)}GB, or ${MAX_PIXEL_SIZE}px x ${MAX_PIXEL_SIZE}px. Modify the resolution value in the RenderSettings ModuleScript to adjust output image size.`
 
 export function getImageDimensions(settings: Settings): Vector2 {
     return new Vector2(

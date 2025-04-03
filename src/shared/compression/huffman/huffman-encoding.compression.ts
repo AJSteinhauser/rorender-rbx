@@ -7,6 +7,7 @@ import {
     ReconstructedNode
 } from "./huffman.model"
 import { to32BitBinaryString } from "../compression.utils"
+import { ScalingBuffer } from "../autoscaling-buffer.util"
 
 const writeBufferBitLength = 31
 const EMPTY_NODE_CODE = 256

@@ -54,7 +54,9 @@ export const runRender = (
             progressHooks.setCurrentStatusText(
                 "Compressing Data [Run Length Encoding]"
             )
+            const start = tick()
             const encoded = runLengthEncode(merged)
+            print("Time: ", tick() - start)
 
             print(getImageDimensions(renderSettings))
             print("\n\n")

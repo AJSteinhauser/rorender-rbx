@@ -1,8 +1,11 @@
 import TestEZ from "@rbxts/testez"
 
 export const runTests = () => {
-    TestEZ.TestBootstrap.run(
-        [game.GetService("ReplicatedStorage") as Instance],
-        TestEZ.Reporters.TextReporter
-    )
+    const pluginRef = script.FindFirstAncestor("rorender/plugin")
+    if (!pluginRef) {
+        warn("Test were unable to execute")
+        return
+    }
+
+    TestEZ.TestBootstrap.run([pluginRef], TestEZ.Reporters.TextReporter)
 }
