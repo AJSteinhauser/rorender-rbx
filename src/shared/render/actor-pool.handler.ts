@@ -7,22 +7,26 @@ const actor = script.Parent?.Parent?.Parent?.FindFirstChild(
 
 export class WorkerPool {
     private actorPoolIntialized = false
+    private actorPoolDestroyed = false
 
     private pool: Actor[] = []
-    private actorAddedBackToPool = new Instance("BindableEvent")
-    private waitingPool: ((value: Actor | Promise<Actor>) => void)[] = []
+    private tasks: ((actor: Actor) => Promise<void>)[] = []
 
     constructor(renderSettings: Settings) {
         this.initializeActors(renderSettings)
-        this.actorAddedBackToPool.Event.Connect(() => {
-            const resolve = this.waitingPool.shift()
-            if (resolve) {
-                const actor = this.pool.shift()
-                if (!actor) {
-                    this.waitingPool.push(resolve)
-                    return
+        task.spawn(() => {
+            while (!this.actorPoolDestroyed) {
+                task.wait()
+                while (this.tasks.size() > 0 && this.pool.size() > 0) {
+                    const actor = this.pool.pop()
+                    const job = this.tasks.pop()
+                    if (!actor || !job) {
+                        break
+                    }
+                    job(actor).then((_) => {
+                        this.pool.push(actor)
+                    })
                 }
-                task.spawn(() => resolve(actor))
             }
         })
     }
@@ -43,24 +47,13 @@ export class WorkerPool {
         }
     }
 
-    getActor = (renderSettings: Settings): Promise<Actor> => {
-        return new Promise<Actor>((resolve, reject) => {
-            const actor = this.pool.shift()
-            if (!actor) {
-                this.waitingPool.push(resolve)
-            } else {
-                resolve(actor)
-            }
-        })
-    }
-
-    releaseActor = (actor: Actor) => {
-        this.pool.push(actor)
-        this.actorAddedBackToPool.Fire()
+    queueTask = (taskCall: (actor: Actor) => Promise<void>) => {
+        this.tasks.push(taskCall)
     }
 
     cleanup = () => {
         this.pool.forEach((actor) => actor.Destroy())
         this.pool = []
+        this.actorPoolDestroyed = true
     }
 }
