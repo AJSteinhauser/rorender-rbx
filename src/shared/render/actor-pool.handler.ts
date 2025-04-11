@@ -9,22 +9,10 @@ export class WorkerPool {
     private actorPoolIntialized = false
 
     private pool: Actor[] = []
-    private actorAddedBackToPool = new Instance("BindableEvent")
     private waitingPool: ((value: Actor | Promise<Actor>) => void)[] = []
 
     constructor(renderSettings: Settings) {
         this.initializeActors(renderSettings)
-        this.actorAddedBackToPool.Event.Connect(() => {
-            const resolve = this.waitingPool.shift()
-            if (resolve) {
-                const actor = this.pool.shift()
-                if (!actor) {
-                    this.waitingPool.push(resolve)
-                    return
-                }
-                task.spawn(() => resolve(actor))
-            }
-        })
     }
 
     private initializeActors = (renderSettings: Settings) => {
@@ -43,6 +31,13 @@ export class WorkerPool {
         }
     }
 
+    private assignFreeWorker(actor: Actor): void {
+        const resolve = this.waitingPool.shift()
+        if (resolve) {
+            resolve(actor)
+        }
+    }
+
     getActor = (renderSettings: Settings): Promise<Actor> => {
         return new Promise<Actor>((resolve, reject) => {
             const actor = this.pool.shift()
@@ -56,7 +51,7 @@ export class WorkerPool {
 
     releaseActor = (actor: Actor) => {
         this.pool.push(actor)
-        this.actorAddedBackToPool.Fire()
+        this.assignFreeWorker(actor)
     }
 
     cleanup = () => {
