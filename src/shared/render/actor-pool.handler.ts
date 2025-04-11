@@ -10,22 +10,22 @@ export class WorkerPool {
     private actorPoolDestroyed = false
 
     private pool: Actor[] = []
-    private tasks: ((actor: Actor) => any)[] = []
+    private tasks: ((actor: Actor) => Promise<void>)[] = []
 
     constructor(renderSettings: Settings) {
         this.initializeActors(renderSettings)
         task.spawn(() => {
             while (!this.actorPoolDestroyed) {
-                task.wait(0.1)
-                if (this.tasks.size() > 0 && this.pool.size() > 0) {
-                    for (let actor of this.pool) {
-                        const task = this.tasks.pop()
-                        if (task) {
-                            task(actor)
-                        } else {
-                            return
-                        }
+                task.wait()
+                while (this.tasks.size() > 0 && this.pool.size() > 0) {
+                    const actor = this.pool.pop()
+                    const job = this.tasks.pop()
+                    if (!actor || !job) {
+                        break
                     }
+                    job(actor).then((_) => {
+                        this.pool.push(actor)
+                    })
                 }
             }
         })
@@ -47,7 +47,7 @@ export class WorkerPool {
         }
     }
 
-    queueTask = (taskCall: (actor: Actor) => any) => {
+    queueTask = (taskCall: (actor: Actor) => Promise<void>) => {
         this.tasks.push(taskCall)
     }
 

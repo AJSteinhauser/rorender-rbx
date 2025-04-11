@@ -45,15 +45,15 @@ export async function render(
             renderConstants
         }
         const rowCompleted = new Promise<void>(async (resolve) => {
-            const renderRowTask = (actor: Actor) => {
+            const renderRowTask = (actor: Actor): Promise<void> => {
                 const rowCalculatedEvent = actor.FindFirstChild(
                     "rowCalculated"
                 ) as BindableEvent
                 const binding = rowCalculatedEvent.Event.Connect(
                     (data: ImageBuffers) => {
+                        binding.Disconnect()
                         startTime = delayForScriptExhuastion(startTime)
                         calculatedRows[row] = data
-                        binding.Disconnect()
                         finishedRows++
                         const currentCompletion =
                             finishedRows / imageDimensions.Y
@@ -69,6 +69,7 @@ export async function render(
                     }
                 )
                 actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
+                return rowCompleted
             }
             pool.queueTask(renderRowTask)
         })
@@ -134,7 +135,7 @@ export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
             renderConstants
         }
         const rowCompleted = new Promise<void>(async (resolve) => {
-            const renderRowTask = (actor: Actor) => {
+            const renderRowTask = (actor: Actor): Promise<void> => {
                 const rowCalculatedEvent = actor.FindFirstChild(
                     "rowCalculated"
                 ) as BindableEvent
@@ -148,6 +149,7 @@ export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
                     }
                 )
                 actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
+                return rowCompleted
             }
             pool.queueTask(renderRowTask)
         })
