@@ -1,5 +1,5 @@
 import { Settings } from "shared/settings/settings.model"
-import { Pixel, RenderConstants, VIEWFINDER_IMAGE_SIZE } from "./render.model"
+import { Pixel, RenderConstants } from "./render.model"
 import { getImageDimensions } from "shared/utils"
 import { ImageBuffers } from "shared/file/file.modal"
 import { WorkerPool } from "./actor-pool.handler"
@@ -45,31 +45,34 @@ export async function render(
             renderConstants
         }
         const rowCompleted = new Promise<void>(async (resolve) => {
-            const actor = await pool.getActor(settings)
-            const rowCalculatedEvent = actor.FindFirstChild(
-                "rowCalculated"
-            ) as BindableEvent
-            const binding = rowCalculatedEvent.Event.Connect(
-                (data: ImageBuffers) => {
-                    startTime = delayForScriptExhuastion(startTime)
-                    calculatedRows[row] = data
-                    binding.Disconnect()
-                    pool.releaseActor(actor)
-                    finishedRows++
-                    const currentCompletion = finishedRows / imageDimensions.Y
-                    if (currentCompletion - lastRowPrinted > 0.05) {
-                        //print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
-                        progressHooks.setCurrentProgress(
+            const renderRowTask = (actor: Actor) => {
+                const rowCalculatedEvent = actor.FindFirstChild(
+                    "rowCalculated"
+                ) as BindableEvent
+                const binding = rowCalculatedEvent.Event.Connect(
+                    (data: ImageBuffers) => {
+                        startTime = delayForScriptExhuastion(startTime)
+                        calculatedRows[row] = data
+                        binding.Disconnect()
+                        finishedRows++
+                        const currentCompletion =
                             finishedRows / imageDimensions.Y
-                        )
-                        task.wait(0.05)
-                        lastRowPrinted = currentCompletion
+                        if (currentCompletion - lastRowPrinted > 0.05) {
+                            //print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
+                            progressHooks.setCurrentProgress(
+                                finishedRows / imageDimensions.Y
+                            )
+                            task.wait(0.05)
+                            lastRowPrinted = currentCompletion
+                        }
+                        resolve()
                     }
-                    resolve()
-                }
-            )
-            actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
+                )
+                actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
+            }
+            pool.queueTask(renderRowTask)
         })
+
         allRowsCompleted.push(rowCompleted)
         //for (let col = 0; col < imageDimensions.X; col++) {
         //    computePixel(new Vector2(col, row),settings, renderConstants)
@@ -131,21 +134,22 @@ export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
             renderConstants
         }
         const rowCompleted = new Promise<void>(async (resolve) => {
-            const actor = await pool.getActor(settings)
-            const rowCalculatedEvent = actor.FindFirstChild(
-                "rowCalculated"
-            ) as BindableEvent
-            const binding = rowCalculatedEvent.Event.Connect(
-                (data: ImageBuffers) => {
-                    startTime = delayForScriptExhuastion(startTime)
-                    calculatedRows[row] = data
-                    binding.Disconnect()
-                    pool.releaseActor(actor)
-                    finishedRows++
-                    resolve()
-                }
-            )
-            actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
+            const renderRowTask = (actor: Actor) => {
+                const rowCalculatedEvent = actor.FindFirstChild(
+                    "rowCalculated"
+                ) as BindableEvent
+                const binding = rowCalculatedEvent.Event.Connect(
+                    (data: ImageBuffers) => {
+                        startTime = delayForScriptExhuastion(startTime)
+                        calculatedRows[row] = data
+                        binding.Disconnect()
+                        finishedRows++
+                        resolve()
+                    }
+                )
+                actor.SendMessage(COMPUTE_ROW_MESSAGE, actorMessage)
+            }
+            pool.queueTask(renderRowTask)
         })
         allRowsCompleted.push(rowCompleted)
     }

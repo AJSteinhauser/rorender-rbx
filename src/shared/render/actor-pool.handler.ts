@@ -7,12 +7,28 @@ const actor = script.Parent?.Parent?.Parent?.FindFirstChild(
 
 export class WorkerPool {
     private actorPoolIntialized = false
+    private actorPoolDestroyed = false
 
     private pool: Actor[] = []
-    private waitingPool: ((value: Actor | Promise<Actor>) => void)[] = []
+    private tasks: ((actor: Actor) => any)[] = []
 
     constructor(renderSettings: Settings) {
         this.initializeActors(renderSettings)
+        task.spawn(() => {
+            while (!this.actorPoolDestroyed) {
+                task.wait(0.1)
+                if (this.tasks.size() > 0 && this.pool.size() > 0) {
+                    for (let actor of this.pool) {
+                        const task = this.tasks.pop()
+                        if (task) {
+                            task(actor)
+                        } else {
+                            return
+                        }
+                    }
+                }
+            }
+        })
     }
 
     private initializeActors = (renderSettings: Settings) => {
@@ -31,31 +47,13 @@ export class WorkerPool {
         }
     }
 
-    private assignFreeWorker(actor: Actor): void {
-        const resolve = this.waitingPool.shift()
-        if (resolve) {
-            resolve(actor)
-        }
-    }
-
-    getActor = (renderSettings: Settings): Promise<Actor> => {
-        return new Promise<Actor>((resolve, reject) => {
-            const actor = this.pool.shift()
-            if (!actor) {
-                this.waitingPool.push(resolve)
-            } else {
-                resolve(actor)
-            }
-        })
-    }
-
-    releaseActor = (actor: Actor) => {
-        this.pool.push(actor)
-        this.assignFreeWorker(actor)
+    queueTask = (taskCall: (actor: Actor) => any) => {
+        this.tasks.push(taskCall)
     }
 
     cleanup = () => {
         this.pool.forEach((actor) => actor.Destroy())
         this.pool = []
+        this.actorPoolDestroyed = true
     }
 }
