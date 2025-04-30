@@ -5,7 +5,12 @@ import { Screens } from "ui/constants"
 import uiConstants from "ui/ui-constants"
 import { ProgressUpdateData } from "./main"
 import { Button, ButtonType } from "ui/button"
-import { CubeMoveDirection, moveRenderBox } from "ui/config-helper"
+import {
+    convertMeshCollisionBoxes,
+    convertToIsometric,
+    CubeMoveDirection,
+    moveRenderBox
+} from "ui/config-helper"
 
 export function AdvancedConfigScreen(props: {
     changeScreen: (screen: Screens) => void
@@ -132,13 +137,47 @@ export function AdvancedConfigScreen(props: {
                     clicked={() => moveRenderBox(CubeMoveDirection.Backward)}
                 />
             </frame>
+            <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 5)} />
+            <textlabel
+                TextColor3={uiConstants.secondayText}
+                BackgroundTransparency={1}
+                Font={uiConstants.boldFont}
+                Text={"Mesh Detail"}
+                Size={new UDim2(1, 0, 0, 15)}
+                TextSize={uiConstants.fontSizeNormal}
+                TextXAlignment={Enum.TextXAlignment.Left}
+                AnchorPoint={new Vector2(0.5, 0.5)}
+            />
             <Button
-                label="Exit"
+                label="Convert Mesh Collision Boxs"
+                buttonType={ButtonType.outline}
+                size={new UDim2(1, 0, 0, 30)}
+                clicked={() => convertMeshCollisionBoxes()}
+            />
+            <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 5)} />
+            <textlabel
+                TextColor3={uiConstants.secondayText}
+                BackgroundTransparency={1}
+                Font={uiConstants.boldFont}
+                Text={"Isometric"}
+                Size={new UDim2(1, 0, 0, 15)}
+                TextSize={uiConstants.fontSizeNormal}
+                TextXAlignment={Enum.TextXAlignment.Left}
+                AnchorPoint={new Vector2(0.5, 0.5)}
+            />
+            <Button
+                label="Toggle Isometric"
+                buttonType={ButtonType.outline}
+                size={new UDim2(1, 0, 0, 30)}
+                clicked={() => convertToIsometric()}
+            />
+            <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 5)} />
+            <Button
+                label="Exit Helpers"
                 buttonType={ButtonType.filled}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => backClick()}
             />
-            <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 5)} />
         </scrollingframe>
     )
 }

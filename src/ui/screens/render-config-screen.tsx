@@ -172,7 +172,7 @@ export function RenderConfigScreen(props: {
                     clicked={() => autoConfigureBoundingBox()}
                 />
                 <Button
-                    label="Advanced Configuration"
+                    label="Helpers"
                     buttonType={ButtonType.outline}
                     size={new UDim2(1, 0, 0, 30)}
                     clicked={() => props.changeScreen(Screens.AdvancedConfig)}

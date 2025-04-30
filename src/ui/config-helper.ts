@@ -11,6 +11,7 @@ const assetService = game.GetService("AssetService")
 const MAX_IMAGE_SIZE = new Vector2(1024, 1024)
 const WATER_COLOR = Color3.fromRGB(66, 135, 245)
 const WATER_OPACITY = 0.7
+const ISOMETRIC_SCALE = 1.22
 
 let loadedRenderRef: ModuleScript | undefined
 let viewFinderImage: EditableImage | undefined = undefined
@@ -450,6 +451,7 @@ export function autoConfigureBoundingBox() {
     if (min.X !== math.huge) {
         centerPos = new CFrame(max.add(min).div(2))
         size = max.sub(min).add(new Vector3(0, 2, 0))
+        center.CFrame = centerPos
     }
 
     c0.CFrame = centerPos.mul(new CFrame(size.div(-2)))
@@ -520,4 +522,82 @@ export const moveRenderBox = (direction: CubeMoveDirection) => {
     c0.CFrame = c0.CFrame.mul(offset)
     c1.CFrame = c1.CFrame.mul(offset)
     changeHistoryService.SetWaypoint("Cube moved")
+}
+
+export const convertToIsometric = () => {
+    const settings = getCurrentRender()
+    if (!settings) {
+        error("No settings module loaded")
+    }
+    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
+
+    const originalCFrame = center.CFrame
+    const originalSize = mesh.Scale
+
+    const isoDegX = math.rad(35)
+    const isoDegY = math.rad(45)
+    const isoDegZ = math.rad(0)
+
+    const camRotation = CFrame.fromOrientation(isoDegX, isoDegY, isoDegZ)
+
+    const corners = [
+        new Vector3(-0.5, -0.5, -0.5),
+        new Vector3(0.5, -0.5, -0.5),
+        new Vector3(-0.5, 0.5, -0.5),
+        new Vector3(0.5, 0.5, -0.5),
+        new Vector3(-0.5, -0.5, 0.5),
+        new Vector3(0.5, -0.5, 0.5),
+        new Vector3(-0.5, 0.5, 0.5),
+        new Vector3(0.5, 0.5, 0.5)
+    ].map((corner) => originalCFrame.mul(corner.mul(originalSize)))
+
+    const rotatedCorners = corners.map((corner) => {
+        const relativePosition = corner.sub(originalCFrame.Position)
+        const rotatedPosition = camRotation.mul(relativePosition)
+        return rotatedPosition
+    })
+
+    let minX = math.huge
+    let maxX = -math.huge
+
+    let minY = math.huge
+    let maxY = -math.huge
+
+    let minZ = math.huge
+    let maxZ = -math.huge
+
+    rotatedCorners.forEach((corner) => {
+        minX = math.min(minX, corner.X)
+        minY = math.min(minY, corner.Y)
+        minZ = math.min(minZ, corner.Z)
+
+        maxX = math.max(maxX, corner.X)
+        maxY = math.max(maxY, corner.Y)
+        maxZ = math.max(maxZ, corner.Z)
+    })
+
+    const newSize = new Vector3(
+        (maxX - minX) * ISOMETRIC_SCALE,
+        (maxY - minY) * ISOMETRIC_SCALE,
+        (maxZ - minZ) * ISOMETRIC_SCALE
+    )
+
+    const newPosition = new Vector3(
+        (maxX + minX) / 2,
+        (maxY + minY) / 2,
+        (maxZ + minZ) / 2
+    )
+
+    mesh.Scale = newSize
+    center.CFrame = new CFrame(newPosition).mul(camRotation)
+}
+
+export const convertMeshCollisionBoxes = () => {
+    game.Workspace.GetDescendants().forEach((instance) => {
+        if (!instance.IsA("MeshPart")) {
+            return
+        }
+        instance.CollisionFidelity =
+            Enum.CollisionFidelity.PreciseConvexDecomposition
+    })
 }
