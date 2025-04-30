@@ -5,6 +5,7 @@ import uiConstants from "./ui-constants"
 
 const lighting = game.GetService("Lighting")
 const selectionService = game.GetService("Selection")
+const changeHistoryService = game.GetService("ChangeHistoryService")
 const assetService = game.GetService("AssetService")
 
 const MAX_IMAGE_SIZE = new Vector2(1024, 1024)
@@ -453,6 +454,8 @@ export function autoConfigureBoundingBox() {
 
     c0.CFrame = centerPos.mul(new CFrame(size.div(-2)))
     c1.CFrame = centerPos.mul(new CFrame(size.div(2)))
+
+    changeHistoryService.SetWaypoint("Autoconfig Render Cube")
 }
 
 const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
@@ -476,4 +479,45 @@ const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
         },
         actors: 50
     }
+}
+
+export enum CubeMoveDirection {
+    Forward,
+    Backward,
+    Left,
+    Right
+}
+export const moveRenderBox = (direction: CubeMoveDirection) => {
+    const settings = getCurrentRender()
+    if (!settings) {
+        error("No settings module loaded")
+    }
+    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
+
+    const size = mesh.Scale
+    let offset: CFrame
+    switch (direction) {
+        case CubeMoveDirection.Forward: {
+            offset = new CFrame(mesh.Scale.mul(new Vector3(0, 0, 1)))
+            break
+        }
+        case CubeMoveDirection.Backward: {
+            offset = new CFrame(mesh.Scale.mul(new Vector3(0, 0, -1)))
+            break
+        }
+
+        case CubeMoveDirection.Right: {
+            offset = new CFrame(mesh.Scale.mul(new Vector3(1, 0, 0)))
+            break
+        }
+        case CubeMoveDirection.Left: {
+            offset = new CFrame(mesh.Scale.mul(new Vector3(-1, 0, 0)))
+            break
+        }
+    }
+
+    center.CFrame = center.CFrame.mul(offset)
+    c0.CFrame = c0.CFrame.mul(offset)
+    c1.CFrame = c1.CFrame.mul(offset)
+    changeHistoryService.SetWaypoint("Cube moved")
 }

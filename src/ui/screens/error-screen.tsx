@@ -1,18 +1,8 @@
 import React, { useState } from "@rbxts/react"
 import { Button, ButtonType } from "ui/button"
-import {
-    getCurrentRender,
-    getRenderSettingsFromSelection,
-    loadRender
-} from "ui/config-helper"
+import { getCurrentRender } from "ui/config-helper"
 import { Screens } from "ui/constants"
 import uiConstants from "ui/ui-constants"
-
-const renderSettings = script.Parent?.Parent?.Parent?.FindFirstChild(
-    "RoRenderSettings"
-) as ModuleScript
-const changeHistoryService = game.GetService("ChangeHistoryService")
-const selectionService = game.GetService("Selection")
 
 export function ErrorScreen(props: {
     changeScreen: (screen: Screens) => void

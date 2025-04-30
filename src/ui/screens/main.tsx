@@ -5,6 +5,7 @@ import { Screens } from "ui/constants"
 import uiConstants from "ui/ui-constants"
 import { RenderProgressScreen } from "./rendering-progress-screen"
 import { ErrorScreen } from "./error-screen"
+import { AdvancedConfigScreen } from "./advanced-config-screen"
 
 export interface ProgressUpdateData {
     currentProgess: number
@@ -97,6 +98,8 @@ export function Main() {
                         errorText={currentErrorText}
                     />
                 )
+            case Screens.AdvancedConfig:
+                return <AdvancedConfigScreen changeScreen={changeScreen} />
         }
     }
 

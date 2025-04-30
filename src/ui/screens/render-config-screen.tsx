@@ -133,7 +133,7 @@ export function RenderConfigScreen(props: {
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(0.5, 0.5)}
             />
-            <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 110)}>
+            <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 140)}>
                 <uilistlayout
                     HorizontalAlignment={Enum.HorizontalAlignment.Center}
                     VerticalAlignment={Enum.VerticalAlignment.Center}
@@ -170,6 +170,12 @@ export function RenderConfigScreen(props: {
                     buttonType={ButtonType.outline}
                     size={new UDim2(1, 0, 0, 30)}
                     clicked={() => autoConfigureBoundingBox()}
+                />
+                <Button
+                    label="Advanced Configuration"
+                    buttonType={ButtonType.outline}
+                    size={new UDim2(1, 0, 0, 30)}
+                    clicked={() => props.changeScreen(Screens.AdvancedConfig)}
                 />
             </frame>
             <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 5)} />
@@ -255,12 +261,12 @@ export function RenderConfigScreen(props: {
                     />
                     <RenderProperty
                         size={new UDim2(1, 0, 0, 20)}
-                        property="Image Size"
+                        property="Output Image Size"
                         value={imageSize}
                     />
                     <RenderProperty
                         size={new UDim2(1, 0, 0, 20)}
-                        property="Scale"
+                        property="Box Scale"
                         value={scale}
                     />
                     <RenderProperty
