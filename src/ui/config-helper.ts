@@ -590,6 +590,9 @@ export const convertToIsometric = () => {
 
     mesh.Scale = newSize
     center.CFrame = new CFrame(newPosition).mul(camRotation)
+
+    c0.CFrame = center.CFrame.mul(new CFrame(newSize.div(-2)))
+    c1.CFrame = center.CFrame.mul(new CFrame(newSize.div(2)))
 }
 
 export const convertMeshCollisionBoxes = () => {
