@@ -16,6 +16,7 @@ import uiConstants from "ui/ui-constants"
 import { ProgressUpdateData, ProgressUpdateHooks } from "./main"
 import { RenderProperty } from "ui/render-property"
 import { ViewFinder } from "ui/view-finder"
+import { useLocalization } from "shared/localization/useLocalization"
 
 function isUUIDv4(input: string): boolean {
     return (
@@ -32,6 +33,7 @@ export function RenderConfigScreen(props: {
     progressHooks: ProgressUpdateHooks
     errorOccured: (message: string) => void
 }) {
+    const { translate } = useLocalization()
     const scrollingFrameRef = useRef<ScrollingFrame>(undefined!)
     const [renderId, setRenderId] = useState<undefined | string>(undefined)
     const [imageSize, setImageSize] = useState<string>("")
@@ -127,7 +129,7 @@ export function RenderConfigScreen(props: {
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
-                Text={"Quick Select"}
+                Text={translate("QuickSelect")}
                 Size={new UDim2(1, 0, 0, 15)}
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
@@ -147,32 +149,32 @@ export function RenderConfigScreen(props: {
                         Padding={new UDim(0, uiConstants.spacingNormal)}
                     />
                     <Button
-                        label="Corner 0"
+                        label={translate("Corner0")}
                         buttonType={ButtonType.outline}
                         size={new UDim2(0.5, -5, 0, 30)}
                         clicked={() => quickSelectModule(QuickSelect.C0)}
                     />
                     <Button
-                        label="Corner 1"
+                        label={translate("Corner1")}
                         buttonType={ButtonType.outline}
                         size={new UDim2(0.5, -5, 0, 30)}
                         clicked={() => quickSelectModule(QuickSelect.C1)}
                     />
                 </frame>
                 <Button
-                    label="Settings Module"
+                    label={translate("SettingsModule")}
                     buttonType={ButtonType.outline}
                     size={new UDim2(1, 0, 0, 30)}
                     clicked={() => quickSelectModule(QuickSelect.Module)}
                 />
                 <Button
-                    label="Auto Configure"
+                    label={translate("AutoConfigure")}
                     buttonType={ButtonType.outline}
                     size={new UDim2(1, 0, 0, 30)}
                     clicked={() => autoConfigureBoundingBox()}
                 />
                 <Button
-                    label="Helpers"
+                    label={translate("Helpers")}
                     buttonType={ButtonType.outline}
                     size={new UDim2(1, 0, 0, 30)}
                     clicked={() => props.changeScreen(Screens.AdvancedConfig)}
@@ -184,7 +186,7 @@ export function RenderConfigScreen(props: {
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
-                Text={"Viewfinder"}
+                Text={translate("Viewfinder")}
                 Size={new UDim2(1, 0, 0, 15)}
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
@@ -192,13 +194,13 @@ export function RenderConfigScreen(props: {
             />
             <ViewFinder size={new UDim2(1, 0, 0, 100)} />
             <Textarea
-                label="Render Id"
-                placeholder="Paste the render id here"
+                label={translate("RenderId")}
+                placeholder={translate("PasteRenderId")}
                 size={new UDim2(1, 0, 0, 60)}
                 textChanged={textChanged}
             />
             <Button
-                label="Start Render"
+                label={translate("StartRender")}
                 buttonType={ButtonType.filled}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => {
@@ -217,13 +219,13 @@ export function RenderConfigScreen(props: {
                         }
                     } else {
                         props.errorOccured(
-                            `${renderId} is not a valid UUID. Use the copy button to ensure the entire UUID is copied into your clipboard.`
+                            translate("InvalidUUID").format(tostring(renderId))
                         )
                     }
                 }}
             />
             <Button
-                label="Detach Configuration"
+                label={translate("DetachConfiguration")}
                 buttonType={ButtonType.outline}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => {
@@ -235,7 +237,7 @@ export function RenderConfigScreen(props: {
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
-                Text={"Stats"}
+                Text={translate("Stats")}
                 Size={new UDim2(1, 0, 0, 15)}
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
@@ -261,17 +263,17 @@ export function RenderConfigScreen(props: {
                     />
                     <RenderProperty
                         size={new UDim2(1, 0, 0, 20)}
-                        property="Output Image Size"
+                        property={translate("OutputImageSize")}
                         value={imageSize}
                     />
                     <RenderProperty
                         size={new UDim2(1, 0, 0, 20)}
-                        property="Box Scale"
+                        property={translate("BoxScale")}
                         value={scale}
                     />
                     <RenderProperty
                         size={new UDim2(1, 0, 0, 20)}
-                        property="Raw Data"
+                        property={translate("RawData")}
                         value={data}
                     />
                 </frame>

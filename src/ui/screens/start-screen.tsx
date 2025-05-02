@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "@rbxts/react"
 import { getFFlagStatus } from "fflags/fflags"
+import { useLocalization } from "shared/localization/useLocalization"
 import { Button, ButtonType } from "ui/button"
 import { getRenderSettingsFromSelection, loadRender } from "ui/config-helper"
 import { Screens } from "ui/constants"
@@ -15,6 +16,7 @@ export function StartScreen(props: {
     changeScreen: (screen: Screens) => void
     errorMessage: (message: string) => void
 }) {
+    const { locale, translate, setLanguage } = useLocalization()
     const createSettingsModule = () => {
         const settings = renderSettings.Clone()
         settings.Parent = game.Workspace
@@ -61,7 +63,7 @@ export function StartScreen(props: {
                 TextSize={uiConstants.fontSizeTitle}
             />
             <Button
-                label="Create Settings Module"
+                label={translate("CreateSettingsModule")}
                 buttonType={ButtonType.outline}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => {
@@ -75,7 +77,7 @@ export function StartScreen(props: {
                 }}
             />
             <Button
-                label="Load Settings Module"
+                label={translate("LoadSettingsModule")}
                 buttonType={ButtonType.outline}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => {
@@ -88,9 +90,7 @@ export function StartScreen(props: {
                         if (success) {
                             props.changeScreen(Screens.Configuration)
                         } else {
-                            props.errorMessage(
-                                "No configuration found (in the workspace). Consider creating a new RenderSettings Module or manually selecting the SettingsModule"
-                            )
+                            props.errorMessage(translate("NoSettingsModule"))
                         }
                     } catch (exception) {}
                 }}
@@ -98,9 +98,7 @@ export function StartScreen(props: {
             <textlabel
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
-                Text={
-                    'To load a previous configuration, select the module in the workspace first, then click "Load Settings Module"'
-                }
+                Text={translate("LoadSettingsModuleInfo")}
                 TextSize={uiConstants.fontSizeSmall}
                 TextWrap={true}
                 Font={uiConstants.lessboldFont}
