@@ -236,11 +236,13 @@ function castRay(
     rayPosition: Vector3,
     rayVector: Vector3,
     ignoreWater: boolean = false,
-    rayParams: RaycastParams = castParams
+    rayParams: RaycastParams = castParams,
+    includeMode = false
 ): RaycastResult | undefined {
     rayParams.IgnoreWater = ignoreWater
     const results = game.Workspace.Raycast(rayPosition, rayVector, rayParams)
     if (!results) return results
+    if (includeMode) return results
     if (results.Instance.Transparency < 1) return results
     rayParams.AddToFilter(results.Instance)
     return castRay(rayPosition, rayVector, ignoreWater, rayParams)
@@ -258,16 +260,19 @@ function getTerrainHit(
     rayVector: Vector3,
     terrain: Instance[] = [game.Workspace.Terrain]
 ): RaycastResult | undefined {
-    if (
-        terrain.find((terrain: Instance) => RaycastResult.Instance === terrain)
-    ) {
+    const terrainWasHit = terrain.some(
+        (terrainObj: Instance) =>
+            terrainObj === RaycastResult.Instance ||
+            RaycastResult.Instance.IsDescendantOf(terrainObj)
+    )
+    if (terrainWasHit) {
         return RaycastResult
     }
     const params = new RaycastParams()
     params.FilterType = Enum.RaycastFilterType.Include
     params.AddToFilter(terrain)
 
-    const result = castRay(rayPosition, rayVector, true, params)
+    const result = castRay(rayPosition, rayVector, true, params, true)
     return result
 }
 
