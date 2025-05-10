@@ -5,7 +5,7 @@ interface LanguageDictionary {
 }
 
 let currentLocale: string = StudioService.StudioLocaleId.lower()
-const defaultLocale = "en-us"
+const defaultLocale = "en_us"
 const languageModules: Map<string, LanguageDictionary> = new Map()
 const languagesFolder = script.Parent?.FindFirstChild("languages") as
     | Folder
