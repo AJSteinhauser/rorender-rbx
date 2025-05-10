@@ -4,11 +4,14 @@ import { RenderConfigScreen } from "./render-config-screen"
 import { Screens } from "ui/constants"
 import uiConstants from "ui/ui-constants"
 import { ProgressUpdateData } from "./main"
+import { useLocalization } from "shared/localization/useLocalization"
 
 export function RenderProgressScreen(props: {
     changeScreen: (screen: Screens) => void
     progressData: ProgressUpdateData
 }) {
+    const { translate } = useLocalization()
+    print(translate("RenderingImage"))
     return (
         <frame Size={UDim2.fromScale(1, 1)} BackgroundTransparency={1}>
             <uilistlayout
@@ -20,7 +23,7 @@ export function RenderProgressScreen(props: {
                 TextColor3={uiConstants.primaryColor}
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
-                Text={"Rendering Image..."}
+                Text={translate("RenderingImage")}
                 Size={new UDim2(1, 0, 0, 60)}
                 AnchorPoint={new Vector2(0.5, 0.5)}
                 TextSize={uiConstants.fontSizeBig}

@@ -21,6 +21,7 @@ import { runTests } from "shared/tests/test-runner"
 import { Settings } from "shared/settings/settings.model"
 import { ProgressUpdateHooks } from "ui/screens/main"
 import { object } from "@rbxts/react/src/prop-types"
+import LocalizationModule from "shared/localization/localization"
 
 const httpService = game.GetService("HttpService")
 
@@ -31,13 +32,15 @@ export const runRender = (
     renderId: string,
     progressHooks: ProgressUpdateHooks
 ) => {
+    const { translate } = LocalizationModule
     try {
         ensureImageLessThanMaxSize(renderSettings)
     } catch (e: any) {
         progressHooks.errorOccured(e)
         return
     }
-    progressHooks.setCurrentStatusText("Rendering Image...")
+    print(translate("RenderingImage"))
+    progressHooks.setCurrentStatusText(translate("RenderingImage"))
     progressHooks.setCurrentProgress(0)
     task.wait(0.5)
     render(renderSettings, progressHooks)
@@ -46,24 +49,22 @@ export const runRender = (
 
             progressHooks.setCurrentProgress(0)
             progressHooks.setCurrentStatusText(
-                "Performing Data Accumulation..."
+                translate("PerformingDataAccumulation")
             )
             const merged = mergeImageBuffersIntoSingleBuffer(output)
 
             progressHooks.setCurrentProgress(1 / 4)
-            progressHooks.setCurrentStatusText(
-                "Compressing Data [Run Length Encoding]"
-            )
+            progressHooks.setCurrentStatusText(translate("CompressingDataRun"))
             const start = tick()
             const encoded = runLengthEncode(merged)
-            print("Time: ", tick() - start)
+            print(translate("Time"), tick() - start)
 
             print(getImageDimensions(renderSettings))
             print("\n\n")
-            print(string.format("RAW: %.2f KB", buffer.len(merged) / 1000))
+            print(string.format(translate("Raw"), buffer.len(merged) / 1000))
             print(
                 string.format(
-                    "RAW Packets Required: %d",
+                    translate("RawPacketsRequired"),
                     math.ceil(buffer.len(merged) / HTTPS_BODY_LIMIT)
                 )
             )
@@ -71,14 +72,14 @@ export const runRender = (
 
             print(
                 string.format(
-                    "RLE compression: %.2f%%",
+                    translate("RLECompression"),
                     (1 - buffer.len(encoded) / buffer.len(merged)) * 100
                 )
             )
-            print(string.format("RLE: %2.f KB", buffer.len(encoded) / 1000))
+            print(string.format(translate("RLE"), buffer.len(encoded) / 1000))
             print(
                 string.format(
-                    "RLE Packets Required: %d",
+                    translate("RLEPacketsRequired"),
                     math.ceil(buffer.len(encoded) / HTTPS_BODY_LIMIT)
                 )
             )
@@ -86,7 +87,7 @@ export const runRender = (
 
             progressHooks.setCurrentProgress(2 / 4)
             progressHooks.setCurrentStatusText(
-                "Compressing Data [Huffman Encoding]"
+                translate("CompressingDataHuffman")
             )
             const frequencyTable = generatePriorityQueue(encoded)
             const huffmanTree = buildTreeFromFrequencyTable(frequencyTable)
@@ -95,20 +96,20 @@ export const runRender = (
             const huffmanEncoded = huffmanEncode(encoded, huffmanMap)
             print(
                 string.format(
-                    "Huffman + RLE compression: %.2f%%",
+                    translate("HuffmanPlusRLECompression"),
                     (1 - buffer.len(huffmanEncoded.data) / buffer.len(merged)) *
                         100
                 )
             )
             print(
                 string.format(
-                    "Huffman: %2.f KB",
+                    translate("Huffman"),
                     buffer.len(huffmanEncoded.data) / 1000
                 )
             )
             print(
                 string.format(
-                    "Huffman Packets Required: %d",
+                    translate("HuffmanPacketsRequired"),
                     math.ceil(
                         buffer.len(huffmanEncoded.data) / HTTPS_BODY_LIMIT
                     )
@@ -120,7 +121,9 @@ export const runRender = (
 
             // header -> tree -> data length -> data
             progressHooks.setCurrentProgress(3 / 4)
-            progressHooks.setCurrentStatusText("Adding Final Encodings...")
+            progressHooks.setCurrentStatusText(
+                translate("AddingFinalEncodings")
+            )
             const accumulatedBuffer = buffer.create(
                 buffer.len(headerBuffer) +
                     buffer.len(treeBuffer) +
@@ -155,17 +158,17 @@ export const runRender = (
                 buffer.len(huffmanEncoded.data)
             )
 
-            print("bit length: " + huffmanEncoded.bitLength)
+            print(translate("BitLength") + huffmanEncoded.bitLength)
 
             print(
                 string.format(
-                    "Final Size : %2.f KB",
+                    translate("FinalSize"),
                     buffer.len(accumulatedBuffer) / 1000
                 )
             )
             print(
                 string.format(
-                    "Final Packets Required: %d",
+                    translate("FinalPacketsRequired"),
                     math.ceil(buffer.len(accumulatedBuffer) / HTTPS_BODY_LIMIT)
                 )
             )
@@ -173,14 +176,17 @@ export const runRender = (
             const outputData = buffer.tostring(accumulatedBuffer)
             const split = splitImageIntoChunks(outputData)
             progressHooks.setCurrentProgress(0)
-            progressHooks.setCurrentStatusText("Sending Data to RoRender.com")
+            progressHooks.setCurrentStatusText(translate("SendingDataToServer"))
 
             let chunksSent = 0
             const promises: Promise<void>[] = []
             split.forEach((chunk, idx) => {
                 promises.push(
                     new Promise<void>((success, failure) => {
-                        print("sent " + tostring(idx), "size: " + chunk.size())
+                        print(
+                            translate("Sent") + tostring(idx),
+                            translate("Size") + chunk.size()
+                        )
                         const [httpSuccess, errorMsg] = pcall(() => {
                             const response = httpService.PostAsync(
                                 "https://uploadrenderchunk-izsda2emzq-uc.a.run.app",
@@ -208,7 +214,9 @@ export const runRender = (
             })
             Promise.all(promises)
                 .then((_) => {
-                    progressHooks.setCurrentStatusText("Render Complete...")
+                    progressHooks.setCurrentStatusText(
+                        translate("RenderComplete")
+                    )
                     progressHooks.renderComplete()
                 })
                 .catch((e) => {

@@ -3,12 +3,14 @@ import { setViewfinderSettings, updateShowWater } from "./config-helper"
 import uiConstants from "./ui-constants"
 import React, { useEffect, useRef, useState } from "@rbxts/react"
 import { CheckBox } from "./checkbox"
+import { useLocalization } from "shared/localization/useLocalization"
 
 const assetService = game.GetService("AssetService")
 const pluginGuiService = game.GetService("PluginGuiService")
 const popoutPadding = new UDim(0, 3)
 
 export function ViewFinder(props: { size: UDim2 }) {
+    const { translate } = useLocalization()
     const editageImageRef = useRef<EditableImage | undefined>(undefined)
     const contentRef = useRef<Content | undefined>(undefined)
     const finderRef = useRef<Frame>()
@@ -198,7 +200,7 @@ export function ViewFinder(props: { size: UDim2 }) {
                 size={new UDim2(1, 0, 0, 25)}
                 onChange={setShowWater}
                 isChecked={showWater}
-                label="Show Water in Preview"
+                label={translate("ShowWaterinPreview")}
             />
         </frame>
     )

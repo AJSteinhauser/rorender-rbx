@@ -11,10 +11,12 @@ import {
     CubeMoveDirection,
     moveRenderBox
 } from "ui/config-helper"
+import { useLocalization } from "shared/localization/useLocalization"
 
 export function AdvancedConfigScreen(props: {
     changeScreen: (screen: Screens) => void
 }) {
+    const { translate } = useLocalization()
     const scrollingFrameRef = useRef<ScrollingFrame>(undefined!)
     const [needsScroll, setNeedsScroll] = useState(false)
 
@@ -91,7 +93,7 @@ export function AdvancedConfigScreen(props: {
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
-                Text={"Move Box"}
+                Text={translate("MoveBox")}
                 Size={new UDim2(1, 0, 0, 15)}
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
@@ -105,7 +107,7 @@ export function AdvancedConfigScreen(props: {
                     Padding={new UDim(0, uiConstants.spacingNormal)}
                 />
                 <Button
-                    label="Forwards"
+                    label={translate("Forwards")}
                     buttonType={ButtonType.outline}
                     size={new UDim2(0.5, 0, 0, 30)}
                     clicked={() => moveRenderBox(CubeMoveDirection.Forward)}
@@ -118,20 +120,20 @@ export function AdvancedConfigScreen(props: {
                         Padding={new UDim(0, uiConstants.spacingNormal)}
                     />
                     <Button
-                        label="Left"
+                        label={translate("Left")}
                         buttonType={ButtonType.outline}
                         size={new UDim2(0.5, -5, 0, 30)}
                         clicked={() => moveRenderBox(CubeMoveDirection.Left)}
                     />
                     <Button
-                        label="Right"
+                        label={translate("Right")}
                         buttonType={ButtonType.outline}
                         size={new UDim2(0.5, -5, 0, 30)}
                         clicked={() => moveRenderBox(CubeMoveDirection.Right)}
                     />
                 </frame>
                 <Button
-                    label="Backwards"
+                    label={translate("Backwards")}
                     buttonType={ButtonType.outline}
                     size={new UDim2(0.5, 0, 0, 30)}
                     clicked={() => moveRenderBox(CubeMoveDirection.Backward)}
@@ -142,14 +144,14 @@ export function AdvancedConfigScreen(props: {
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
-                Text={"Mesh Detail"}
+                Text={translate("MeshDetail")}
                 Size={new UDim2(1, 0, 0, 15)}
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(0.5, 0.5)}
             />
             <Button
-                label="Convert Mesh Collision Boxs"
+                label={translate("ConvertMeshCollisionBoxes")}
                 buttonType={ButtonType.outline}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => convertMeshCollisionBoxes()}
@@ -159,21 +161,21 @@ export function AdvancedConfigScreen(props: {
                 TextColor3={uiConstants.secondayText}
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
-                Text={"Isometric"}
+                Text={translate("Isometric")}
                 Size={new UDim2(1, 0, 0, 15)}
                 TextSize={uiConstants.fontSizeNormal}
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(0.5, 0.5)}
             />
             <Button
-                label="Toggle Isometric"
+                label={translate("ConvertIsometric")}
                 buttonType={ButtonType.outline}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => convertToIsometric()}
             />
             <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 5)} />
             <Button
-                label="Exit Helpers"
+                label={translate("ExitHelpers")}
                 buttonType={ButtonType.filled}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => backClick()}
