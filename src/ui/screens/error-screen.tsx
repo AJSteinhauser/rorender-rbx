@@ -1,4 +1,5 @@
 import React, { useState } from "@rbxts/react"
+import { useLocalization } from "shared/localization/useLocalization"
 import { Button, ButtonType } from "ui/button"
 import { getCurrentRender } from "ui/config-helper"
 import { Screens } from "ui/constants"
@@ -8,6 +9,8 @@ export function ErrorScreen(props: {
     changeScreen: (screen: Screens) => void
     errorText: string
 }) {
+    const { translate } = useLocalization()
+
     return (
         <frame Size={UDim2.fromScale(1, 1)} BackgroundTransparency={1}>
             <uilistlayout
@@ -19,7 +22,7 @@ export function ErrorScreen(props: {
                 TextColor3={uiConstants.errorText}
                 BackgroundTransparency={1}
                 Font={uiConstants.boldFont}
-                Text={"Error"}
+                Text={translate("Error")}
                 Size={new UDim2(1, 0, 0, 40)}
                 TextScaled={true}
                 TextXAlignment={Enum.TextXAlignment.Left}
@@ -50,7 +53,7 @@ export function ErrorScreen(props: {
                 />
             </frame>
             <Button
-                label="Ok"
+                label={translate("Ok")}
                 buttonType={ButtonType.filled}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => {
