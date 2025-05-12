@@ -11,7 +11,6 @@ export function RenderProgressScreen(props: {
     progressData: ProgressUpdateData
 }) {
     const { translate } = useLocalization()
-    print(translate("RenderingImage"))
     return (
         <frame Size={UDim2.fromScale(1, 1)} BackgroundTransparency={1}>
             <uilistlayout
