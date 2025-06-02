@@ -457,7 +457,30 @@ export function autoConfigureBoundingBox() {
     c0.CFrame = centerPos.mul(new CFrame(size.div(-2)))
     c1.CFrame = centerPos.mul(new CFrame(size.div(2)))
 
+    const newResolution = calculateResolutionToAchieveImageSize(size)
+    replaceResolutionValue(newResolution)
+
     changeHistoryService.SetWaypoint("Autoconfig Render Cube")
+}
+
+const calculateResolutionToAchieveImageSize = (
+    mapScale: Vector3,
+    maxMapSize = 1000
+): number => {
+    const maxAxis = math.max(mapScale.X, mapScale.Z)
+    return maxAxis / maxMapSize
+}
+
+const replaceResolutionValue = (newResolution: number) => {
+    const renderSettings = loadedRenderRef
+    if (!renderSettings) {
+        return
+    }
+    const [newSource] = renderSettings.Source.gsub(
+        "(resolution%s*=%s*)(-?%d*%.?%d+)",
+        "%1" + string.format("%.2f", newResolution)
+    )
+    renderSettings.Source = newSource
 }
 
 const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
