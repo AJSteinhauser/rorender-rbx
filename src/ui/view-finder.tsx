@@ -1,4 +1,4 @@
-import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model"
+import { Get_Viewfinder_Image_Size } from "shared/render/render.model"
 import { setViewfinderSettings, updateShowWater } from "./config-helper"
 import uiConstants from "./ui-constants"
 import React, { useEffect, useRef, useState } from "@rbxts/react"
@@ -23,14 +23,19 @@ export function ViewFinder(props: { size: UDim2 }) {
     ) as DockWidgetPluginGui
     useEffect(() => {
         if (!editageImageRef.current) {
-            const editableImage = assetService.CreateEditableImage({
-                Size: VIEWFINDER_IMAGE_SIZE
-            })
-            editageImageRef.current = editableImage
+            const updater = () => {
+                const VIEWFINDER_IMAGE_SIZE = Get_Viewfinder_Image_Size()
+                const editableImage = assetService.CreateEditableImage({
+                    Size: VIEWFINDER_IMAGE_SIZE
+                })
+                editageImageRef.current = editableImage
 
-            const content = Content.fromObject(editableImage)
-            contentRef.current = content
-            setViewfinderSettings(editableImage)
+                const content = Content.fromObject(editableImage)
+                contentRef.current = content
+                setViewfinderSettings(editableImage, updater)
+            }
+
+            updater()
         }
     }, [])
 
