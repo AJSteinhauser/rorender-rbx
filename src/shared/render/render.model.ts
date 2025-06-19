@@ -28,6 +28,7 @@ export interface ActorHelperRequestPayload {
 }
 
 let VIEWFINDER_IMAGE_SIZE = new Vector2(100, 100)
+export const MAX_AUTOMATIC_VIEWFINDER_IMAGE_SIZE = new Vector2(300, 300)
 
 export type ReplacementRayCastFunc = (
     orginal: RaycastResult,

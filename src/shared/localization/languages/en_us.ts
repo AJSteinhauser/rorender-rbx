@@ -10,6 +10,9 @@ const translations: Record<string, string> = {
 
     //view-finder
     ShowWaterinPreview: `Show Water in Preview`,
+    RenderSize: `Render Size`,
+    RenderSizePlaceholder: `Enter a number forom 100 - 1024 to change size`,
+    RerenderViewFinder: `Rerender Viewfinder`,
 
     //render-runner
     PerformingDataAccumulation: `Performing Data Accumulation...`,

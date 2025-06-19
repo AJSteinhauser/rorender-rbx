@@ -5,6 +5,7 @@ export function Textarea(props: {
     label: string
     placeholder: string
     size: UDim2
+    text?: string
     textChanged: (text: string) => void
 }) {
     return (
@@ -45,20 +46,20 @@ export function Textarea(props: {
                     TextColor3={uiConstants.primaryText}
                     BackgroundTransparency={1}
                     TextTruncate={Enum.TextTruncate.AtEnd}
-                    Text={""}
+                    Text={props.text || ""}
                     Event={{
-                        InputChanged: (changed, text) => {
-                            props.textChanged(changed.Text)
-                        },
+                        // InputChanged: (changed, text) => {
+                        //     props.textChanged(changed.Text)
+                        // },
                         FocusLost: (changed) => {
                             props.textChanged(changed.Text)
-                        },
-                        InputEnded: (changed, text) => {
-                            props.textChanged(changed.Text)
-                        },
-                        MouseLeave: (changed, text) => {
-                            props.textChanged(changed.Text)
                         }
+                        // InputEnded: (changed, text) => {
+                        //     props.textChanged(changed.Text)
+                        // },
+                        // MouseLeave: (changed, text) => {
+                        //     props.textChanged(changed.Text)
+                        // }
                     }}
                 />
             </frame>
