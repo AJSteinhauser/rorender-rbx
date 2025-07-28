@@ -8,6 +8,7 @@ import {
 } from "./render.model"
 import { color3ToVector3 } from "shared/utils"
 import { getEditableImage, getEditableMesh } from "./editable-cache"
+import { render } from "./render.main"
 
 const LIGHTING = game.GetService("Lighting")
 const TERRAIN = game.Workspace.Terrain
@@ -43,8 +44,12 @@ export function computePixel(
         renderConstants.startingPosition.Y - renderConstants.rayLength
 
     // Helper function to compute height
-    const calculateHeight = (y: number) =>
-        math.floor(((y - rayBottom) / renderConstants.startingPosition.Y) * 255)
+    const calculateHeight = (y: number) => {
+        const adjustment = rayBottom * -1
+        const adjustedY = y + adjustment
+        const adjustedTop = renderConstants.startingPosition.Y + adjustment
+        return math.floor((adjustedY / adjustedTop) * 255)
+    }
 
     // Helper function to deal deal with textured parts
     const bailTextureCalulations = (hit: RaycastResult): boolean => {

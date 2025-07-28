@@ -522,7 +522,7 @@ const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
         mapScale,
         mapCFrame,
         resolution,
-        terrain: [],
+        terrain: [game.Workspace.Terrain],
         buildingGroups: [],
         roadGroups: [],
         water: {
