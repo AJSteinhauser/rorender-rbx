@@ -42,6 +42,10 @@ button.Click.Connect(() => {
     dockWindow.Enabled = !dockWindow.Enabled
 })
 
+while (!PhysicsService.IsCollisionGroupRegistered("StudioSelectable")) {
+    task.wait()
+}
+
 PhysicsService.RegisterCollisionGroup("RoRenderDraggers")
 PhysicsService.CollisionGroupSetCollidable(
     "RoRenderDraggers",
