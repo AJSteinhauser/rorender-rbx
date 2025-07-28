@@ -4,4 +4,3 @@ node_modules
 aftman.toml
 dist
 .DS_Store
-.sourcemap.json

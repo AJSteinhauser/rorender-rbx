@@ -1,8 +1,5 @@
 import { render, renderPreview } from "shared/render/render.main"
-import {
-    Get_Viewfinder_Image_Size,
-    Set_Viewfinder_Image_Size
-} from "shared/render/render.model"
+import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model"
 import { Settings } from "shared/settings/settings.model"
 import uiConstants from "./ui-constants"
 
@@ -18,7 +15,6 @@ const ISOMETRIC_SCALE = 1.22
 
 let loadedRenderRef: ModuleScript | undefined
 let viewFinderImage: EditableImage | undefined = undefined
-let viewFinderImageUpdater: ((force?: boolean) => void) | undefined
 let connections: RBXScriptConnection[] = []
 let imageSizeHook: React.Dispatch<React.SetStateAction<string>> | undefined
 let dataHook: React.Dispatch<React.SetStateAction<string>> | undefined
@@ -54,28 +50,14 @@ export const getRenderSettingsFromSelection = (): boolean => {
     return true
 }
 
-export const setViewfinderSettings = (
-    image?: EditableImage,
-    updater?: () => void
-) => {
-    if (image) viewFinderImage = image
-    if (updater) viewFinderImageUpdater = updater
+export const setViewfinderSettings = (image: EditableImage) => {
+    viewFinderImage = image
 }
 
 export const updateShowWater = (show: boolean) => {
     renderWater = show
     updateUI()
 }
-
-export const updateViewfinderSize = (size: Vector2, force?: boolean) => {
-    Set_Viewfinder_Image_Size(size)
-    if (loadedRenderRef) {
-        const { mesh, center } = getElementsFromSettings(loadedRenderRef)
-        updatePreviewImageThrottled(mesh.Scale, center.CFrame, force)
-    }
-}
-
-_G.updateViewfinderSize = updateViewfinderSize
 
 function throttle<T extends (...args: unknown[]) => void>(
     func: T,
@@ -99,29 +81,17 @@ function throttle<T extends (...args: unknown[]) => void>(
     } as T
 }
 
-const updatePreviewImage = (
-    scale: Vector3,
-    cframe: CFrame,
-    force?: boolean
-) => {
+const updatePreviewImage = (scale: Vector3, cframe: CFrame) => {
     if (!loadedRenderRef || !viewFinderImage) return
 
     const settings = previewSettings(scale, cframe)
     const imageSize = getImageDimensions(settings.resolution, settings.mapScale)
-    const VIEWFINDER_IMAGE_SIZE = Get_Viewfinder_Image_Size()
 
     if (imageSize.X > MAX_IMAGE_SIZE.X || imageSize.Y > MAX_IMAGE_SIZE.Y) {
         clearViewFinderImage()
         return
     }
 
-    if (VIEWFINDER_IMAGE_SIZE !== viewFinderImage.Size) {
-        if (viewFinderImageUpdater) {
-            viewFinderImageUpdater(force)
-        }
-        clearViewFinderImage()
-        return
-    }
     const imageData = renderPreview(settings)
     imageData.then((data) => {
         const tempCanvas = assetService.CreateEditableImage({
@@ -177,17 +147,15 @@ const updatePreviewImage = (
 }
 
 const clearViewFinderImage = () => {
-    const VIEWFINDER_IMAGE_SIZE = Get_Viewfinder_Image_Size()
     const clearBuff = buffer.create(
         VIEWFINDER_IMAGE_SIZE.X * VIEWFINDER_IMAGE_SIZE.Y * 4
     )
     buffer.fill(clearBuff, 0, 0)
-    if (viewFinderImage && viewFinderImage.Size === VIEWFINDER_IMAGE_SIZE)
-        viewFinderImage?.WritePixelsBuffer(
-            new Vector2(),
-            VIEWFINDER_IMAGE_SIZE,
-            clearBuff
-        )
+    viewFinderImage?.WritePixelsBuffer(
+        new Vector2(),
+        VIEWFINDER_IMAGE_SIZE,
+        clearBuff
+    )
     //drawDiagonalLines()
 }
 
@@ -516,7 +484,6 @@ const replaceResolutionValue = (newResolution: number) => {
 }
 
 const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
-    const VIEWFINDER_IMAGE_SIZE = Get_Viewfinder_Image_Size()
     const resolution = mapScale.Z / VIEWFINDER_IMAGE_SIZE.Y
     return {
         mapScale,

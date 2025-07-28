@@ -1,19 +1,9 @@
-import {
-    Get_Viewfinder_Image_Size,
-    MAX_AUTOMATIC_VIEWFINDER_IMAGE_SIZE,
-    Set_Viewfinder_Image_Size
-} from "shared/render/render.model"
-import {
-    setViewfinderSettings,
-    updateShowWater,
-    updateViewfinderSize
-} from "./config-helper"
+import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model"
+import { setViewfinderSettings, updateShowWater } from "./config-helper"
 import uiConstants from "./ui-constants"
 import React, { useEffect, useRef, useState } from "@rbxts/react"
 import { CheckBox } from "./checkbox"
 import { useLocalization } from "shared/localization/useLocalization"
-import { Textarea } from "./text-area"
-import { Button, ButtonType } from "./button"
 
 const assetService = game.GetService("AssetService")
 const pluginGuiService = game.GetService("PluginGuiService")
@@ -27,45 +17,23 @@ export function ViewFinder(props: { size: UDim2 }) {
     const [showWater, setShowWater] = useState(false)
     const [popout, setPopout] = useState(false)
     const [hover, setHover] = useState(false)
-    const [viewsize, setViewsize] = useState(Get_Viewfinder_Image_Size())
     const [oldParent, setOldParent] = useState<Instance>()
-    const Size = new UDim2(0.9, 0, 0, 320)
     let dockWindowPreview = pluginGuiService.FindFirstChild(
         "RoRender V4 Preview"
     ) as DockWidgetPluginGui
-
-    const viewfinderupdater = (force?: boolean): EditableImage | undefined => {
-        const VIEWFINDER_IMAGE_SIZE = Get_Viewfinder_Image_Size()
-        if (
-            VIEWFINDER_IMAGE_SIZE.X <= MAX_AUTOMATIC_VIEWFINDER_IMAGE_SIZE.X ||
-            force
-        ) {
+    useEffect(() => {
+        if (!editageImageRef.current) {
             const editableImage = assetService.CreateEditableImage({
                 Size: VIEWFINDER_IMAGE_SIZE
             })
-
-            if (editageImageRef.current)
-                setViewfinderSettings(editableImage, undefined)
-
             editageImageRef.current = editableImage
 
             const content = Content.fromObject(editableImage)
             contentRef.current = content
-
-            return editableImage
-        }
-    }
-
-    useEffect(() => {
-        if (!editageImageRef.current) {
-            const editableImage = viewfinderupdater()
-            setViewfinderSettings(editableImage, viewfinderupdater)
+            setViewfinderSettings(editableImage)
         }
     }, [])
 
-    if (editageImageRef.current) {
-        print(editageImageRef.current.Size)
-    }
     useEffect(() => {
         let dockWindowPreviewCloseConnection: RBXScriptConnection
 
@@ -84,7 +52,7 @@ export function ViewFinder(props: { size: UDim2 }) {
                         ) as GuiObject
                         finderRef.current.Parent = oldParent
                         finderRef.current.BackgroundTransparency = 1
-                        finderRef.current.Size = Size
+                        finderRef.current.Size = UDim2.fromOffset(180, 180)
                         if (holder) {
                             holder.Size = UDim2.fromOffset(150, 150)
                         }
@@ -104,7 +72,7 @@ export function ViewFinder(props: { size: UDim2 }) {
     const gridTransparency = 0.5
     return (
         <frame
-            Size={Size}
+            Size={UDim2.fromOffset(180, 180)}
             BackgroundColor3={uiConstants.groundColor}
             BackgroundTransparency={1}
             ref={finderRef}
@@ -123,14 +91,14 @@ export function ViewFinder(props: { size: UDim2 }) {
             <frame
                 Size={
                     popout
-                        ? new UDim2(0.8, 0, 1, -200)
+                        ? new UDim2(0.8, 0, 0, 150)
                         : UDim2.fromOffset(150, 150)
                 }
                 BackgroundColor3={uiConstants.cardColor}
                 key={"Holder"}
             >
                 <uiaspectratioconstraint
-                    AspectType={Enum.AspectType.FitWithinMaxSize}
+                    AspectType={Enum.AspectType.ScaleWithParentSize}
                 />
                 <uicorner
                     CornerRadius={new UDim(0, uiConstants.cornerRadius)}
@@ -145,6 +113,40 @@ export function ViewFinder(props: { size: UDim2 }) {
                     PaddingLeft={new UDim(0, 3)}
                     PaddingRight={new UDim(0, 3)}
                 />
+                {/*
+                <frame
+                    Size={new UDim2(1,0,0,1)}
+                    BackgroundTransparency={gridTransparency}
+                    Position={UDim2.fromScale(0,.333)}
+                    BackgroundColor3={gridColor}
+                    BorderSizePixel={0}
+                    ZIndex={2}
+                />
+                <frame
+                    Size={new UDim2(1,0,0,1)}
+                    BackgroundTransparency={gridTransparency}
+                    Position={UDim2.fromScale(0,.666)}
+                    BackgroundColor3={gridColor}
+                    BorderSizePixel={0}
+                    ZIndex={2}
+                />
+                <frame
+                    Size={new UDim2(0,1,1,0)}
+                    BackgroundTransparency={gridTransparency}
+                    Position={UDim2.fromScale(.333,0)}
+                    BackgroundColor3={gridColor}
+                    BorderSizePixel={0}
+                    ZIndex={2}
+                />
+                <frame
+                    Size={new UDim2(0,1,1,0)}
+                    BackgroundTransparency={gridTransparency}
+                    Position={UDim2.fromScale(.333,0)}
+                    BackgroundColor3={gridColor}
+                    BorderSizePixel={0}
+                    ZIndex={2}
+                />
+                */}
                 <imagelabel
                     Size={UDim2.fromScale(1, 1)}
                     ImageContent={contentRef.current}
@@ -199,37 +201,6 @@ export function ViewFinder(props: { size: UDim2 }) {
                 onChange={setShowWater}
                 isChecked={showWater}
                 label={translate("ShowWaterinPreview")}
-            />
-            <Textarea
-                key={"y1"}
-                label={translate("RenderSize")}
-                placeholder={translate("RenderSizePlaceholder")}
-                size={new UDim2(1, 0, 0, 60)}
-                text={`${viewsize.X}`}
-                textChanged={(newtext: string) => {
-                    if (!newtext) return
-                    if (tonumber(newtext) === undefined) return
-                    const number = (tonumber(newtext) as number) || 0
-
-                    if (number <= 1024 && number >= 100) {
-                        if (number > MAX_AUTOMATIC_VIEWFINDER_IMAGE_SIZE.X) {
-                            setViewsize(Vector2.one.mul(number || 100))
-                        } else {
-                            setViewsize(Vector2.one.mul(number || 100))
-                            updateViewfinderSize(Vector2.one.mul(number || 100))
-                        }
-                    }
-                }}
-            />
-            <Button
-                key={"y2"}
-                label={translate("RerenderViewFinder")}
-                buttonType={ButtonType.outline}
-                size={new UDim2(1, 0, 0, 30)}
-                clicked={() => {
-                    print(viewsize)
-                    updateViewfinderSize(viewsize, true)
-                }}
             />
         </frame>
     )

@@ -10,9 +10,6 @@ const translations: Record<string, string> = {
 
     //view-finder
     ShowWaterinPreview: `Wasser im Vorschaubild anzeigen`,
-    RenderSize: `Bild Größe`,
-    RenderSizePlaceholder: `Geben sie eine nummer ein von 100 - 1024`,
-    RerenderViewFinder: `Vorschaubild neu laden`,
 
     //render-runner
     PerformingDataAccumulation: `Datensammlung wird durchgeführt...`,

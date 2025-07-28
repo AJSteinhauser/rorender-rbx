@@ -27,8 +27,7 @@ export interface ActorHelperRequestPayload {
     assetId: string
 }
 
-let VIEWFINDER_IMAGE_SIZE = new Vector2(100, 100)
-export const MAX_AUTOMATIC_VIEWFINDER_IMAGE_SIZE = new Vector2(300, 300)
+export const VIEWFINDER_IMAGE_SIZE = new Vector2(100, 100)
 
 export type ReplacementRayCastFunc = (
     orginal: RaycastResult,
@@ -43,11 +42,3 @@ interface SurfaceAppearanceModifiers {
 }
 
 export type SurfaceOptions = Partial<SurfaceAppearanceModifiers>
-
-export function Set_Viewfinder_Image_Size(Size: Vector2) {
-    VIEWFINDER_IMAGE_SIZE = Size
-}
-
-export function Get_Viewfinder_Image_Size(): Vector2 {
-    return VIEWFINDER_IMAGE_SIZE
-}
