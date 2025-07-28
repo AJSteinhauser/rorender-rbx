@@ -1,4 +1,5 @@
 import mount from "ui/mount"
+const PhysicsService = game.GetService("PhysicsService")
 const Name = "RoRender V4"
 const toolbar = plugin.CreateToolbar(Name)
 const button = toolbar.CreateButton(
@@ -41,4 +42,22 @@ button.Click.Connect(() => {
     dockWindow.Enabled = !dockWindow.Enabled
 })
 
+PhysicsService.RegisterCollisionGroup("RoRenderDraggers")
+PhysicsService.CollisionGroupSetCollidable(
+    "RoRenderDraggers",
+    "StudioSelectable",
+    false
+)
+
 mount(dockWindow)
+
+function Cleanup() {
+    const RoRenderDraggers = game
+        .GetService("CoreGui")
+        .FindFirstChild("RoRenderDraggers")
+    if (RoRenderDraggers) RoRenderDraggers.Destroy()
+}
+
+plugin.Deactivation.Connect(Cleanup)
+plugin.Destroying.Connect(Cleanup)
+plugin.Unloading.Connect(Cleanup)
