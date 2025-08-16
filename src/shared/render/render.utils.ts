@@ -454,7 +454,7 @@ function getOverlayTextureFromMesh(
         )
 
         return color3ToVector3(
-            overlayBlend(result.Instance.Color, color, opacity)
+            overlayBlend(color, surfaceAppearance.Color, opacity)
         )
     } catch (e) {
         return color3ToVector3(result.Instance.Color)
