@@ -9,7 +9,7 @@ import {
     updateViewfinderSize
 } from "./config-helper"
 import uiConstants from "./ui-constants"
-import React, { useEffect, useRef, useState } from "@rbxts/react"
+import React, { useEffect, useMemo, useRef, useState } from "@rbxts/react"
 import { CheckBox } from "./checkbox"
 import { useLocalization } from "shared/localization/useLocalization"
 import { Textarea } from "./text-area"
@@ -29,7 +29,7 @@ export function ViewFinder(props: { size: UDim2 }) {
     const [hover, setHover] = useState(false)
     const [viewsize, setViewsize] = useState(Get_Viewfinder_Image_Size())
     const [oldParent, setOldParent] = useState<Instance>()
-    const Size = new UDim2(0.9, 0, 0, 320)
+    const Size = new UDim2(0.9, 0, 0, 220)
     let dockWindowPreview = pluginGuiService.FindFirstChild(
         "RoRender V4 Preview"
     ) as DockWidgetPluginGui
@@ -197,7 +197,7 @@ export function ViewFinder(props: { size: UDim2 }) {
                 isChecked={showWater}
                 label={translate("ShowWaterinPreview")}
             />
-            <Textarea
+            {/* <Textarea
                 key={"y1"}
                 label={translate("RenderSize")}
                 placeholder={translate("RenderSizePlaceholder")}
@@ -224,10 +224,9 @@ export function ViewFinder(props: { size: UDim2 }) {
                 buttonType={ButtonType.outline}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => {
-                    print(viewsize)
                     updateViewfinderSize(viewsize, true)
                 }}
-            />
+            /> */}
         </frame>
     )
 }

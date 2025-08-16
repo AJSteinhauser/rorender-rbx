@@ -137,7 +137,10 @@ export function RenderConfigScreen(props: {
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(0.5, 0.5)}
             />
-            <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 140)}>
+            <frame
+                BackgroundTransparency={1}
+                Size={new UDim2(1, 0, 0, 150 + uiConstants.spacingNormal * 4)}
+            >
                 <uilistlayout
                     HorizontalAlignment={Enum.HorizontalAlignment.Center}
                     VerticalAlignment={Enum.VerticalAlignment.Center}
