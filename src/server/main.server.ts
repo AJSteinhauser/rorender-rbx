@@ -1,3 +1,4 @@
+import { exposePlugin } from "ui/config-helper"
 import mount from "ui/mount"
 const Name = "RoRender V4"
 const toolbar = plugin.CreateToolbar(Name)
@@ -41,5 +42,7 @@ dockWindowPreview.Title = `${Name} Preview`
 button.Click.Connect(() => {
     dockWindow.Enabled = !dockWindow.Enabled
 })
+
+exposePlugin(plugin)
 
 mount(dockWindow)

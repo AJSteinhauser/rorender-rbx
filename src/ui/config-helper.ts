@@ -16,6 +16,7 @@ const WATER_COLOR = Color3.fromRGB(66, 135, 245)
 const WATER_OPACITY = 0.7
 const ISOMETRIC_SCALE = 1.22
 
+let pluginRef: Plugin | undefined
 let draggerHandles: Record<Direction, Part> | undefined
 let draggerMode: DraggerMode | undefined
 let loadedRenderRef: ModuleScript | undefined
@@ -70,6 +71,10 @@ export const getRenderSettingsFromSelection = (): boolean => {
     }
     loadRender(settingsModule)
     return true
+}
+
+export const exposePlugin = (plugin: Plugin) => {
+    pluginRef = plugin
 }
 
 export const setViewfinderSettings = (image: EditableImage) => {
@@ -221,6 +226,7 @@ export const loadRender = (render: ModuleScript) => {
 
     draggerHandles = createDragHandles()
     setAllDraggerHandlePosition()
+    cleanUpOldDragHandles()
 }
 
 export const unloadRender = () => {
@@ -231,15 +237,8 @@ export const selectModuleScript = () => {
     if (!loadedRenderRef) {
         return
     }
-    const currentSelection = selectionService.Get()
-    if (
-        currentSelection.size() === 1 &&
-        currentSelection[0] === loadedRenderRef
-    ) {
-        // Open script
-        //plug.OpenScript(loadedRenderRef)
-    } else {
-        selectionService.Set([loadedRenderRef])
+    if (pluginRef) {
+        pluginRef.OpenScript(loadedRenderRef)
     }
 }
 
@@ -299,6 +298,9 @@ const createDragHandle = (direction: Direction) => {
     handle.MouseDrag.Connect((_, distance) =>
         dragEvent(direction, distance, intialDragPosition, initialSize)
     )
+    handle.MouseButton1Up.Connect(() => {
+        changeHistoryService.SetWaypoint("Drag ended")
+    })
 
     return handleBasePart
 }
@@ -325,6 +327,9 @@ const dragEvent = (
         center.CFrame = intialDragPosition.mul(
             new CFrame(vectorDir.mul(distance / 2))
         )
+
+        const newResolution = calculateResolutionToAchieveImageSize(mesh.Scale)
+        replaceResolutionValue(newResolution)
     }
 }
 
@@ -433,6 +438,20 @@ const setupUpdateConnections = (render: ModuleScript) => {
     )
 }
 
+const cleanUpOldDragHandles = () => {
+    if (!loadedRenderRef) return
+    const { center } = getElementsFromSettings(loadedRenderRef)
+    const c0 = center.FindFirstChild("c0")
+    if (c0 && c0.IsA("Part")) {
+        c0.Destroy()
+    }
+
+    const c1 = center.FindFirstChild("c1")
+    if (c1 && c1.IsA("Part")) {
+        c1.Destroy()
+    }
+}
+
 export const updateUI = () => {
     const renderSettings = loadedRenderRef
     if (!renderSettings) {
@@ -467,7 +486,7 @@ const ensureCenterPartSize = (center: Part) => {
 
 const updatePreviewImageThrottled = throttle(
     updatePreviewImage as (...args: unknown[]) => any,
-    0.3
+    0.4
 )
 
 function updateDataText(resolution: number, scale: Vector3) {
