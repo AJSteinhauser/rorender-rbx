@@ -34,6 +34,7 @@ const dockWindowPreview = plugin.CreateDockWidgetPluginGui(
     `${Name} Preview`,
     dockSettingsPreview
 )
+
 dockWindowPreview.Name = `${Name} Preview`
 dockWindowPreview.Title = `${Name} Preview`
 
