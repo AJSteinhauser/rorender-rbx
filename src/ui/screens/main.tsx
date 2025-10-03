@@ -6,8 +6,6 @@ import uiConstants from "ui/ui-constants"
 import { RenderProgressScreen } from "./rendering-progress-screen"
 import { ErrorScreen } from "./error-screen"
 import { AdvancedConfigScreen } from "./advanced-config-screen"
-import { Draggers } from "ui/draggers"
-import { getCurrentRender, getElementsFromSettings } from "ui/config-helper"
 
 export interface ProgressUpdateData {
     currentProgess: number
@@ -31,9 +29,6 @@ export function Main() {
     const [currentProgess, setCurrentProgress] = useState(0)
     const [currentStatusText, setCurrentStatusText] = useState("")
     const [currentErrorText, setCurrentErrorText] = useState("")
-    const [draggerMode, setDraggerMode] = useState<"Resize" | "Movement">(
-        "Movement"
-    )
 
     const renderComplete = () => {
         task.wait(5)
@@ -58,14 +53,6 @@ export function Main() {
     const progressUpdateData: ProgressUpdateData = {
         currentProgess,
         currentStatusText
-    }
-
-    const switchDragger = () => {
-        if (draggerMode.match("Movement").size() > 0) {
-            setDraggerMode("Resize")
-        } else if (draggerMode.match("Resize").size() > 0) {
-            setDraggerMode("Movement")
-        }
     }
 
     const [pluginDebuggingEnabled, setPluginDebuggingEnabled] = useState(true)
@@ -95,8 +82,6 @@ export function Main() {
                         changeScreen={changeScreen}
                         progressHooks={progressUpdateHooks}
                         errorOccured={errorOccured}
-                        switchDragger={switchDragger}
-                        draggerMode={draggerMode}
                     />
                 )
             case Screens.Rendering:
@@ -118,140 +103,11 @@ export function Main() {
         }
     }
 
-    const settings = getCurrentRender()
-    let [BoxCFrame, setBoxCFrame] = useState(new CFrame())
-    let [BoxSize, setBoxSize] = useState(new Vector3(30, 20, 30))
-    let Box: BlockMesh
-    let Center: BasePart
-
-    if (settings) {
-        const { center, mesh } = getElementsFromSettings(settings)
-        Box = mesh
-        Center = center
-
-        if (center.CFrame !== BoxCFrame) setBoxCFrame(center.CFrame)
-        if (mesh.Scale !== BoxSize) setBoxSize(mesh.Scale)
-    }
-
     return (
         <frame
             Size={UDim2.fromScale(1, 1)}
             BackgroundColor3={uiConstants.groundColor}
         >
-            <Draggers
-                mode={draggerMode}
-                cframe={BoxCFrame}
-                size={BoxSize}
-                onDrag={(direction, distance: number) => {
-                    if (draggerMode.match("Movement").size() > 0) {
-                        if (direction === "MinusX") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(-distance, 0, 0)
-                            )
-                            Center.CFrame = newCFrame
-                            return [newCFrame, BoxSize]
-                        } else if (direction === "MinusY") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(0, -distance, 0)
-                            )
-                            Center.CFrame = newCFrame
-                            return [newCFrame, BoxSize]
-                        } else if (direction === "MinusZ") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(0, 0, -distance)
-                            )
-                            Center.CFrame = newCFrame
-                            return [newCFrame, BoxSize]
-                        } else if (direction === "PlusX") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(distance, 0, 0)
-                            )
-                            Center.CFrame = newCFrame
-                            return [newCFrame, BoxSize]
-                        } else if (direction === "PlusY") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(0, distance, 0)
-                            )
-                            Center.CFrame = newCFrame
-                            return [newCFrame, BoxSize]
-                        } else if (direction === "PlusZ") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(0, 0, distance)
-                            )
-                            Center.CFrame = newCFrame
-                            return [newCFrame, BoxSize]
-                        }
-                    } else if (draggerMode.match("Resize").size() > 0) {
-                        if (direction === "MinusX") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(-distance / 2, 0, 0)
-                            )
-                            const newSize = BoxSize.add(
-                                new Vector3(distance, 0, 0)
-                            )
-                            Center.CFrame = newCFrame
-                            Box.Scale = newSize
-                            return [newCFrame, newSize]
-                        } else if (direction === "MinusY") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(0, -distance / 2, 0)
-                            )
-                            const newSize = BoxSize.add(
-                                new Vector3(0, distance, 0)
-                            )
-                            Center.CFrame = newCFrame
-                            Box.Scale = newSize
-                            return [newCFrame, newSize]
-                        } else if (direction === "MinusZ") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(0, 0, -distance / 2)
-                            )
-                            const newSize = BoxSize.add(
-                                new Vector3(0, 0, distance)
-                            )
-                            Center.CFrame = newCFrame
-                            Box.Scale = newSize
-                            return [newCFrame, newSize]
-                        } else if (direction === "PlusX") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(distance / 2, 0, 0)
-                            )
-                            const newSize = BoxSize.add(
-                                new Vector3(distance, 0, 0)
-                            )
-                            Center.CFrame = newCFrame
-                            Box.Scale = newSize
-                            return [newCFrame, newSize]
-                        } else if (direction === "PlusY") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(0, distance / 2, 0)
-                            )
-                            const newSize = BoxSize.add(
-                                new Vector3(0, distance, 0)
-                            )
-                            Center.CFrame = newCFrame
-                            Box.Scale = newSize
-                            return [newCFrame, newSize]
-                        } else if (direction === "PlusZ") {
-                            const newCFrame = BoxCFrame.mul(
-                                new CFrame(0, 0, distance / 2)
-                            )
-                            const newSize = BoxSize.add(
-                                new Vector3(0, 0, distance)
-                            )
-                            Center.CFrame = newCFrame
-                            Box.Scale = newSize
-                            return [newCFrame, newSize]
-                        }
-                    }
-                    return [BoxCFrame, BoxSize]
-                }}
-                onDragged={() => {
-                    setBoxCFrame(Center.CFrame)
-                    setBoxSize(Box.Scale)
-                }}
-                enabled={settings !== undefined}
-            ></Draggers>
             {!pluginDebuggingEnabled && (
                 <textlabel
                     Size={new UDim2(1, 0, 0, 30)}

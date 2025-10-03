@@ -33,8 +33,6 @@ export function RenderConfigScreen(props: {
     changeScreen: (screen: Screens) => void
     progressHooks: ProgressUpdateHooks
     errorOccured: (message: string) => void
-    switchDragger: () => void
-    draggerMode: "Resize" | "Movement"
 }) {
     const { translate } = useLocalization()
     const scrollingFrameRef = useRef<ScrollingFrame>(undefined!)
@@ -138,10 +136,7 @@ export function RenderConfigScreen(props: {
                 TextXAlignment={Enum.TextXAlignment.Left}
                 AnchorPoint={new Vector2(0.5, 0.5)}
             />
-            <frame
-                BackgroundTransparency={1}
-                Size={new UDim2(1, 0, 0, 150 + uiConstants.spacingNormal * 4)}
-            >
+            <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 140)}>
                 <uilistlayout
                     HorizontalAlignment={Enum.HorizontalAlignment.Center}
                     VerticalAlignment={Enum.VerticalAlignment.Center}
@@ -184,12 +179,6 @@ export function RenderConfigScreen(props: {
                     buttonType={ButtonType.outline}
                     size={new UDim2(1, 0, 0, 30)}
                     clicked={() => props.changeScreen(Screens.AdvancedConfig)}
-                />
-                <Button
-                    label={translate(`DraggerMode${props.draggerMode}`)}
-                    buttonType={ButtonType.outline}
-                    size={new UDim2(1, 0, 0, 30)}
-                    clicked={() => props.switchDragger()}
                 />
             </frame>
             <frame BackgroundTransparency={1} Size={new UDim2(1, 0, 0, 5)} />
