@@ -1,3 +1,4 @@
+import { exposePlugin } from "ui/config-helper"
 import mount from "ui/mount"
 const PhysicsService = game.GetService("PhysicsService")
 const Name = "RoRender V4"
@@ -35,6 +36,7 @@ const dockWindowPreview = plugin.CreateDockWidgetPluginGui(
     `${Name} Preview`,
     dockSettingsPreview
 )
+
 dockWindowPreview.Name = `${Name} Preview`
 dockWindowPreview.Title = `${Name} Preview`
 

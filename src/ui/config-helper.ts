@@ -5,17 +5,23 @@ import {
 } from "shared/render/render.model"
 import { Settings } from "shared/settings/settings.model"
 import uiConstants from "./ui-constants"
+import { object } from "@rbxts/react/src/prop-types"
 
 const lighting = game.GetService("Lighting")
 const selectionService = game.GetService("Selection")
 const changeHistoryService = game.GetService("ChangeHistoryService")
 const assetService = game.GetService("AssetService")
+const coreGui = game.GetService("CoreGui")
+const studioService = game.GetService("StudioService")
 
 const MAX_IMAGE_SIZE = new Vector2(1024, 1024)
 const WATER_COLOR = Color3.fromRGB(66, 135, 245)
 const WATER_OPACITY = 0.7
 const ISOMETRIC_SCALE = 1.22
 
+let pluginRef: Plugin | undefined
+let draggerHandles: Record<Direction, Part> | undefined
+let draggerMode: DraggerMode | undefined
 let loadedRenderRef: ModuleScript | undefined
 let viewFinderImage: EditableImage | undefined = undefined
 let viewFinderImageUpdater: ((force?: boolean) => void) | undefined
@@ -29,10 +35,27 @@ let lastScale = new Vector3()
 let lastImageSize = new Vector2()
 let renderWater = false
 
-export enum QuickSelect {
-    C0,
-    C1,
-    Module
+export enum DraggerMode {
+    Move,
+    Scale
+}
+
+export enum Direction {
+    Front,
+    Back,
+    Left,
+    Right,
+    Top,
+    Bottom
+}
+
+const directionTable: Record<Direction, Vector3> = {
+    [Direction.Right]: new Vector3(1, 0, 0),
+    [Direction.Left]: new Vector3(-1, 0, 0),
+    [Direction.Top]: new Vector3(0, 1, 0),
+    [Direction.Bottom]: new Vector3(0, -1, 0),
+    [Direction.Front]: new Vector3(0, 0, 1),
+    [Direction.Back]: new Vector3(0, 0, -1)
 }
 
 export const getRenderSettingsFromSelection = (): boolean => {
@@ -54,12 +77,12 @@ export const getRenderSettingsFromSelection = (): boolean => {
     return true
 }
 
-export const setViewfinderSettings = (
-    image?: EditableImage,
-    updater?: () => void
-) => {
-    if (image) viewFinderImage = image
-    if (updater) viewFinderImageUpdater = updater
+export const exposePlugin = (plugin: Plugin) => {
+    pluginRef = plugin
+}
+
+export const setViewfinderSettings = (image: EditableImage) => {
+    viewFinderImage = image
 }
 
 export const updateShowWater = (show: boolean) => {
@@ -182,13 +205,11 @@ const clearViewFinderImage = () => {
         VIEWFINDER_IMAGE_SIZE.X * VIEWFINDER_IMAGE_SIZE.Y * 4
     )
     buffer.fill(clearBuff, 0, 0)
-    if (viewFinderImage && viewFinderImage.Size === VIEWFINDER_IMAGE_SIZE)
-        viewFinderImage?.WritePixelsBuffer(
-            new Vector2(),
-            VIEWFINDER_IMAGE_SIZE,
-            clearBuff
-        )
-    //drawDiagonalLines()
+    viewFinderImage?.WritePixelsBuffer(
+        new Vector2(),
+        VIEWFINDER_IMAGE_SIZE,
+        clearBuff
+    )
 }
 
 const drawDiagonalLines = () => {
@@ -228,31 +249,133 @@ export const getCurrentRender = () => {
 export const loadRender = (render: ModuleScript) => {
     cleanUpLastLoadedRender()
     setupUpdateConnections(render)
-
     loadedRenderRef = render
-    offsetHandles(loadedRenderRef)
+
+    draggerHandles = createDragHandles()
+    setAllDraggerHandlePosition()
+    cleanUpOldDragHandles()
 }
 
 export const unloadRender = () => {
     cleanUpLastLoadedRender()
 }
 
-export const quickSelectModule = (item: QuickSelect) => {
+export const selectModuleScript = () => {
     if (!loadedRenderRef) {
         return
     }
-    const { c0, c1 } = getElementsFromSettings(loadedRenderRef)
-    switch (item) {
-        case QuickSelect.C0:
-            selectionService.Set([c0])
-            break
-        case QuickSelect.C1:
-            selectionService.Set([c1])
-            break
-        case QuickSelect.Module:
-            selectionService.Set([loadedRenderRef])
-            break
+    if (pluginRef) {
+        pluginRef.OpenScript(loadedRenderRef)
     }
+}
+
+export const setDraggerMode = (mode: DraggerMode) => {
+    if (!draggerHandles) return
+    draggerMode = mode
+    let newHandleStyle: Enum.HandlesStyle = Enum.HandlesStyle.Resize
+    if (mode === DraggerMode.Move) {
+        newHandleStyle = Enum.HandlesStyle.Movement
+    }
+
+    const setDraggerToMode = (handleContainer: Part) => {
+        const handle = handleContainer.FindFirstChildOfClass("Handles")
+        if (!handle) return
+        handle.Style = newHandleStyle
+    }
+    setDraggerToMode(draggerHandles[Direction.Right])
+    setDraggerToMode(draggerHandles[Direction.Left])
+    setDraggerToMode(draggerHandles[Direction.Top])
+    setDraggerToMode(draggerHandles[Direction.Bottom])
+    setDraggerToMode(draggerHandles[Direction.Front])
+    setDraggerToMode(draggerHandles[Direction.Back])
+}
+
+const createDragHandle = (direction: Direction) => {
+    const colorLookUp: Record<Direction, Color3> = {
+        [Direction.Right]: new Color3(1, 0, 0),
+        [Direction.Left]: new Color3(1, 0, 0),
+        [Direction.Top]: new Color3(0, 1, 0),
+        [Direction.Bottom]: new Color3(0, 1, 0),
+        [Direction.Front]: new Color3(0, 0, 1),
+        [Direction.Back]: new Color3(0, 0, 1)
+    }
+
+    const handleBasePart = new Instance("Part")
+    handleBasePart.Parent = coreGui // game.Workspace.Terrain //coreGui
+    handleBasePart.Size = new Vector3(1, 1, 1)
+    handleBasePart.Name = `RoRenderHandle-${direction}`
+    handleBasePart.Anchored = true
+
+    const handle = new Instance("Handles")
+    handle.Color3 = colorLookUp[direction]
+    handle.Parent = handleBasePart
+    handle.Faces = new Faces(Enum.NormalId.Front)
+    handle.Adornee = handleBasePart
+    handle.Style = Enum.HandlesStyle.Resize
+
+    if (!loadedRenderRef) return handleBasePart
+    const { center, mesh } = getElementsFromSettings(loadedRenderRef)
+
+    let intialDragPosition: CFrame = center.CFrame
+    let initialSize: Vector3 = mesh.Scale
+    handle.MouseButton1Down.Connect(() => {
+        intialDragPosition = center.CFrame
+        initialSize = mesh.Scale
+    })
+    handle.MouseDrag.Connect((_, distance) =>
+        dragEvent(direction, distance, intialDragPosition, initialSize)
+    )
+    handle.MouseButton1Up.Connect(() => {
+        changeHistoryService.SetWaypoint("Drag ended")
+    })
+
+    return handleBasePart
+}
+
+const dragEvent = (
+    direction: Direction,
+    distance: number,
+    intialDragPosition: CFrame,
+    initalSize: Vector3
+) => {
+    if (!loadedRenderRef) return
+    distance = distance - (distance % studioService.GridSize)
+    const { center, mesh } = getElementsFromSettings(loadedRenderRef)
+    if (draggerMode === DraggerMode.Move) {
+        const vectorDir = directionTable[direction]
+        center.CFrame = intialDragPosition.mul(
+            new CFrame(vectorDir.mul(distance))
+        )
+    } else {
+        mesh.Scale = initalSize.add(
+            directionTable[direction].Abs().mul(distance)
+        )
+        const vectorDir = directionTable[direction]
+        center.CFrame = intialDragPosition.mul(
+            new CFrame(vectorDir.mul(distance / 2))
+        )
+
+        const newResolution = calculateResolutionToAchieveImageSize(mesh.Scale)
+        replaceResolutionValue(newResolution)
+    }
+}
+
+export const createDragHandles = () => {
+    coreGui.GetChildren().forEach((child) => {
+        if (child.Name.match("RoRenderHandle")) {
+            child.Destroy()
+        }
+    })
+    const handles: Record<Direction, Part> = {
+        [Direction.Right]: createDragHandle(Direction.Right),
+        [Direction.Left]: createDragHandle(Direction.Left),
+        [Direction.Top]: createDragHandle(Direction.Top),
+        [Direction.Bottom]: createDragHandle(Direction.Bottom),
+        [Direction.Front]: createDragHandle(Direction.Front),
+        [Direction.Back]: createDragHandle(Direction.Back)
+    }
+
+    return handles
 }
 
 const cleanUpLastLoadedRender = () => {
@@ -263,6 +386,53 @@ const cleanUpLastLoadedRender = () => {
     closeScreenHook = undefined
     connections.forEach((x) => x.Disconnect())
     selectionService.Set([])
+    cleanUpHandles()
+}
+
+const cleanUpHandles = () => {
+    if (draggerHandles) {
+        draggerHandles[Direction.Right].Destroy()
+        draggerHandles[Direction.Left].Destroy()
+        draggerHandles[Direction.Top].Destroy()
+        draggerHandles[Direction.Bottom].Destroy()
+        draggerHandles[Direction.Front].Destroy()
+        draggerHandles[Direction.Back].Destroy()
+    }
+}
+
+const setAllDraggerHandlePosition = () => {
+    if (!draggerHandles || !loadedRenderRef) return
+    const handles = draggerHandles
+
+    const { center, mesh } = getElementsFromSettings(loadedRenderRef)
+
+    const scaleTable: Record<Direction, number> = {
+        [Direction.Right]: mesh.Scale.X,
+        [Direction.Left]: mesh.Scale.X,
+        [Direction.Top]: mesh.Scale.Y,
+        [Direction.Bottom]: mesh.Scale.Y,
+        [Direction.Front]: mesh.Scale.Z,
+        [Direction.Back]: mesh.Scale.Z
+    }
+
+    const positionHandle = (direction: Direction) => {
+        const part = handles[direction]
+        const vectorDir = directionTable[direction]
+        const scaleSize = scaleTable[direction]
+
+        const position = center.CFrame.mul(vectorDir.mul(scaleSize / 2))
+        const lookVector = position.add(
+            position.sub(center.CFrame.Position).Unit.mul(scaleSize * 2)
+        )
+        part.CFrame = new CFrame(position, lookVector)
+    }
+
+    positionHandle(Direction.Right)
+    positionHandle(Direction.Left)
+    positionHandle(Direction.Front)
+    positionHandle(Direction.Back)
+    positionHandle(Direction.Top)
+    positionHandle(Direction.Bottom)
 }
 
 export const setUpdaters = (
@@ -282,31 +452,31 @@ export const setUpdaters = (
 }
 
 const setupUpdateConnections = (render: ModuleScript) => {
-    const { c0, c1, center, mesh } = getElementsFromSettings(render)
-
-    const c0PositionConnection = c0.GetPropertyChangedSignal("Position")
-    const c1PositionConnection = c1.GetPropertyChangedSignal("Position")
-    const centerConnection = c1.Changed as RBXScriptSignal
+    const { center, mesh } = getElementsFromSettings(render)
 
     connections.push(
-        centerConnection.Connect(() => {
-            center.Size = new Vector3(1, 1, 1)
-            updateUI()
-        }),
-        c0PositionConnection.Connect(() => {
-            updateBoxFromHandles(render)
-            updateUI()
-        }),
-        c1PositionConnection.Connect(() => {
-            updateBoxFromHandles(render)
-            updateUI()
-        }),
         render.GetPropertyChangedSignal("Source").Connect(updateUI),
         lighting
             .GetPropertyChangedSignal("ClockTime")
             .Connect(() => updateUI()),
-        center.Destroying.Connect(() => cleanUpLastLoadedRender())
+        center.Destroying.Connect(() => cleanUpLastLoadedRender()),
+        center.GetPropertyChangedSignal("CFrame").Connect(updateUI),
+        mesh.GetPropertyChangedSignal("Scale").Connect(updateUI)
     )
+}
+
+const cleanUpOldDragHandles = () => {
+    if (!loadedRenderRef) return
+    const { center } = getElementsFromSettings(loadedRenderRef)
+    const c0 = center.FindFirstChild("c0")
+    if (c0 && c0.IsA("Part")) {
+        c0.Destroy()
+    }
+
+    const c1 = center.FindFirstChild("c1")
+    if (c1 && c1.IsA("Part")) {
+        c1.Destroy()
+    }
 }
 
 export const updateUI = () => {
@@ -329,13 +499,21 @@ export const updateUI = () => {
     const { mesh, center } = getElementsFromSettings(renderSettings)
     updateDepthText()
     updateImageSizeText(resolution, mesh.Scale)
+    ensureCenterPartSize(center)
     updateDataText(resolution, mesh.Scale)
+    setAllDraggerHandlePosition()
     updatePreviewImageThrottled(mesh.Scale, center.CFrame)
+}
+
+const ensureCenterPartSize = (center: Part) => {
+    if (center.Size !== new Vector3(1, 1, 1)) {
+        center.Size = new Vector3(1, 1, 1)
+    }
 }
 
 const updatePreviewImageThrottled = throttle(
     updatePreviewImage as (...args: unknown[]) => any,
-    0.3
+    0.4
 )
 
 function updateDataText(resolution: number, scale: Vector3) {
@@ -400,45 +578,15 @@ export const getElementsFromSettings = (settings: ModuleScript) => {
     const box = settings.FindFirstChild("box") as Folder
     const center = box?.FindFirstChild("center") as Part
     const mesh = center?.FindFirstChild("mesh") as BlockMesh
-    const c0 = center?.FindFirstChild("c1") as Part
-    const c1 = center?.FindFirstChild("c0") as Part
 
-    if (!box || !center || !mesh || !c0 || !c1) {
+    if (!box || !center || !mesh) {
         error("Not a valid settings module")
     }
     return {
         box,
         center,
-        mesh,
-        c0,
-        c1
+        mesh
     }
-}
-
-const offsetHandles = (settings: ModuleScript) => {
-    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
-
-    if (c0.Position === c1.Position) {
-        c0.CFrame = new CFrame(
-            center.CFrame.mul(mesh.Scale.mul(new Vector3(-0.5, -0.5, -0.5)))
-        )
-        c1.CFrame = new CFrame(
-            center.CFrame.mul(mesh.Scale.mul(new Vector3(0.5, 0.5, 0.5)))
-        )
-    }
-}
-
-export const updateBoxFromHandles = (settings: ModuleScript) => {
-    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
-
-    const offset = c0.CFrame.PointToObjectSpace(c1.Position)
-    mesh.Scale = new Vector3(
-        math.abs(offset.X),
-        math.abs(offset.Y),
-        math.abs(offset.Z)
-    )
-
-    center.Position = c0.Position.add(c1.Position).mul(0.5)
 }
 
 export function autoConfigureBoundingBox() {
@@ -446,7 +594,7 @@ export function autoConfigureBoundingBox() {
     if (!settings) {
         error("No settings module loaded")
     }
-    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
+    const { center, mesh } = getElementsFromSettings(settings)
 
     let min = new Vector3(math.huge, math.huge, math.huge)
     let max = new Vector3(-math.huge, -math.huge, -math.huge)
@@ -484,10 +632,10 @@ export function autoConfigureBoundingBox() {
         centerPos = new CFrame(max.add(min).div(2))
         size = max.sub(min).add(new Vector3(0, 2, 0))
         center.CFrame = centerPos
+        mesh.Scale = size
     }
 
-    c0.CFrame = centerPos.mul(new CFrame(size.div(-2)))
-    c1.CFrame = centerPos.mul(new CFrame(size.div(2)))
+    setAllDraggerHandlePosition()
 
     const newResolution = calculateResolutionToAchieveImageSize(size)
     replaceResolutionValue(newResolution)
@@ -550,7 +698,7 @@ export const moveRenderBox = (direction: CubeMoveDirection) => {
     if (!settings) {
         error("No settings module loaded")
     }
-    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
+    const { center, mesh } = getElementsFromSettings(settings)
 
     const size = mesh.Scale
     let offset: CFrame
@@ -575,8 +723,6 @@ export const moveRenderBox = (direction: CubeMoveDirection) => {
     }
 
     center.CFrame = center.CFrame.mul(offset)
-    c0.CFrame = c0.CFrame.mul(offset)
-    c1.CFrame = c1.CFrame.mul(offset)
     changeHistoryService.SetWaypoint("Cube moved")
 }
 
@@ -585,7 +731,7 @@ export const convertToIsometric = () => {
     if (!settings) {
         error("No settings module loaded")
     }
-    const { c0, c1, center, mesh } = getElementsFromSettings(settings)
+    const { center, mesh } = getElementsFromSettings(settings)
 
     const originalCFrame = center.CFrame
     const originalSize = mesh.Scale
@@ -646,9 +792,6 @@ export const convertToIsometric = () => {
 
     mesh.Scale = newSize
     center.CFrame = new CFrame(newPosition).mul(camRotation)
-
-    c0.CFrame = center.CFrame.mul(new CFrame(newSize.div(-2)))
-    c1.CFrame = center.CFrame.mul(new CFrame(newSize.div(2)))
 }
 
 export const convertMeshCollisionBoxes = () => {

@@ -5,10 +5,11 @@ import { Button, ButtonType } from "ui/button"
 import {
     autoConfigureBoundingBox,
     getCurrentRender,
-    QuickSelect,
-    quickSelectModule,
+    DraggerMode,
+    selectModuleScript,
     setUpdaters,
-    unloadRender
+    unloadRender,
+    setDraggerMode
 } from "ui/config-helper"
 import { Screens } from "ui/constants"
 import { Textarea } from "ui/text-area"
@@ -154,23 +155,23 @@ export function RenderConfigScreen(props: {
                         Padding={new UDim(0, uiConstants.spacingNormal)}
                     />
                     <Button
-                        label={translate("Corner0")}
+                        label={translate("Move")}
                         buttonType={ButtonType.outline}
                         size={new UDim2(0.5, -5, 0, 30)}
-                        clicked={() => quickSelectModule(QuickSelect.C0)}
+                        clicked={() => setDraggerMode(DraggerMode.Move)}
                     />
                     <Button
-                        label={translate("Corner1")}
+                        label={translate("Scale")}
                         buttonType={ButtonType.outline}
                         size={new UDim2(0.5, -5, 0, 30)}
-                        clicked={() => quickSelectModule(QuickSelect.C1)}
+                        clicked={() => setDraggerMode(DraggerMode.Scale)}
                     />
                 </frame>
                 <Button
                     label={translate("SettingsModule")}
                     buttonType={ButtonType.outline}
                     size={new UDim2(1, 0, 0, 30)}
-                    clicked={() => quickSelectModule(QuickSelect.Module)}
+                    clicked={() => selectModuleScript()}
                 />
                 <Button
                     label={translate("AutoConfigure")}
