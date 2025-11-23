@@ -638,6 +638,11 @@ const replaceResolutionValue = (newResolution: number) => {
 
 const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
     const resolution = mapScale.Z / VIEWFINDER_IMAGE_SIZE.Y
+    if (!loadedRenderRef) {
+        throw "Failed to load settings"
+    }
+    const { center } = getElementsFromSettings(loadedRenderRef)
+
     return {
         mapScale,
         mapCFrame,

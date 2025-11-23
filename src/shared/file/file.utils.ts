@@ -9,11 +9,35 @@ import {
 import { getImageDimensions } from "shared/utils"
 import { Pixel } from "shared/render/render.model"
 
-export function writeHeader(imageSize: Vector2): buffer {
+export function writeHeader(renderSettings: Settings): buffer {
+    const imageSize = getImageDimensions(renderSettings)
     const buf = buffer.create(HEADER_DATA_SIZE)
-    buffer.writeu16(buf, 0, RORENDER_FILE_VERSION) // Version 1
-    buffer.writeu16(buf, 2, imageSize.X) // Version 1
-    buffer.writeu16(buf, 4, imageSize.Y) // Version 1
+    let offset = 0
+    const writeU16ValueToHeaderBuffer = (value: number) => {
+        buffer.writeu16(buf, offset, value)
+        offset += 2
+    }
+    const writeFloat32ValueToHeaderBuffer = (value: number) => {
+        buffer.writef32(buf, offset, value)
+        offset += 4
+    }
+    const writeVector3ToHeader = (vec: Vector3) => {
+        writeFloat32ValueToHeaderBuffer(vec.X)
+        writeFloat32ValueToHeaderBuffer(vec.Y)
+        writeFloat32ValueToHeaderBuffer(vec.Z)
+    }
+    writeU16ValueToHeaderBuffer(RORENDER_FILE_VERSION)
+    writeU16ValueToHeaderBuffer(imageSize.X)
+    writeU16ValueToHeaderBuffer(imageSize.Y)
+
+    writeVector3ToHeader(renderSettings.mapCFrame.Position)
+    writeVector3ToHeader(renderSettings.mapScale)
+
+    const orientation = renderSettings.mapCFrame.ToEulerAnglesXYZ()
+    writeVector3ToHeader(
+        new Vector3(orientation[0], orientation[1], orientation[2])
+    )
+
     return buf
 }
 

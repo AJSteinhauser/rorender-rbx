@@ -45,7 +45,7 @@ export const runRender = (
     task.wait(0.5)
     render(renderSettings, progressHooks)
         .then((output) => {
-            const headerBuffer = writeHeader(getImageDimensions(renderSettings))
+            const headerBuffer = writeHeader(renderSettings)
 
             progressHooks.setCurrentProgress(0)
             progressHooks.setCurrentStatusText(
