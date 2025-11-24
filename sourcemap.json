@@ -1,0 +1,2308 @@
+{
+    "name": "rorender/plugin",
+    "className": "Folder",
+    "filePaths": ["out\\init.meta.json", "default.project.json"],
+    "children": [
+        {
+            "name": "RoRenderSettings",
+            "className": "ModuleScript",
+            "filePaths": ["out\\RoRenderSettings\\init.luau"],
+            "children": [
+                {
+                    "name": "box",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "center",
+                            "className": "Part",
+                            "filePaths": [
+                                "out\\RoRenderSettings\\box\\center\\init.meta.json"
+                            ],
+                            "children": [
+                                {
+                                    "name": "mesh",
+                                    "className": "BlockMesh",
+                                    "filePaths": [
+                                        "out\\RoRenderSettings\\box\\center\\mesh\\init.meta.json"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "buildConfig",
+            "className": "ModuleScript",
+            "filePaths": ["out\\buildConfig.luau"]
+        },
+        {
+            "name": "fflags",
+            "className": "Folder",
+            "children": [
+                {
+                    "name": "fflag-local",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\fflags\\fflag-local.luau"]
+                },
+                {
+                    "name": "fflags",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\fflags\\fflags.luau"]
+                },
+                {
+                    "name": "fflags.model",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\fflags\\fflags.model.luau"]
+                }
+            ]
+        },
+        {
+            "name": "server",
+            "className": "Folder",
+            "children": [
+                {
+                    "name": "main",
+                    "className": "Script",
+                    "filePaths": ["out\\server\\main.server.luau"]
+                },
+                {
+                    "name": "render-runner",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\server\\render-runner.luau"]
+                }
+            ]
+        },
+        {
+            "name": "shared",
+            "className": "Folder",
+            "children": [
+                {
+                    "name": "compression",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "autoscaling-buffer.util",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\compression\\autoscaling-buffer.util.luau"
+                            ]
+                        },
+                        {
+                            "name": "compression.utils",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\compression\\compression.utils.luau"
+                            ]
+                        },
+                        {
+                            "name": "huffman",
+                            "className": "Folder",
+                            "children": [
+                                {
+                                    "name": "huffman-encoding.compression",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\compression\\huffman\\huffman-encoding.compression.luau"
+                                    ]
+                                },
+                                {
+                                    "name": "huffman.model",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\compression\\huffman\\huffman.model.luau"
+                                    ]
+                                },
+                                {
+                                    "name": "huffman.spec",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\compression\\huffman\\huffman.spec.luau"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "run-length",
+                            "className": "Folder",
+                            "children": [
+                                {
+                                    "name": "run-lengh.spec",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\compression\\run-length\\run-lengh.spec.luau"
+                                    ]
+                                },
+                                {
+                                    "name": "run-length-encoding.compression",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\compression\\run-length\\run-length-encoding.compression.luau"
+                                    ]
+                                },
+                                {
+                                    "name": "run-length.model",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\compression\\run-length\\run-length.model.luau"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "file",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "file.modal",
+                            "className": "ModuleScript",
+                            "filePaths": ["out\\shared\\file\\file.modal.luau"]
+                        },
+                        {
+                            "name": "file.utils",
+                            "className": "ModuleScript",
+                            "filePaths": ["out\\shared\\file\\file.utils.luau"]
+                        }
+                    ]
+                },
+                {
+                    "name": "localization",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "languages",
+                            "className": "Folder",
+                            "children": [
+                                {
+                                    "name": "de_de",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\localization\\languages\\de_de.luau"
+                                    ]
+                                },
+                                {
+                                    "name": "en_us",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\localization\\languages\\en_us.luau"
+                                    ]
+                                },
+                                {
+                                    "name": "pt_br",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "out\\shared\\localization\\languages\\pt_br.luau"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "localization",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\localization\\localization.luau"
+                            ]
+                        },
+                        {
+                            "name": "useLocalization",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\localization\\useLocalization.luau"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "render",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "actor-pool.handler",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\render\\actor-pool.handler.luau"
+                            ]
+                        },
+                        {
+                            "name": "actor.model",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\render\\actor.model.luau"
+                            ]
+                        },
+                        {
+                            "name": "editable-cache",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\render\\editable-cache.luau"
+                            ]
+                        },
+                        {
+                            "name": "render.main",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\render\\render.main.luau"
+                            ]
+                        },
+                        {
+                            "name": "render.model",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\render\\render.model.luau"
+                            ]
+                        },
+                        {
+                            "name": "render.utils",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\render\\render.utils.luau"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "settings",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "settings.model",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\settings\\settings.model.luau"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "tests",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "test-runner",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\shared\\tests\\test-runner.luau"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "utils",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\shared\\utils.luau"]
+                }
+            ]
+        },
+        {
+            "name": "threads",
+            "className": "Folder",
+            "children": [
+                {
+                    "name": "actor",
+                    "className": "Actor",
+                    "filePaths": ["out\\threads\\actor\\init.meta.json"],
+                    "children": [
+                        {
+                            "name": "actionHandler",
+                            "className": "Script",
+                            "filePaths": [
+                                "out\\threads\\actor\\actionHandler\\init.meta.json",
+                                "out\\threads\\actor\\actionHandler\\init.server.luau"
+                            ]
+                        },
+                        {
+                            "name": "rowCalculated",
+                            "className": "BindableEvent",
+                            "filePaths": [
+                                "out\\threads\\actor\\rowCalculated\\init.meta.json"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "meshPixel",
+                    "className": "BindableEvent",
+                    "filePaths": ["out\\threads\\meshPixel\\init.meta.json"]
+                }
+            ]
+        },
+        {
+            "name": "ui",
+            "className": "Folder",
+            "children": [
+                {
+                    "name": "button",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\button.luau"]
+                },
+                {
+                    "name": "checkbox",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\checkbox.luau"]
+                },
+                {
+                    "name": "config-helper",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\config-helper.luau"]
+                },
+                {
+                    "name": "constants",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\constants.luau"]
+                },
+                {
+                    "name": "mount",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\mount.luau"]
+                },
+                {
+                    "name": "render-property",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\render-property.luau"]
+                },
+                {
+                    "name": "screens",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "advanced-config-screen",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\ui\\screens\\advanced-config-screen.luau"
+                            ]
+                        },
+                        {
+                            "name": "error-screen",
+                            "className": "ModuleScript",
+                            "filePaths": ["out\\ui\\screens\\error-screen.luau"]
+                        },
+                        {
+                            "name": "main",
+                            "className": "ModuleScript",
+                            "filePaths": ["out\\ui\\screens\\main.luau"]
+                        },
+                        {
+                            "name": "render-config-screen",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\ui\\screens\\render-config-screen.luau"
+                            ]
+                        },
+                        {
+                            "name": "rendering-progress-screen",
+                            "className": "ModuleScript",
+                            "filePaths": [
+                                "out\\ui\\screens\\rendering-progress-screen.luau"
+                            ]
+                        },
+                        {
+                            "name": "start-screen",
+                            "className": "ModuleScript",
+                            "filePaths": ["out\\ui\\screens\\start-screen.luau"]
+                        }
+                    ]
+                },
+                {
+                    "name": "text-area",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\text-area.luau"]
+                },
+                {
+                    "name": "ui-constants",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\ui-constants.luau"]
+                },
+                {
+                    "name": "view-finder",
+                    "className": "ModuleScript",
+                    "filePaths": ["out\\ui\\view-finder.luau"]
+                }
+            ]
+        },
+        {
+            "name": "rbxts_include",
+            "className": "Folder",
+            "children": [
+                {
+                    "name": "Promise",
+                    "className": "ModuleScript",
+                    "filePaths": ["include\\Promise.lua"]
+                },
+                {
+                    "name": "RuntimeLib",
+                    "className": "ModuleScript",
+                    "filePaths": ["include\\RuntimeLib.lua"]
+                },
+                {
+                    "name": "node_modules",
+                    "className": "Folder",
+                    "children": [
+                        {
+                            "name": "@rbxts",
+                            "className": "Folder",
+                            "children": [
+                                {
+                                    "name": "compiler-types",
+                                    "className": "Folder",
+                                    "children": [
+                                        {
+                                            "name": "types",
+                                            "className": "Folder"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "react",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "node_modules/@rbxts\\react\\src\\init.lua",
+                                        "node_modules/@rbxts\\react\\default.project.json"
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "tags",
+                                            "className": "ModuleScript",
+                                            "filePaths": [
+                                                "node_modules/@rbxts\\react\\src\\tags.lua"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "react-roblox",
+                                    "className": "ModuleScript",
+                                    "filePaths": [
+                                        "node_modules/@rbxts\\react-roblox\\src\\init.lua",
+                                        "node_modules/@rbxts\\react-roblox\\default.project.json"
+                                    ]
+                                },
+                                {
+                                    "name": "ReactLua",
+                                    "className": "Folder",
+                                    "filePaths": [
+                                        "node_modules/@rbxts\\react-vendor\\react-lua.rbxmx",
+                                        "node_modules/@rbxts\\react-vendor\\default.project.json"
+                                    ],
+                                    "children": [
+                                        {
+                                            "name": "React",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactCache",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactDebugTools",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactDevtoolsExtensions",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactDevtoolsShared",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactIs",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactReconciler",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactRoblox",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactShallowRenderer",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "ReactTestRenderer",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "RoactCompat",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "Scheduler",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "Shared",
+                                            "className": "ModuleScript"
+                                        },
+                                        {
+                                            "name": "node_modules",
+                                            "className": "Folder",
+                                            "children": [
+                                                {
+                                                    "name": ".bin",
+                                                    "className": "Folder"
+                                                },
+                                                {
+                                                    "name": ".luau-aliases",
+                                                    "className": "Folder",
+                                                    "children": [
+                                                        {
+                                                            "name": "@jsdotlua",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "boolean",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "collections",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "console",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "es7-types",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "instance-of",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "luau-polyfill",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "math",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "number",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "promise",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-cache",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-debug-tools",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-devtools-extensions",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-devtools-shared",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-is",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-reconciler",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-shallow-renderer",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react-test-renderer",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "react",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "roact-compat",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "scheduler",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "shared",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "string",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "timers",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "symbol-luau",
+                                                            "className": "ModuleScript"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "@jsdotlua",
+                                                    "className": "Folder",
+                                                    "children": [
+                                                        {
+                                                            "name": "boolean",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "toJSBoolean",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "collections",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "Array",
+                                                                            "className": "ModuleScript",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "concat",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "every",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "filter",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "find",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "findIndex",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "flat",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "flatMap",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "forEach",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "from",
+                                                                                    "className": "ModuleScript",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "name": "fromArray",
+                                                                                            "className": "ModuleScript"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "fromMap",
+                                                                                            "className": "ModuleScript"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "fromSet",
+                                                                                            "className": "ModuleScript"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "fromString",
+                                                                                            "className": "ModuleScript"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "name": "includes",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "indexOf",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "isArray",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "join",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "map",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "reduce",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "reverse",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "shift",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "slice",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "some",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "sort",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "splice",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "unshift",
+                                                                                    "className": "ModuleScript"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "Map",
+                                                                            "className": "ModuleScript",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "Map",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "coerceToMap",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "coerceToTable",
+                                                                                    "className": "ModuleScript"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "Object",
+                                                                            "className": "ModuleScript",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "None",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "assign",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "entries",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "freeze",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "is",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "isFrozen",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "keys",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "preventExtensions",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "seal",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "values",
+                                                                                    "className": "ModuleScript"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "Set",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "WeakMap",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "inspect",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "console",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "makeConsoleImpl",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "es7-types",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "instance-of",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "instanceof",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "luau-polyfill",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "AssertionError",
+                                                                            "className": "ModuleScript",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "AssertionError.global",
+                                                                                    "className": "ModuleScript"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "Error",
+                                                                            "className": "ModuleScript",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "Error.global",
+                                                                                    "className": "ModuleScript"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "Promise",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "encodeURIComponent",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "extends",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "math",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "clz32",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "number",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "MAX_SAFE_INTEGER",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "MIN_SAFE_INTEGER",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "isFinite",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "isInteger",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "isNaN",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "isSafeInteger",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "toExponential",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "promise",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "lib",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "react",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "None.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "React",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactBaseClasses",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactBinding.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactChildren",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactContext",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactCreateRef",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactElement",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactElementValidator",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactForwardRef",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactHooks",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactLazy",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactMemo",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactMutableSource",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactNoopUpdateQueue",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "createSignal.roblox",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "react-cache",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "LRU",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactCacheOld",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "ReactDebugTools",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "ReactDebugHooks",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactDebugTools",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "react-devtools-extensions",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "backend",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "react-devtools-shared",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "backend",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "NativeStyleEditor",
+                                                                            "className": "Folder",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "types",
+                                                                                    "className": "ModuleScript"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactSymbols",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "agent",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "console",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "renderer",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "types",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "utils",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "bridge",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "clipboardjs.mock",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "constants",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "devtools",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "ProfilerStore",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ProfilingCache",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "cache",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "store",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "types",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "utils",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "views",
+                                                                            "className": "Folder",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "Components",
+                                                                                    "className": "Folder",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "name": "types",
+                                                                                            "className": "ModuleScript"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "name": "Profiler",
+                                                                                    "className": "Folder",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "name": "CommitTreeBuilder",
+                                                                                            "className": "ModuleScript"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "FlamegraphChartBuilder",
+                                                                                            "className": "ModuleScript"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "InteractionsChartBuilder",
+                                                                                            "className": "ModuleScript"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "RankedChartBuilder",
+                                                                                            "className": "ModuleScript"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "types",
+                                                                                            "className": "ModuleScript"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "utils",
+                                                                                            "className": "ModuleScript"
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "events",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "hook",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "hydration",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "jest.config",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "storage",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "types",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "utils",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "react-is",
+                                                            "className": "ModuleScript"
+                                                        },
+                                                        {
+                                                            "name": "react-reconciler",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "DebugTracing",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "MaxInts",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactCapturedValue",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactChildFiber.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactCurrentFiber",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiber.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberBeginWork.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberClassComponent.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberCommitWork.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberCompleteWork.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberComponentStack",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberContext.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberDevToolsHook.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberErrorDialog",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberErrorLogger",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberFlags",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberHooks.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberHostConfig",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberHostContext.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberHotReloading.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberHydrationContext.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberLane",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberLazyComponent.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberNewContext.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberOffscreenComponent",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberReconciler",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberReconciler.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberRoot.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberSchedulerPriorities.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberStack.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberSuspenseComponent.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberSuspenseContext.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberThrow.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberTransition",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberTreeReflection",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberUnwindWork.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberWorkInProgress",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberWorkLoop.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactHookEffectTags",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactInternalTypes",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactMutableSource.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactPortal",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactProfilerTimer.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactRootTags",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactStrictModeWarnings.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactTestSelectors",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactTypeOfMode",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactUpdateQueue.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactWorkTags",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "RobloxReactProfiling",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "SchedulerWithReactIntegration.new",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "SchedulingProfiler",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "forks",
+                                                                    "className": "Folder",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "ReactFiberHostConfig.test",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "react-roblox",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "ReactReconciler.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "client",
+                                                                    "className": "Folder",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "ReactRoblox",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactRobloxComponent",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactRobloxComponentTree",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactRobloxHostConfig",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactRobloxHostTypes.roblox",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactRobloxRoot",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "roblox",
+                                                                            "className": "Folder",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "RobloxComponentProps",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "SingleEventManager",
+                                                                                    "className": "ModuleScript"
+                                                                                },
+                                                                                {
+                                                                                    "name": "getDefaultInstanceProperty",
+                                                                                    "className": "ModuleScript"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "react-shallow-renderer",
+                                                            "className": "ModuleScript"
+                                                        },
+                                                        {
+                                                            "name": "react-test-renderer",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "ReactTestHostConfig",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactTestRenderer",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "roblox",
+                                                                    "className": "Folder",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "RobloxComponentProps",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "roact-compat",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "Portal",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "RoactTree",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "createFragment",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "oneChild",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "setGlobalConfig",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "warnOnce",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "scheduler",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "Scheduler",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "SchedulerFeatureFlags",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "SchedulerHostConfig",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "SchedulerMinHeap",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "SchedulerPriorities",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "SchedulerProfiling",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "Tracing",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "TracingSubscriptions",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "forks",
+                                                                    "className": "Folder",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "SchedulerHostConfig.default",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "SchedulerHostConfig.mock",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "unstable_mock",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "shared",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "ConsolePatchingDev.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ErrorHandling.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ExecutionEnvironment",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "PropMarkers",
+                                                                    "className": "Folder",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "Change",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "Event",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "Tag",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "ReactComponentStackFrame",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactElementType",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactErrorUtils",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFeatureFlags",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactFiberHostConfig",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "WithNoHydration",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "WithNoPersistence",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "WithNoTestSelectors",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "ReactInstanceMap",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactSharedInternals",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "IsSomeRendererActing",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactCurrentBatchConfig",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactCurrentDispatcher",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactCurrentOwner",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "ReactDebugCurrentFrame",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "ReactSymbols",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactTypes",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "ReactVersion",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "Symbol.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "Type.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "UninitializedState.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "checkPropTypes",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "console",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "consoleWithStackDev",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "enqueueTask.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "flowtypes.roblox",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "formatProdErrorMessage",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "getComponentName",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "invariant",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "invokeGuardedCallbackImpl",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "isValidElementType",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "objectIs",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "shallowEqual",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "string",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "charCodeAt",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "endsWith",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "findOr",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "includes",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "indexOf",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "lastIndexOf",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "slice",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "split",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "startsWith",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "substr",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "trim",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "trimEnd",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "trimStart",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "timers",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "package",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "src",
+                                                                    "className": "ModuleScript",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "makeIntervalImpl",
+                                                                            "className": "ModuleScript"
+                                                                        },
+                                                                        {
+                                                                            "name": "makeTimerImpl",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "commander",
+                                                    "className": "Folder",
+                                                    "children": [
+                                                        {
+                                                            "name": "lib",
+                                                            "className": "Folder"
+                                                        },
+                                                        {
+                                                            "name": "package-support",
+                                                            "className": "ModuleScript"
+                                                        },
+                                                        {
+                                                            "name": "package",
+                                                            "className": "ModuleScript"
+                                                        },
+                                                        {
+                                                            "name": "typings",
+                                                            "className": "Folder"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "npmluau",
+                                                    "className": "Folder",
+                                                    "children": [
+                                                        {
+                                                            "name": "LICENSE",
+                                                            "className": "StringValue"
+                                                        },
+                                                        {
+                                                            "name": "luau-types-re-export",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "pkg",
+                                                                    "className": "Folder",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "package",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "package",
+                                                            "className": "ModuleScript"
+                                                        },
+                                                        {
+                                                            "name": "src",
+                                                            "className": "Folder"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "symbol-luau",
+                                                    "className": "Folder",
+                                                    "children": [
+                                                        {
+                                                            "name": "LICENSE",
+                                                            "className": "StringValue"
+                                                        },
+                                                        {
+                                                            "name": "package",
+                                                            "className": "ModuleScript"
+                                                        },
+                                                        {
+                                                            "name": "src",
+                                                            "className": "ModuleScript",
+                                                            "children": [
+                                                                {
+                                                                    "name": "Registry.global",
+                                                                    "className": "ModuleScript"
+                                                                },
+                                                                {
+                                                                    "name": "Symbol",
+                                                                    "className": "ModuleScript"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "walkdir",
+                                                    "className": "Folder",
+                                                    "children": [
+                                                        {
+                                                            "name": "package",
+                                                            "className": "ModuleScript"
+                                                        },
+                                                        {
+                                                            "name": "test",
+                                                            "className": "Folder",
+                                                            "children": [
+                                                                {
+                                                                    "name": "comparison",
+                                                                    "className": "Folder",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "package",
+                                                                            "className": "ModuleScript"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "dir",
+                                                                    "className": "Folder",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "foo",
+                                                                            "className": "Folder",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "a",
+                                                                                    "className": "Folder",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "name": "b",
+                                                                                            "className": "Folder",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "name": "c",
+                                                                                                    "className": "Folder"
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "nested-symlink",
+                                                                            "className": "Folder"
+                                                                        },
+                                                                        {
+                                                                            "name": "symlinks",
+                                                                            "className": "Folder",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "dir1",
+                                                                                    "className": "Folder"
+                                                                                },
+                                                                                {
+                                                                                    "name": "dir2",
+                                                                                    "className": "Folder"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "testez",
+                                    "className": "Folder",
+                                    "children": [
+                                        {
+                                            "name": "src",
+                                            "className": "ModuleScript",
+                                            "filePaths": [
+                                                "node_modules/@rbxts\\testez\\src\\init.lua"
+                                            ],
+                                            "children": [
+                                                {
+                                                    "name": "Context",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\Context.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "Expectation",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\Expectation.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "ExpectationContext",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\ExpectationContext.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "LifecycleHooks",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\LifecycleHooks.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "Reporters",
+                                                    "className": "Folder",
+                                                    "children": [
+                                                        {
+                                                            "name": "TeamCityReporter",
+                                                            "className": "ModuleScript",
+                                                            "filePaths": [
+                                                                "node_modules/@rbxts\\testez\\src\\Reporters\\TeamCityReporter.lua"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "TextReporter",
+                                                            "className": "ModuleScript",
+                                                            "filePaths": [
+                                                                "node_modules/@rbxts\\testez\\src\\Reporters\\TextReporter.lua"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "TextReporterQuiet",
+                                                            "className": "ModuleScript",
+                                                            "filePaths": [
+                                                                "node_modules/@rbxts\\testez\\src\\Reporters\\TextReporterQuiet.lua"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "TestBootstrap",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\TestBootstrap.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "TestEnum",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\TestEnum.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "TestPlan",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\TestPlan.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "TestPlanner",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\TestPlanner.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "TestResults",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\TestResults.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "TestRunner",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\TestRunner.lua"
+                                                    ]
+                                                },
+                                                {
+                                                    "name": "TestSession",
+                                                    "className": "ModuleScript",
+                                                    "filePaths": [
+                                                        "node_modules/@rbxts\\testez\\src\\TestSession.lua"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "types",
+                                    "className": "Folder",
+                                    "children": [
+                                        {
+                                            "name": "include",
+                                            "className": "Folder",
+                                            "children": [
+                                                {
+                                                    "name": "generated",
+                                                    "className": "Folder"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

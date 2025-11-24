@@ -44,7 +44,7 @@ function getCurrentLocale() {
 }
 
 function translate(source: string) {
-    const langModule = getLanguageModule(currentLocale)
+    const langModule = getLanguageModule(_G.v4Locale || currentLocale)
     if (langModule && langModule[source]) {
         return langModule[source]
     }
@@ -79,6 +79,7 @@ function setLanguage(localeCode: string) {
         currentLocale = StudioService.StudioLocaleId.lower()
     }
     _G.v4setLanguage = setLanguage
+    _G.v4getCurrentLocale = getCurrentLocale
 })()
 
 export = {
