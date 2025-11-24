@@ -5,3 +5,4 @@ aftman.toml
 dist
 .DS_Store
 .sourcemap.json
+sourcemap.json
