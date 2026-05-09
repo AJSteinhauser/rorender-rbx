@@ -28,6 +28,8 @@ const translations: Record<string, string> = {
     BitLength: `bit length: `,
     FinalSize: `Final Size : %2.f KB`,
     FinalPacketsRequired: `Final Packets Required: %d`,
+    ValidatingPipeline: `Validating pipeline...`,
+    PipelineValidationFailed: `Pipeline validation failed`,
     SendingDataToServer: `Sending Data to RoRender.com`,
     Sent: `sent: `,
     Size: `size: `,

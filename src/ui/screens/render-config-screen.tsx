@@ -18,16 +18,7 @@ import { ProgressUpdateData, ProgressUpdateHooks } from "./main"
 import { RenderProperty } from "ui/render-property"
 import { ViewFinder } from "ui/view-finder"
 import { useLocalization } from "shared/localization/useLocalization"
-
-function isUUIDv4(input: string): boolean {
-    return (
-        input
-            .match(
-                "^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89abAB]%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$"
-            )
-            .size() > 0
-    )
-}
+import { parseRenderId, ParsedRenderId } from "shared/render/render.model"
 
 export function RenderConfigScreen(props: {
     changeScreen: (screen: Screens) => void
@@ -86,11 +77,11 @@ export function RenderConfigScreen(props: {
         setUpdaters(setImageSize, setScale, setData, closeScreen)
     }, [])
 
-    const validateUUID = (id: string | undefined): boolean => {
-        if (!id) {
-            return false
-        }
-        return isUUIDv4(id)
+    const validateUUID = (
+        id: string | undefined
+    ): ParsedRenderId | undefined => {
+        if (!id) return undefined
+        return parseRenderId(id)
     }
 
     const textChanged = (text: string) => {
@@ -205,14 +196,15 @@ export function RenderConfigScreen(props: {
                 buttonType={ButtonType.filled}
                 size={new UDim2(1, 0, 0, 30)}
                 clicked={() => {
-                    if (validateUUID(renderId)) {
+                    const parsed = validateUUID(renderId)
+                    if (parsed) {
                         props.changeScreen(Screens.Rendering)
                         try {
                             runRender(
                                 require(
                                     (getCurrentRender() as ModuleScript).Clone()
                                 ) as Settings,
-                                renderId as string,
+                                parsed,
                                 props.progressHooks
                             )
                         } catch (e) {

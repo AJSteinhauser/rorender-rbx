@@ -12,7 +12,7 @@ const coreGui = game.GetService("CoreGui")
 const studioService = game.GetService("StudioService")
 
 const MAX_IMAGE_SIZE = new Vector2(1024, 1024)
-const WATER_COLOR = Color3.fromRGB(66, 135, 245)
+const WATER_COLOR = game.Workspace.Terrain.WaterColor
 const WATER_OPACITY = 0.7
 const ISOMETRIC_SCALE = 1.22
 

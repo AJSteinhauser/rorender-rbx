@@ -87,9 +87,9 @@ export function computePixel(
                 waterHeight = calculateHeight(castFromBottom.Position.Y)
             }
             return {
-                r: 0,
-                g: 0,
-                b: 0,
+                r: math.floor(TERRAIN.WaterColor.R * 255),
+                g: math.floor(TERRAIN.WaterColor.G * 255),
+                b: math.floor(TERRAIN.WaterColor.B * 255),
                 h: 0,
                 material: 0,
                 road: 0,
