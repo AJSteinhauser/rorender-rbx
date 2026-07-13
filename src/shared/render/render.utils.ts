@@ -130,6 +130,10 @@ export function computePixel(
         color = applyShadowsSamples(results, color, settings)
     }
 
+    // Fully transparent surfaces get swapped for the underlying hit during
+    // color sampling; follow that swap so grouping/material match the color.
+    primary = results[0]
+
     // Determine groupings
     const buildingGrouping = getGrouping(
         settings.buildingGroups,
