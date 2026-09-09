@@ -51,51 +51,36 @@ export const readRunLengthSequence = (
     return { length, value }
 }
 
-// Used for testing / validating purposes
-export const runLengthDecode = (image: buffer): buffer => {
-    let idx = 0
-    const runs: RunLengthSequence[] = []
-    const increment = RUN_LENGTH_BYTE_SIZE + 1
+const RUN_LENGTH_UNIT_SIZE = RUN_LENGTH_BYTE_SIZE + 1
 
+export const runLengthDecode = (image: buffer): buffer => {
+    const imageLength = buffer.len(image)
+
+    let totalLength = 0
     let startTime = tick()
-    while (idx <= buffer.len(image) - increment) {
+    for (
+        let idx = 0;
+        idx + RUN_LENGTH_UNIT_SIZE <= imageLength;
+        idx += RUN_LENGTH_UNIT_SIZE
+    ) {
         startTime = delayForScriptExhuastion(startTime)
-        runs.push(readRunLengthSequence(image, idx))
-        idx += increment
+        totalLength += buffer.readu16(image, idx)
     }
 
-    return convertRunLengthSequenceToRawBuffer(runs) // TODO: Convert this to direct buffer manipulation; faster + less memory consumed (table underflow errors reported)
-}
+    const output = buffer.create(totalLength)
 
-const convertRunLengthSequenceToRawBuffer = (
-    runLengthSequence: RunLengthSequence[]
-): buffer => {
-    const count = runLengthSequence.reduce((sum, item) => sum + item.length, 0)
-    const output = buffer.create(count)
-
-    let idx = 0
-    let startTime = tick()
-    runLengthSequence.forEach((item) => {
-        for (let i = 0; i < item.length; i++) {
-            startTime = delayForScriptExhuastion(startTime)
-            buffer.writeu8(output, idx + i, item.value)
-        }
-        idx += item.length
-    })
-    return output
-}
-
-export const convertRunLengthSequenceToEncodedBuffer = (
-    runLengthSequence: RunLengthSequence[]
-): buffer => {
-    const output = buffer.create(
-        runLengthSequence.size() * (RUN_LENGTH_BYTE_SIZE + 1)
-    )
-    let startTime = tick()
-    runLengthSequence.forEach((item, idx) => {
+    let outIdx = 0
+    startTime = tick()
+    for (
+        let idx = 0;
+        idx + RUN_LENGTH_UNIT_SIZE <= imageLength;
+        idx += RUN_LENGTH_UNIT_SIZE
+    ) {
         startTime = delayForScriptExhuastion(startTime)
-        buffer.writeu16(output, idx * (RUN_LENGTH_BYTE_SIZE + 1), item.length)
-        buffer.writeu8(output, idx * (RUN_LENGTH_BYTE_SIZE + 1) + 2, item.value)
-    })
+        const { length, value } = readRunLengthSequence(image, idx)
+        buffer.fill(output, outIdx, value, length)
+        outIdx += length
+    }
+
     return output
 }

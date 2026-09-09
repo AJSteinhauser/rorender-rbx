@@ -25,3 +25,17 @@ export const FILE_FORMAT_DATA_ORDER: (keyof ImageBuffers)[] = [
     "water",
     "materialsEncoding"
 ]
+
+export type RasterChannel = Exclude<keyof ImageBuffers, "materialsEncoding">
+
+export const RASTER_CHANNEL_ORDER = FILE_FORMAT_DATA_ORDER.filter(
+    (key): key is RasterChannel => key !== "materialsEncoding"
+)
+
+export type RleRowBuffers = {
+    [K in RasterChannel]: buffer[]
+}
+
+export type RleRow = {
+    [K in RasterChannel]: buffer
+}

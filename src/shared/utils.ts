@@ -41,6 +41,8 @@ export function ensureImageLessThanMaxSize(settings: Settings) {
     const imageSize = getImageDimensions(settings)
     const bytesPerChannel = imageSize.X * imageSize.Y * 8
     if (bytesPerChannel > MAX_IMAGE_SIZE) {
-        throw `Image too large: ${imageSize}. ${SIZE_ERROR_MESSAGE}`
+        warn(
+            `Image larger than recommended: ${imageSize}. ${SIZE_ERROR_MESSAGE}`
+        )
     }
 }

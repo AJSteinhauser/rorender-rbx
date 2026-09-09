@@ -7,4 +7,5 @@ export interface ActorMessage {
     settings: Settings
     row: number
     renderConstants: RenderConstants
+    encodeOnRow: boolean
 }

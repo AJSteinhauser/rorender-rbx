@@ -1,12 +1,27 @@
 import { Settings } from "shared/settings/settings.model"
-import { Pixel, RenderConstants } from "./render.model"
+import { RenderConstants } from "./render.model"
 import { getImageDimensions } from "shared/utils"
-import { ImageBuffers } from "shared/file/file.modal"
+import {
+    ImageBuffers,
+    RASTER_CHANNEL_ORDER,
+    RleRow,
+    RleRowBuffers
+} from "shared/file/file.modal"
 import { WorkerPool } from "./actor-pool.handler"
-import { generateBufferChannels } from "shared/file/file.utils"
+import {
+    assembleFinalRleBuffer,
+    generateBufferChannels,
+    generateEmptyRleRowBuffers,
+    generateStringEncodings,
+    writePixelToImageBuffer
+} from "shared/file/file.utils"
 import { computePixel, delayForScriptExhuastion } from "./render.utils"
 import { ActorMessage, COMPUTE_ROW_MESSAGE } from "./actor.model"
 import { ProgressUpdateHooks } from "ui/screens/main"
+import {
+    runLengthDecode,
+    runLengthEncode
+} from "shared/compression/run-length/run-length-encoding.compression"
 
 const meshPixels = script.Parent?.Parent?.Parent?.FindFirstChild(
     "threads"
@@ -15,25 +30,29 @@ const meshPixels = script.Parent?.Parent?.Parent?.FindFirstChild(
 export async function render(
     settings: Settings,
     progressHooks: ProgressUpdateHooks
-): Promise<ImageBuffers> {
+): Promise<buffer> {
     const imageDimensions = getImageDimensions(settings)
     const renderConstants = getRenderConstants(settings, imageDimensions)
 
     const pool = new WorkerPool(settings)
 
-    const calculatedRows: ImageBuffers[] = []
+    const rleRows: RleRowBuffers = generateEmptyRleRowBuffers()
     const allRowsCompleted: Promise<void>[] = []
 
     let startTime = tick()
     let finishedRows = 0
     let lastRowPrinted = 0
 
-    const meshCalculation: Vector2[] = []
+    const meshCalculationByRow = new Map<number, Vector2[]>()
     let counter = 0
     const meshPixelsConnection = meshPixels.Event.Connect(
         (positions: Vector2[]) => {
             counter++
-            positions.forEach((pos) => meshCalculation.push(pos))
+            positions.forEach((pos) => {
+                const bucket = meshCalculationByRow.get(pos.Y) ?? []
+                bucket.push(pos)
+                meshCalculationByRow.set(pos.Y, bucket)
+            })
         }
     )
     task.wait(0.1) // Allow time for actors to initalize and message recievers to bind to actor parent
@@ -42,7 +61,8 @@ export async function render(
         const actorMessage: ActorMessage = {
             settings,
             row,
-            renderConstants
+            renderConstants,
+            encodeOnRow: true
         }
         const rowCompleted = new Promise<void>(async (resolve) => {
             const renderRowTask = (actor: Actor): Promise<void> => {
@@ -50,10 +70,12 @@ export async function render(
                     "rowCalculated"
                 ) as BindableEvent
                 const binding = rowCalculatedEvent.Event.Connect(
-                    (data: ImageBuffers) => {
+                    (data: RleRow) => {
                         binding.Disconnect()
                         startTime = delayForScriptExhuastion(startTime)
-                        calculatedRows[row] = data
+                        for (let channel of RASTER_CHANNEL_ORDER) {
+                            rleRows[channel][row] = data[channel]
+                        }
                         finishedRows++
                         const currentCompletion =
                             finishedRows / imageDimensions.Y
@@ -75,35 +97,80 @@ export async function render(
         })
 
         allRowsCompleted.push(rowCompleted)
-        //for (let col = 0; col < imageDimensions.X; col++) {
-        //    computePixel(new Vector2(col, row),settings, renderConstants)
-        //}
     }
     await Promise.all(allRowsCompleted)
     print(counter, "total pixels to be texture counted")
 
     pool.cleanup()
     meshPixelsConnection.Disconnect()
-    const output = combineAllBuffers(calculatedRows, settings)
 
     progressHooks.setCurrentStatusText("Computing Mesh Textures...")
     progressHooks.setCurrentProgress(0)
-    print("Total mesh calculations", meshCalculation.size())
-    for (let i = 0; i < meshCalculation.size(); i++) {
-        const position = meshCalculation[i]
-        startTime = delayForScriptExhuastion(startTime)
-        const pixel = computePixel(position, settings, renderConstants, false)
-        if (pixel && pixel !== "texture") {
-            spliceTexturedPixelsIn(output, pixel, position, imageDimensions)
-        }
-        if (i % 30 === 0) {
-            progressHooks.setCurrentProgress(i / meshCalculation.size())
-        }
-    }
+    let totalMeshPixels = 0
+    meshCalculationByRow.forEach((positions) => {
+        totalMeshPixels += positions.size()
+    })
+    print("Total mesh calculations", totalMeshPixels)
+
+    const progressState = { patched: 0, total: totalMeshPixels }
+    let rowYieldTime = tick()
+    meshCalculationByRow.forEach((positions, row) => {
+        rowYieldTime = delayForScriptExhuastion(rowYieldTime)
+        patchRowInPlace(
+            rleRows,
+            row,
+            positions,
+            settings,
+            renderConstants,
+            progressState,
+            progressHooks
+        )
+    })
 
     progressHooks.setCurrentProgress(0)
     progressHooks.setCurrentStatusText("Splicing Mesh Textures...")
-    return output
+    return assembleFinalRleBuffer(rleRows, generateStringEncodings(settings))
+}
+
+function patchRowInPlace(
+    rleRows: RleRowBuffers,
+    row: number,
+    patchPositions: Vector2[],
+    settings: Settings,
+    renderConstants: RenderConstants,
+    progressState: { patched: number; total: number },
+    progressHooks: ProgressUpdateHooks
+): void {
+    const rowBuffers: ImageBuffers = {
+        red: runLengthDecode(rleRows.red[row]),
+        green: runLengthDecode(rleRows.green[row]),
+        blue: runLengthDecode(rleRows.blue[row]),
+        height: runLengthDecode(rleRows.height[row]),
+        material: runLengthDecode(rleRows.material[row]),
+        roads: runLengthDecode(rleRows.roads[row]),
+        buildings: runLengthDecode(rleRows.buildings[row]),
+        water: runLengthDecode(rleRows.water[row]),
+        materialsEncoding: buffer.create(0)
+    }
+
+    let startTime = tick()
+    for (let position of patchPositions) {
+        startTime = delayForScriptExhuastion(startTime)
+        const pixel = computePixel(position, settings, renderConstants, false)
+        if (pixel && pixel !== "texture") {
+            writePixelToImageBuffer(position.X, pixel, rowBuffers)
+        }
+        progressState.patched++
+        if (progressState.patched % 30 === 0) {
+            progressHooks.setCurrentProgress(
+                progressState.patched / progressState.total
+            )
+        }
+    }
+
+    for (let channel of RASTER_CHANNEL_ORDER) {
+        rleRows[channel][row] = runLengthEncode(rowBuffers[channel])
+    }
 }
 
 export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
@@ -132,7 +199,8 @@ export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
         const actorMessage: ActorMessage = {
             settings,
             row,
-            renderConstants
+            renderConstants,
+            encodeOnRow: false
         }
         const rowCompleted = new Promise<void>(async (resolve) => {
             const renderRowTask = (actor: Actor): Promise<void> => {
@@ -161,23 +229,6 @@ export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
     const output = combineAllBuffers(calculatedRows, settings)
 
     return output
-}
-
-export function spliceTexturedPixelsIn(
-    buffers: ImageBuffers,
-    pixel: Pixel,
-    position: Vector2,
-    imageSize: Vector2
-) {
-    const bufferPosition = position.X + imageSize.X * position.Y
-    buffer.writeu8(buffers.red, bufferPosition, pixel.r)
-    buffer.writeu8(buffers.green, bufferPosition, pixel.g)
-    buffer.writeu8(buffers.blue, bufferPosition, pixel.b)
-    buffer.writeu8(buffers.height, bufferPosition, pixel.h)
-    buffer.writeu8(buffers.material, bufferPosition, pixel.material)
-    buffer.writeu8(buffers.roads, bufferPosition, pixel.road)
-    buffer.writeu8(buffers.buildings, bufferPosition, pixel.building)
-    buffer.writeu8(buffers.water, bufferPosition, pixel.water)
 }
 
 export function getRenderMaterialMap(): Map<Enum.Material, number> {

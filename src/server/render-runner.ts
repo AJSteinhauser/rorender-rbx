@@ -7,6 +7,7 @@ import {
 } from "shared/compression/huffman/huffman-encoding.compression"
 import { runLengthEncode } from "shared/compression/run-length/run-length-encoding.compression"
 import {
+    generateStringEncodings,
     mergeImageBuffersIntoSingleBuffer,
     writeHeader
 } from "shared/file/file.utils"
@@ -104,7 +105,7 @@ function applyWaterOverlay(output: ImageBuffers, pixelCount: number): void {
     }
 }
 
-function packageAndUpload(
+function packageRawImageAndUpload(
     effectiveSettings: Settings,
     output: ImageBuffers,
     parsedId: ParsedRenderId,
@@ -113,21 +114,41 @@ function packageAndUpload(
     const { translate } = LocalizationModule
 
     progressHooks.setCurrentProgress(0)
-    progressHooks.setCurrentStatusText(translate("PerformingDataAccumulation"))
-    const headerBuffer = writeHeader(effectiveSettings)
+    progressHooks.setCurrentStatusText(translate("CompressingDataRun"))
     const merged = mergeImageBuffersIntoSingleBuffer(output)
 
-    progressHooks.setCurrentProgress(1 / 4)
-    progressHooks.setCurrentStatusText(translate("CompressingDataRun"))
     const start = tick()
     const encoded = runLengthEncode(merged)
     print(translate("Time"), tick() - start)
+
+    finalizeAndUpload(
+        effectiveSettings,
+        encoded,
+        buffer.len(merged),
+        parsedId,
+        progressHooks
+    )
+}
+
+function finalizeAndUpload(
+    effectiveSettings: Settings,
+    encoded: buffer,
+    approxRawSizeBytes: number,
+    parsedId: ParsedRenderId,
+    progressHooks: ProgressUpdateHooks
+): void {
+    const { translate } = LocalizationModule
+
+    progressHooks.setCurrentProgress(1 / 4)
+    progressHooks.setCurrentStatusText(translate("PerformingDataAccumulation"))
+    const headerBuffer = writeHeader(effectiveSettings)
+
     print(getImageDimensions(effectiveSettings))
-    print(string.format(translate("Raw"), buffer.len(merged) / 1000))
+    print(string.format(translate("Raw"), approxRawSizeBytes / 1000))
     print(
         string.format(
             translate("RawPacketsRequired"),
-            math.ceil(buffer.len(merged) / HTTPS_BODY_LIMIT)
+            math.ceil(approxRawSizeBytes / HTTPS_BODY_LIMIT)
         )
     )
 
@@ -141,13 +162,13 @@ function packageAndUpload(
     print(
         string.format(
             translate("RLECompression"),
-            (1 - buffer.len(encoded) / buffer.len(merged)) * 100
+            (1 - buffer.len(encoded) / approxRawSizeBytes) * 100
         )
     )
     print(
         string.format(
             translate("HuffmanPlusRLECompression"),
-            (1 - buffer.len(huffmanEncoded.data) / buffer.len(merged)) * 100
+            (1 - buffer.len(huffmanEncoded.data) / approxRawSizeBytes) * 100
         )
     )
     print(
@@ -268,24 +289,34 @@ export const runRender = (
             .then((output) => {
                 const dims = getImageDimensions(rosaSettings)
                 applyWaterOverlay(output, dims.X * dims.Y)
-                packageAndUpload(rosaSettings, output, parsedId, progressHooks)
+                packageRawImageAndUpload(
+                    rosaSettings,
+                    output,
+                    parsedId,
+                    progressHooks
+                )
             })
             .catch((e) => progressHooks.errorOccured(tostring(e)))
         return
     }
 
-    try {
-        ensureImageLessThanMaxSize(renderSettings)
-    } catch (e: any) {
-        progressHooks.errorOccured(e)
-        return
-    }
+    ensureImageLessThanMaxSize(renderSettings)
     progressHooks.setCurrentStatusText(translate("RenderingImage"))
     progressHooks.setCurrentProgress(0)
     task.wait(0.5)
     render(renderSettings, progressHooks)
-        .then((output) =>
-            packageAndUpload(renderSettings, output, parsedId, progressHooks)
-        )
+        .then((encoded) => {
+            const dims = getImageDimensions(renderSettings)
+            const approxRawSizeBytes =
+                dims.X * dims.Y * 8 +
+                buffer.len(generateStringEncodings(renderSettings))
+            finalizeAndUpload(
+                renderSettings,
+                encoded,
+                approxRawSizeBytes,
+                parsedId,
+                progressHooks
+            )
+        })
         .catch((e) => progressHooks.errorOccured(tostring(e)))
 }

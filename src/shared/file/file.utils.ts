@@ -3,11 +3,15 @@ import {
     FILE_FORMAT_DATA_ORDER,
     HEADER_DATA_SIZE,
     ImageBuffers,
+    RASTER_CHANNEL_ORDER,
+    RleRowBuffers,
     RORENDER_FILE_VERSION,
     STRING_ENCODING_SEPERATOR
 } from "./file.modal"
 import { getImageDimensions } from "shared/utils"
 import { Pixel } from "shared/render/render.model"
+import { delayForScriptExhuastion } from "shared/render/render.utils"
+import { runLengthEncode } from "shared/compression/run-length/run-length-encoding.compression"
 
 export function writeHeader(renderSettings: Settings): buffer {
     const imageSize = getImageDimensions(renderSettings)
@@ -41,7 +45,7 @@ export function writeHeader(renderSettings: Settings): buffer {
     return buf
 }
 
-function generateStringEncodings(settings: Settings): buffer {
+export function generateStringEncodings(settings: Settings): buffer {
     const materials = Enum.Material.GetEnumItems()
         .map((x) => x.Name)
         .join(",")
@@ -65,7 +69,6 @@ export const generateBufferChannels = (
         warn(
             "Current max image size is 1GB, or 11,585px x 11,585px. If your use case requires a larger image, please make a feature request at rorender.com/support. In the meantime consider tiling your map into smaller chunks to achieve desired resolution."
         )
-        throw "Image too large"
     }
     return {
         red: buffer.create(bytesPerChannel),
@@ -120,5 +123,62 @@ export const mergeImageBuffersIntoSingleBuffer = (
         )
         currentOffset += buffer.len(imageData[item])
     }
+    return output
+}
+
+export const generateEmptyRleRowBuffers = (): RleRowBuffers => ({
+    red: [],
+    green: [],
+    blue: [],
+    height: [],
+    material: [],
+    roads: [],
+    buildings: [],
+    water: []
+})
+
+// materialsEncoding is RLE'd here too so the assembled output stays a single
+// uniform RLE stream, matching what mergeImageBuffersIntoSingleBuffer +
+// runLengthEncode already produce for it today - the decoder has no
+// row/channel boundary awareness, it only understands one continuous stream.
+export const assembleFinalRleBuffer = (
+    rleRows: RleRowBuffers,
+    materialsEncoding: buffer
+): buffer => {
+    const encodedMaterialsEncoding = runLengthEncode(materialsEncoding)
+    const rowCount = rleRows.red.size()
+
+    let totalSize = 0
+    for (let channel of RASTER_CHANNEL_ORDER) {
+        for (let row = 0; row < rowCount; row++) {
+            totalSize += buffer.len(rleRows[channel][row])
+        }
+    }
+    totalSize += buffer.len(encodedMaterialsEncoding)
+
+    const output = buffer.create(totalSize)
+    let currentOffset = 0
+    let startTime = tick()
+    for (let channel of RASTER_CHANNEL_ORDER) {
+        for (let row = 0; row < rowCount; row++) {
+            startTime = delayForScriptExhuastion(startTime)
+            const rowBuffer = rleRows[channel][row]
+            buffer.copy(
+                output,
+                currentOffset,
+                rowBuffer,
+                0,
+                buffer.len(rowBuffer)
+            )
+            currentOffset += buffer.len(rowBuffer)
+        }
+    }
+    buffer.copy(
+        output,
+        currentOffset,
+        encodedMaterialsEncoding,
+        0,
+        buffer.len(encodedMaterialsEncoding)
+    )
     return output
 }
