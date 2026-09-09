@@ -1,4 +1,3 @@
-import { act } from "@rbxts/react-roblox"
 import { Settings } from "shared/settings/settings.model"
 
 const actor = script.Parent?.Parent?.Parent?.FindFirstChild(
@@ -49,6 +48,10 @@ export class WorkerPool {
 
     queueTask = (taskCall: (actor: Actor) => Promise<void>) => {
         this.tasks.push(taskCall)
+    }
+
+    broadcast = (message: string, payload: unknown) => {
+        this.pool.forEach((actor) => actor.SendMessage(message, payload))
     }
 
     cleanup = () => {

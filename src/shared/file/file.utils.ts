@@ -137,10 +137,6 @@ export const generateEmptyRleRowBuffers = (): RleRowBuffers => ({
     water: []
 })
 
-// materialsEncoding is RLE'd here too so the assembled output stays a single
-// uniform RLE stream, matching what mergeImageBuffersIntoSingleBuffer +
-// runLengthEncode already produce for it today - the decoder has no
-// row/channel boundary awareness, it only understands one continuous stream.
 export const assembleFinalRleBuffer = (
     rleRows: RleRowBuffers,
     materialsEncoding: buffer

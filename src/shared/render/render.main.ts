@@ -1,5 +1,5 @@
 import { Settings } from "shared/settings/settings.model"
-import { RenderConstants } from "./render.model"
+import { HeightPrepassGrid, RenderConstants } from "./render.model"
 import { getImageDimensions } from "shared/utils"
 import {
     ImageBuffers,
@@ -16,7 +16,11 @@ import {
     writePixelToImageBuffer
 } from "shared/file/file.utils"
 import { computePixel, delayForScriptExhuastion } from "./render.utils"
-import { ActorMessage, COMPUTE_ROW_MESSAGE } from "./actor.model"
+import {
+    ActorMessage,
+    COMPUTE_ROW_MESSAGE,
+    SET_HEIGHT_PREPASS_MESSAGE
+} from "./actor.model"
 import { ProgressUpdateHooks } from "ui/screens/main"
 import {
     runLengthDecode,
@@ -31,6 +35,7 @@ export async function render(
     settings: Settings,
     progressHooks: ProgressUpdateHooks
 ): Promise<buffer> {
+    const initTime = tick()
     const imageDimensions = getImageDimensions(settings)
     const renderConstants = getRenderConstants(settings, imageDimensions)
 
@@ -56,12 +61,24 @@ export async function render(
         }
     )
     task.wait(0.1) // Allow time for actors to initalize and message recievers to bind to actor parent
+
+    if (renderConstants.heightPrepass) {
+        pool.broadcast(
+            SET_HEIGHT_PREPASS_MESSAGE,
+            renderConstants.heightPrepass
+        )
+    }
+    const renderConstantsForActors: RenderConstants = {
+        ...renderConstants,
+        heightPrepass: undefined
+    }
+
     for (let row = 0; row < imageDimensions.Y; row++) {
         startTime = delayForScriptExhuastion(startTime)
         const actorMessage: ActorMessage = {
             settings,
             row,
-            renderConstants,
+            renderConstants: renderConstantsForActors,
             encodeOnRow: true
         }
         const rowCompleted = new Promise<void>(async (resolve) => {
@@ -72,7 +89,6 @@ export async function render(
                 const binding = rowCalculatedEvent.Event.Connect(
                     (data: RleRow) => {
                         binding.Disconnect()
-                        startTime = delayForScriptExhuastion(startTime)
                         for (let channel of RASTER_CHANNEL_ORDER) {
                             rleRows[channel][row] = data[channel]
                         }
@@ -80,12 +96,11 @@ export async function render(
                         const currentCompletion =
                             finishedRows / imageDimensions.Y
                         if (currentCompletion - lastRowPrinted > 0.05) {
-                            //print(`finished rows: ${string.format("%.2f", (finishedRows / imageDimensions.Y) * 100)}%`)
+                            lastRowPrinted = currentCompletion
                             progressHooks.setCurrentProgress(
                                 finishedRows / imageDimensions.Y
                             )
                             task.wait(0.05)
-                            lastRowPrinted = currentCompletion
                         }
                         resolve()
                     }
@@ -129,7 +144,13 @@ export async function render(
 
     progressHooks.setCurrentProgress(0)
     progressHooks.setCurrentStatusText("Splicing Mesh Textures...")
-    return assembleFinalRleBuffer(rleRows, generateStringEncodings(settings))
+    const result = assembleFinalRleBuffer(
+        rleRows,
+        generateStringEncodings(settings)
+    )
+    print("Render Time: ", tick() - initTime, "(s)")
+
+    return result
 }
 
 function patchRowInPlace(
@@ -175,7 +196,7 @@ function patchRowInPlace(
 
 export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
     const imageDimensions = getImageDimensions(settings)
-    const renderConstants = getRenderConstants(settings, imageDimensions)
+    const renderConstants = getRenderConstants(settings, imageDimensions, false)
 
     const pool = new WorkerPool(settings)
 
@@ -226,6 +247,7 @@ export async function renderPreview(settings: Settings): Promise<ImageBuffers> {
     await Promise.all(allRowsCompleted)
     pool.cleanup()
     meshPixelsConnection.Disconnect()
+
     const output = combineAllBuffers(calculatedRows, settings)
 
     return output
@@ -293,9 +315,71 @@ function combineAllBuffers(
     return output
 }
 
+const HEIGHT_PREPASS_CELL_WORLD_SIZE = 15
+const HEIGHT_PREPASS_FOOTPRINT_OVERLAP = 1.5
+const HEIGHT_PREPASS_BOX_THICKNESS = 1
+
+function buildHeightPrepass(
+    settings: Settings,
+    startingPosition: CFrame,
+    rayVector: Vector3,
+    rayLength: number,
+    imageDimensions: Vector2
+): HeightPrepassGrid {
+    const rayUnit = rayVector.Unit
+    const cellWorldSize = HEIGHT_PREPASS_CELL_WORLD_SIZE
+    const cellPixelSize = cellWorldSize / settings.resolution
+    const cellsX = math.ceil(imageDimensions.X / cellPixelSize)
+    const cellsZ = math.ceil(imageDimensions.Y / cellPixelSize)
+    const boxFootprint = cellWorldSize * HEIGHT_PREPASS_FOOTPRINT_OVERLAP
+    const margin = cellWorldSize
+
+    const params = new RaycastParams()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    const boxSize = new Vector3(
+        boxFootprint,
+        HEIGHT_PREPASS_BOX_THICKNESS,
+        boxFootprint
+    )
+
+    const shifts: number[] = []
+    let yieldTime = tick()
+    for (let cz = 0; cz < cellsZ; cz++) {
+        for (let cx = 0; cx < cellsX; cx++) {
+            yieldTime = delayForScriptExhuastion(yieldTime)
+            const pixelCenterX = (cx + 0.5) * cellPixelSize
+            const pixelCenterZ = (cz + 0.5) * cellPixelSize
+            const cellTopCFrame = startingPosition.mul(
+                new CFrame(
+                    pixelCenterX * settings.resolution,
+                    0,
+                    pixelCenterZ * settings.resolution
+                )
+            )
+            const hit = game.Workspace.Blockcast(
+                cellTopCFrame,
+                boxSize,
+                rayVector,
+                params
+            )
+            if (!hit) {
+                shifts.push(0)
+                continue
+            }
+            const distanceFromTop = hit.Position.sub(
+                cellTopCFrame.Position
+            ).Dot(rayUnit)
+            shifts.push(math.clamp(distanceFromTop - margin, 0, rayLength))
+        }
+    }
+
+    return { cellPixelSize, cellsX, cellsZ, shifts }
+}
+
 function getRenderConstants(
     settings: Settings,
-    imageDimensions: Vector2
+    imageDimensions: Vector2,
+    enableHeightPrepass = true
 ): RenderConstants {
     const rayLength = settings.mapScale.Y
 
@@ -306,15 +390,30 @@ function getRenderConstants(
 
     const offset = mapScale.mul(new Vector3(-0.5, 0.5, -0.5))
 
+    const startingPosition = mapCFrame.mul(new CFrame(offset))
+    const rayVector = settings.mapCFrame.UpVector.mul(-1).mul(rayLength)
+
+    const heightPrepass = enableHeightPrepass
+        ? buildHeightPrepass(
+              settings,
+              startingPosition,
+              rayVector,
+              rayLength,
+              imageDimensions
+          )
+        : undefined
+
     return {
-        startingPosition: mapCFrame.mul(new CFrame(offset)),
+        startingPosition,
         rayLength,
         imageDimensions,
-        rayVector: settings.mapCFrame.UpVector.mul(-1).mul(rayLength),
+        rayVector,
+        rayUnit: rayVector.Unit,
         materialMap,
         sharedCaches: {
             roadCache: new Map<Instance, number>(),
             buildingCache: new Map<Instance, number>()
-        }
+        },
+        heightPrepass
     }
 }

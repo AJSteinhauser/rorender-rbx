@@ -9,8 +9,16 @@ export interface Pixel {
     water: number
 }
 
+export interface HeightPrepassGrid {
+    cellPixelSize: number
+    cellsX: number
+    cellsZ: number
+    shifts: number[]
+}
+
 export interface RenderConstants {
     rayVector: Vector3
+    rayUnit: Vector3
     rayLength: number
     imageDimensions: Vector2
     startingPosition: CFrame
@@ -19,6 +27,7 @@ export interface RenderConstants {
         roadCache: Map<Instance, number>
         buildingCache: Map<Instance, number>
     }
+    heightPrepass?: HeightPrepassGrid
 }
 
 export enum ActorHelperRequest {

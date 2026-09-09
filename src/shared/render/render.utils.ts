@@ -1,6 +1,7 @@
 import { Settings, StructureGrouping } from "shared/settings/settings.model"
 import {
     ActorHelperRequest,
+    HeightPrepassGrid,
     Pixel,
     RenderConstants,
     ReplacementRayCastFunc,
@@ -21,9 +22,16 @@ const MAX_SURFACE_APPEREANCE_RECASTS = 10
 
 const rand = new Random()
 
-const castParams = new RaycastParams()
-castParams.FilterType = Enum.RaycastFilterType.Exclude
-castParams.FilterDescendantsInstances = []
+function lookupHeightShift(
+    grid: HeightPrepassGrid | undefined,
+    position: Vector2
+): number {
+    if (!grid) return 0
+    const cx = math.floor(position.X / grid.cellPixelSize)
+    const cz = math.floor(position.Y / grid.cellPixelSize)
+    const index = cz * grid.cellsX + cx
+    return grid.shifts[index] ?? 0
+}
 
 export function computePixel(
     position: Vector2,
@@ -39,6 +47,21 @@ export function computePixel(
     )
     const rayCenter = rayCFrame.Position
     const results: RaycastResult[] = []
+
+    const heightShift = lookupHeightShift(
+        renderConstants.heightPrepass,
+        position
+    )
+    const castOrigin =
+        heightShift > 0
+            ? rayCenter.add(renderConstants.rayUnit.mul(heightShift))
+            : rayCenter
+    const castVector =
+        heightShift > 0
+            ? renderConstants.rayUnit.mul(
+                  renderConstants.rayLength - heightShift
+              )
+            : renderConstants.rayVector
 
     let waterHeight = 0 // Default to no water
     const rayBottom =
@@ -67,21 +90,24 @@ export function computePixel(
     }
 
     // Initial raycast
-    let primary = castRay(rayCenter, renderConstants.rayVector)
+    let primary = castRay(castOrigin, castVector)
     if (!primary) return
     if (bailTextureCalulations(primary)) {
         return "texture"
     }
 
     // Handle water material
-    if (checkIfRayIsWater(primary, settings)) {
+    const isWater = checkIfRayIsWater(primary, settings)
+    if (isWater) {
         waterHeight = calculateHeight(primary.Position.Y)
-        primary = castRay(rayCenter, renderConstants.rayVector, true)
+        primary = castRay(castOrigin, castVector, true)
         if (!primary) {
+            const bottomCastParams = new RaycastParams()
+            bottomCastParams.FilterType = Enum.RaycastFilterType.Exclude
             const castFromBottom = game.Workspace.Raycast(
                 rayCenter.sub(settings.mapScale.mul(new Vector3(0, 1, 0))),
                 renderConstants.rayVector.mul(-1),
-                castParams
+                bottomCastParams
             )
             if (castFromBottom) {
                 waterHeight = calculateHeight(castFromBottom.Position.Y)
@@ -103,8 +129,12 @@ export function computePixel(
 
     // Collect additional samples
     for (let i = 1; i < settings.samples; i++) {
-        const samplePosition = getSamplePosition(rayCFrame, settings.resolution)
-        const result = castRay(samplePosition, renderConstants.rayVector, true)
+        const sampleTop = getSamplePosition(rayCFrame, settings.resolution)
+        const samplePosition =
+            heightShift > 0
+                ? sampleTop.add(renderConstants.rayUnit.mul(heightShift))
+                : sampleTop
+        const result = castRay(samplePosition, castVector, true)
         if (result) {
             results.push(result)
             if (bailTextureCalulations(result)) {
@@ -115,17 +145,15 @@ export function computePixel(
 
     // Handle terrain hit
     const terrainHit =
-        getTerrainHit(
-            primary,
-            rayCenter,
-            renderConstants.rayVector,
-            settings.terrain
-        ) || primary
+        getTerrainHit(primary, castOrigin, castVector, settings.terrain) ||
+        primary
 
     // Compute color
     let color = averageColorSamples(results, renderConstants.rayVector)
+
     color = averageShadeSamples(results, color, settings)
     color = gammaNormalizeSamples(color)
+
     if (settings.shadows.enabled) {
         color = applyShadowsSamples(results, color, settings)
     }
@@ -268,16 +296,20 @@ function castRay(
     rayPosition: Vector3,
     rayVector: Vector3,
     ignoreWater: boolean = false,
-    rayParams: RaycastParams = castParams,
+    rayParams?: RaycastParams,
     includeMode = false
 ): RaycastResult | undefined {
-    rayParams.IgnoreWater = ignoreWater
-    const results = game.Workspace.Raycast(rayPosition, rayVector, rayParams)
+    const params = rayParams ?? new RaycastParams()
+    if (!rayParams) {
+        params.FilterType = Enum.RaycastFilterType.Exclude
+    }
+    params.IgnoreWater = ignoreWater
+    const results = game.Workspace.Raycast(rayPosition, rayVector, params)
     if (!results) return results
     if (includeMode) return results
     if (results.Instance.Transparency < 1) return results
-    rayParams.AddToFilter(results.Instance)
-    return castRay(rayPosition, rayVector, ignoreWater, rayParams)
+    params.AddToFilter(results.Instance)
+    return castRay(rayPosition, rayVector, ignoreWater, params, includeMode)
 }
 
 function checkSunShadow(hit: RaycastResult, settings: Settings): boolean {
@@ -660,7 +692,6 @@ function averageColorSamples(
     rayCastResults: RaycastResult[],
     downVector: Vector3
 ): Vector3 {
-    let color = new Vector3(0, 0, 0)
     const replaceResultSample: ReplacementRayCastFunc = (
         originalResult: RaycastResult,
         replacement: RaycastResult
@@ -669,6 +700,15 @@ function averageColorSamples(
         rayCastResults[index] = replacement
     }
 
+    if (rayCastResults.size() === 1) {
+        return getColorFromResult(
+            rayCastResults[0],
+            downVector,
+            replaceResultSample
+        )
+    }
+
+    let color = new Vector3(0, 0, 0)
     for (const result of rayCastResults) {
         const sampleColor = getColorFromResult(
             result,
@@ -705,6 +745,10 @@ function averageShadeSamples(
     inputColor: Vector3,
     settings: Settings
 ): Vector3 {
+    if (rayCastResults.size() === 1) {
+        return shadeColor(inputColor, rayCastResults[0], settings)
+    }
+
     let color = new Vector3(0, 0, 0)
     rayCastResults.forEach((result: RaycastResult) => {
         color = color.add(

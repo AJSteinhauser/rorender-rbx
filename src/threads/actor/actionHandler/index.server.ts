@@ -8,13 +8,17 @@ import {
     writePixelToImageBuffer
 } from "shared/file/file.utils"
 import { getRenderMaterialMap } from "shared/render/render.main"
-import { ActorMessage, COMPUTE_ROW_MESSAGE } from "shared/render/actor.model"
+import {
+    ActorMessage,
+    COMPUTE_ROW_MESSAGE,
+    SET_HEIGHT_PREPASS_MESSAGE
+} from "shared/render/actor.model"
 import {
     RasterChannel,
     RASTER_CHANNEL_ORDER,
     RleRow
 } from "shared/file/file.modal"
-import { Pixel } from "shared/render/render.model"
+import { HeightPrepassGrid, Pixel } from "shared/render/render.model"
 import { ScalingBuffer } from "shared/compression/autoscaling-buffer.util"
 import { MAX_RUN_LENGTH } from "shared/compression/run-length/run-length.model"
 
@@ -55,40 +59,53 @@ const channelValueOf = (pixel: Pixel, channel: RasterChannel): number => {
     }
 }
 
-class RowRunLengthEncoder {
-    private output = new ScalingBuffer()
-    private currentValue = 0
-    private runLength = 0
-
-    public push(value: number): void {
-        if (this.runLength === 0) {
-            this.currentValue = value
-            this.runLength = 1
-            return
-        }
-        if (value === this.currentValue && this.runLength < MAX_RUN_LENGTH) {
-            this.runLength++
-            return
-        }
-        this.output.push_u16(this.runLength)
-        this.output.push_u8(this.currentValue)
-        this.currentValue = value
-        this.runLength = 1
-    }
-
-    public finish(): buffer {
-        if (this.runLength > 0) {
-            this.output.push_u16(this.runLength)
-            this.output.push_u8(this.currentValue)
-        }
-        return this.output.getBuffer()
-    }
+interface RleChannelState {
+    output: ScalingBuffer
+    currentValue: number
+    runLength: number
 }
+
+const newRleChannelState = (): RleChannelState => ({
+    output: new ScalingBuffer(),
+    currentValue: 0,
+    runLength: 0
+})
+
+const pushRleValue = (state: RleChannelState, value: number): void => {
+    if (state.runLength === 0) {
+        state.currentValue = value
+        state.runLength = 1
+        return
+    }
+    if (value === state.currentValue && state.runLength < MAX_RUN_LENGTH) {
+        state.runLength++
+        return
+    }
+    state.output.push_u16(state.runLength)
+    state.output.push_u8(state.currentValue)
+    state.currentValue = value
+    state.runLength = 1
+}
+
+const finishRleValue = (state: RleChannelState): buffer => {
+    if (state.runLength > 0) {
+        state.output.push_u16(state.runLength)
+        state.output.push_u8(state.currentValue)
+    }
+    return state.output.getBuffer()
+}
+
+let cachedHeightPrepass: HeightPrepassGrid | undefined
+
+actor?.BindToMessage(SET_HEIGHT_PREPASS_MESSAGE, (grid: HeightPrepassGrid) => {
+    cachedHeightPrepass = grid
+})
 
 actor?.BindToMessage(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
     let startTime = tick()
     const imageDimensions = getImageDimensions(message.settings)
     message.renderConstants.materialMap = getRenderMaterialMap() // Update material map to actually use enum instead of stringified versions
+    message.renderConstants.heightPrepass = cachedHeightPrepass
 
     const textureSpots: Vector2[] = []
 
@@ -98,7 +115,7 @@ actor?.BindToMessage(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
     const encoders = message.encodeOnRow
         ? RASTER_CHANNEL_ORDER.map((channel) => ({
               channel,
-              encoder: new RowRunLengthEncoder()
+              state: newRleChannelState()
           }))
         : undefined
 
@@ -117,11 +134,15 @@ actor?.BindToMessage(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
         if (encoders) {
             const resolvedPixel =
                 pixel && pixel !== "texture" ? pixel : undefined
-            encoders.forEach(({ channel, encoder }) => {
-                encoder.push(
-                    resolvedPixel ? channelValueOf(resolvedPixel, channel) : 0
+            for (let e = 0; e < encoders.size(); e++) {
+                const entry = encoders[e]
+                pushRleValue(
+                    entry.state,
+                    resolvedPixel
+                        ? channelValueOf(resolvedPixel, entry.channel)
+                        : 0
                 )
-            })
+            }
         } else if (pixel && pixel !== "texture" && imageData) {
             writePixelToImageBuffer(col, pixel, imageData)
         }
@@ -131,8 +152,8 @@ actor?.BindToMessage(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
 
     if (encoders) {
         const rleRow = {} as RleRow
-        encoders.forEach(({ channel, encoder }) => {
-            rleRow[channel] = encoder.finish()
+        encoders.forEach(({ channel, state }) => {
+            rleRow[channel] = finishRleValue(state)
         })
         rowCalculatedEvent.Fire(rleRow)
     } else {
