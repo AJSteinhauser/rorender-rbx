@@ -225,12 +225,17 @@ function getGrouping(
     primary: RaycastResult,
     cache: Map<Instance, number>
 ): number {
-    const cacheHit = cache.get(primary.Instance)
-    if (cacheHit !== undefined) {
-        return cacheHit
+    const isTerrain = primary.Instance === TERRAIN
+    if (!isTerrain) {
+        const cacheHit = cache.get(primary.Instance)
+        if (cacheHit !== undefined) {
+            return cacheHit
+        }
     }
     const groupingId = searchForGrouping(groups, primary)
-    cache.set(primary.Instance, groupingId)
+    if (!isTerrain) {
+        cache.set(primary.Instance, groupingId)
+    }
     return groupingId
 }
 
