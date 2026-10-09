@@ -1,5 +1,4 @@
 import { render, renderPreview } from "shared/render/render.main"
-import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model"
 import { Settings } from "shared/settings/settings.model"
 import uiConstants from "./ui-constants"
 import { object } from "@rbxts/react/src/prop-types"
@@ -30,6 +29,9 @@ let lastData = 0
 let lastScale = new Vector3()
 let lastImageSize = new Vector2()
 let renderWater = false
+let manualPreviewRefresh = false
+let lastPreviewInputs: string | undefined
+let previewStaleHook: ((stale: boolean) => void) | undefined
 
 export enum DraggerMode {
     Move,
@@ -77,9 +79,30 @@ export const exposePlugin = (plugin: Plugin) => {
     pluginRef = plugin
 }
 
-export const setViewfinderSettings = (image: EditableImage) => {
+export const setViewfinderSettings = (
+    image: EditableImage | undefined,
+    manualRefresh = false
+) => {
     viewFinderImage = image
+    manualPreviewRefresh = manualRefresh
+    refreshPreview()
 }
+
+export const setPreviewStaleHook = (
+    hook: ((stale: boolean) => void) | undefined
+) => {
+    previewStaleHook = hook
+}
+
+export const refreshPreview = () => {
+    if (!loadedRenderRef) return
+    const { mesh, center } = getElementsFromSettings(loadedRenderRef)
+    updatePreviewImage(mesh.Scale, center.CFrame)
+    previewStaleHook?.(false)
+}
+
+const getPreviewInputs = (scale: Vector3, cframe: CFrame) =>
+    `${scale}|${cframe}|${renderWater}|${lighting.ClockTime}`
 
 export const updateShowWater = (show: boolean) => {
     renderWater = show
@@ -109,9 +132,11 @@ function throttle<T extends (...args: unknown[]) => void>(
 }
 
 const updatePreviewImage = (scale: Vector3, cframe: CFrame) => {
-    if (!loadedRenderRef || !viewFinderImage) return
+    const canvas = viewFinderImage
+    if (!loadedRenderRef || !canvas) return
 
-    const settings = previewSettings(scale, cframe)
+    lastPreviewInputs = getPreviewInputs(scale, cframe)
+    const settings = previewSettings(scale, cframe, canvas.Size)
     const imageSize = getImageDimensions(settings.resolution, settings.mapScale)
 
     if (imageSize.X > MAX_IMAGE_SIZE.X || imageSize.Y > MAX_IMAGE_SIZE.Y) {
@@ -121,6 +146,7 @@ const updatePreviewImage = (scale: Vector3, cframe: CFrame) => {
 
     const imageData = renderPreview(settings)
     imageData.then((data) => {
+        if (canvas !== viewFinderImage) return
         const tempCanvas = assetService.CreateEditableImage({
             Size: imageSize
         })
@@ -155,12 +181,12 @@ const updatePreviewImage = (scale: Vector3, cframe: CFrame) => {
         clearViewFinderImage()
         const scaleFit = math.min(
             1,
-            VIEWFINDER_IMAGE_SIZE.X / imageSize.X,
-            VIEWFINDER_IMAGE_SIZE.Y / imageSize.Y
+            canvas.Size.X / imageSize.X,
+            canvas.Size.Y / imageSize.Y
         )
 
-        viewFinderImage?.DrawImageTransformed(
-            VIEWFINDER_IMAGE_SIZE.div(2),
+        canvas.DrawImageTransformed(
+            canvas.Size.div(2),
             new Vector2(scaleFit, scaleFit),
             0,
             tempCanvas,
@@ -174,15 +200,11 @@ const updatePreviewImage = (scale: Vector3, cframe: CFrame) => {
 }
 
 const clearViewFinderImage = () => {
-    const clearBuff = buffer.create(
-        VIEWFINDER_IMAGE_SIZE.X * VIEWFINDER_IMAGE_SIZE.Y * 4
-    )
+    if (!viewFinderImage) return
+    const size = viewFinderImage.Size
+    const clearBuff = buffer.create(size.X * size.Y * 4)
     buffer.fill(clearBuff, 0, 0)
-    viewFinderImage?.WritePixelsBuffer(
-        new Vector2(),
-        VIEWFINDER_IMAGE_SIZE,
-        clearBuff
-    )
+    viewFinderImage.WritePixelsBuffer(new Vector2(), size, clearBuff)
 }
 
 const drawDiagonalLines = () => {
@@ -475,7 +497,13 @@ export const updateUI = () => {
     ensureCenterPartSize(center)
     updateDataText(resolution, mesh.Scale)
     setAllDraggerHandlePosition()
-    updatePreviewImageThrottled(mesh.Scale, center.CFrame)
+    if (manualPreviewRefresh) {
+        previewStaleHook?.(
+            getPreviewInputs(mesh.Scale, center.CFrame) !== lastPreviewInputs
+        )
+    } else {
+        updatePreviewImageThrottled(mesh.Scale, center.CFrame)
+    }
 }
 
 const ensureCenterPartSize = (center: Part) => {
@@ -636,8 +664,15 @@ const replaceResolutionValue = (newResolution: number) => {
     renderSettings.Source = newSource
 }
 
-const previewSettings = (mapScale: Vector3, mapCFrame: CFrame): Settings => {
-    const resolution = mapScale.Z / VIEWFINDER_IMAGE_SIZE.Y
+const previewSettings = (
+    mapScale: Vector3,
+    mapCFrame: CFrame,
+    canvasSize: Vector2
+): Settings => {
+    const resolution = math.max(
+        mapScale.X / canvasSize.X,
+        mapScale.Z / canvasSize.Y
+    )
     if (!loadedRenderRef) {
         throw "Failed to load settings"
     }

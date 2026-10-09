@@ -10,6 +10,7 @@ const translations: Record<string, string> = {
 
     //view-finder
     ShowWaterinPreview: `Show Water in Preview`,
+    RefreshPreview: `Refresh Preview`,
 
     //render-runner
     PerformingDataAccumulation: `Performing Data Accumulation...`,

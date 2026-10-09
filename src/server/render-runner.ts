@@ -15,7 +15,7 @@ import { ImageBuffers } from "shared/file/file.modal"
 import { render, renderPreview } from "shared/render/render.main"
 import { ParsedRenderId } from "shared/render/render.model"
 import {
-    ensureImageLessThanMaxSize,
+    getImageSizeError,
     getImageDimensions,
     HTTPS_BODY_LIMIT,
     splitImageIntoChunks
@@ -300,7 +300,12 @@ export const runRender = (
         return
     }
 
-    ensureImageLessThanMaxSize(renderSettings)
+    const sizeError = getImageSizeError(renderSettings)
+    if (sizeError) {
+        progressHooks.errorOccured(sizeError)
+        return
+    }
+
     progressHooks.setCurrentStatusText(translate("RenderingImage"))
     progressHooks.setCurrentProgress(0)
     task.wait(0.5)

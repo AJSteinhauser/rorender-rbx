@@ -1,6 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { ensureImageLessThanMaxSize } from "./utils"
+import { getImageSizeError, MAX_PIXEL_SIZE } from "./utils"
 import { Settings } from "./settings/settings.model"
 
 const buildTestSettings = (mapScaleX: number, mapScaleZ: number): Settings => ({
@@ -21,18 +21,20 @@ const buildTestSettings = (mapScaleX: number, mapScaleZ: number): Settings => ({
 })
 
 export = () => {
-    describe("ensureImageLessThanMaxSize", () => {
-        it("should not throw for an image within the recommended size", () => {
-            const settings = buildTestSettings(1000, 1000)
-            expect(() => ensureImageLessThanMaxSize(settings)).never.to.throw()
+    describe("getImageSizeError", () => {
+        it("should return undefined for an image within the max size", () => {
+            const settings = buildTestSettings(MAX_PIXEL_SIZE, MAX_PIXEL_SIZE)
+            expect(getImageSizeError(settings)).never.to.be.ok()
         })
 
-        it("should warn instead of throw for an oversized image", () => {
-            // Comfortably past the ~7000x7000px soft-warn threshold; this is
-            // a pure arithmetic check (no buffer allocation), so it's safe
-            // to exercise at this scale in a test.
-            const settings = buildTestSettings(20000, 20000)
-            expect(() => ensureImageLessThanMaxSize(settings)).never.to.throw()
+        it("should return an error when width exceeds the max size", () => {
+            const settings = buildTestSettings(MAX_PIXEL_SIZE + 1, 1000)
+            expect(getImageSizeError(settings)).to.be.ok()
+        })
+
+        it("should return an error when height exceeds the max size", () => {
+            const settings = buildTestSettings(1000, MAX_PIXEL_SIZE + 1)
+            expect(getImageSizeError(settings)).to.be.ok()
         })
     })
 }

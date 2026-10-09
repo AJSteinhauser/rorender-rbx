@@ -41,6 +41,7 @@ export interface ActorHelperRequestPayload {
 }
 
 export const VIEWFINDER_IMAGE_SIZE = new Vector2(100, 100)
+export const VIEWFINDER_POPOUT_IMAGE_SIZE = new Vector2(1024, 1024)
 
 export interface ParsedRenderId {
     rawId: string // full input string passed as pipelineId

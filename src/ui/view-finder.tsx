@@ -1,8 +1,17 @@
-import { VIEWFINDER_IMAGE_SIZE } from "shared/render/render.model"
-import { setViewfinderSettings, updateShowWater } from "./config-helper"
+import {
+    VIEWFINDER_IMAGE_SIZE,
+    VIEWFINDER_POPOUT_IMAGE_SIZE
+} from "shared/render/render.model"
+import {
+    refreshPreview,
+    setPreviewStaleHook,
+    setViewfinderSettings,
+    updateShowWater
+} from "./config-helper"
 import uiConstants from "./ui-constants"
 import React, { useEffect, useRef, useState } from "@rbxts/react"
 import { CheckBox } from "./checkbox"
+import { Button, ButtonType } from "./button"
 import { useLocalization } from "shared/localization/useLocalization"
 
 const assetService = game.GetService("AssetService")
@@ -11,28 +20,32 @@ const popoutPadding = new UDim(0, 3)
 
 export function ViewFinder(props: { size: UDim2 }) {
     const { translate } = useLocalization()
-    const editageImageRef = useRef<EditableImage | undefined>(undefined)
-    const contentRef = useRef<Content | undefined>(undefined)
+    const [content, setContent] = useState<Content>()
     const finderRef = useRef<Frame>()
     const [showWater, setShowWater] = useState(false)
     const [popout, setPopout] = useState(false)
     const [hover, setHover] = useState(false)
+    const [stale, setStale] = useState(false)
     const [oldParent, setOldParent] = useState<Instance>()
     let dockWindowPreview = pluginGuiService.FindFirstChild(
         "RoRender V4 Preview"
     ) as DockWidgetPluginGui
     useEffect(() => {
-        if (!editageImageRef.current) {
-            const editableImage = assetService.CreateEditableImage({
-                Size: VIEWFINDER_IMAGE_SIZE
-            })
-            editageImageRef.current = editableImage
+        const editableImage = assetService.CreateEditableImage({
+            Size: popout ? VIEWFINDER_POPOUT_IMAGE_SIZE : VIEWFINDER_IMAGE_SIZE
+        })
+        setContent(Content.fromObject(editableImage))
+        setPreviewStaleHook(setStale)
+        setViewfinderSettings(editableImage, popout)
 
-            const content = Content.fromObject(editableImage)
-            contentRef.current = content
-            setViewfinderSettings(editableImage)
+        return () => {
+            setPreviewStaleHook(undefined)
+            setViewfinderSettings(undefined)
+            editableImage.Destroy()
         }
-    }, [])
+    }, [popout])
+
+    useEffect(() => updateShowWater(showWater), [showWater])
 
     useEffect(() => {
         let dockWindowPreviewCloseConnection: RBXScriptConnection
@@ -65,8 +78,6 @@ export function ViewFinder(props: { size: UDim2 }) {
                 dockWindowPreviewCloseConnection.Disconnect()
         }
     }, [popout === true, finderRef.current !== undefined])
-
-    updateShowWater(showWater)
 
     const gridColor = uiConstants.groundColor
     const gridTransparency = 0.5
@@ -105,7 +116,9 @@ export function ViewFinder(props: { size: UDim2 }) {
                 />
                 <uistroke
                     Thickness={uiConstants.borderSize}
-                    Color={uiConstants.primaryColor}
+                    Color={
+                        stale ? uiConstants.errorText : uiConstants.primaryColor
+                    }
                     ApplyStrokeMode={Enum.ApplyStrokeMode.Border}
                 />
 
@@ -149,7 +162,7 @@ export function ViewFinder(props: { size: UDim2 }) {
                 */}
                 <imagelabel
                     Size={UDim2.fromScale(1, 1)}
-                    ImageContent={contentRef.current}
+                    ImageContent={content}
                     BackgroundTransparency={1}
                     Event={{
                         MouseEnter: () => {
@@ -195,6 +208,15 @@ export function ViewFinder(props: { size: UDim2 }) {
                     ></imagebutton>
                 </imagelabel>
             </frame>
+            {popout && (
+                <Button
+                    key={"refresh"}
+                    label={translate("RefreshPreview")}
+                    buttonType={stale ? ButtonType.filled : ButtonType.outline}
+                    size={new UDim2(0.8, 0, 0, 25)}
+                    clicked={refreshPreview}
+                />
+            )}
             <CheckBox
                 key={"show"}
                 size={new UDim2(1, 0, 0, 25)}

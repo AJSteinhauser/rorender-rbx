@@ -3,13 +3,9 @@ import { Settings } from "./settings/settings.model"
 
 export const HTTPS_BODY_LIMIT = 1024 * 1000 - 1 // 1024Kb - 2
 export const HEADER_DATA_SIZE = 6 // 3 of 2byte u16int values
-const MAX_IMAGE_SIZE = 7000 * 7000 * 8
-export const MAX_PIXEL_SIZE = math.floor(math.sqrt(MAX_IMAGE_SIZE / 8))
+export const MAX_PIXEL_SIZE = 25000
 
-const SIZE_ERROR_MESSAGE = `\nCurrent max image size is ${string.format(
-    "%.2fGB",
-    MAX_IMAGE_SIZE / 1000000000
-)}GB, or ${MAX_PIXEL_SIZE}px x ${MAX_PIXEL_SIZE}px. Modify the resolution value in the RenderSettings ModuleScript to adjust output image size.`
+const SIZE_ERROR_MESSAGE = `Max image size is ${MAX_PIXEL_SIZE}px x ${MAX_PIXEL_SIZE}px. Modify the resolution value in the RenderSettings ModuleScript to adjust output image size.`
 
 export function getImageDimensions(settings: Settings): Vector2 {
     return new Vector2(
@@ -37,12 +33,10 @@ export function color3ToVector3(color: Color3): Vector3 {
     return new Vector3(color.R, color.G, color.B)
 }
 
-export function ensureImageLessThanMaxSize(settings: Settings) {
+export function getImageSizeError(settings: Settings): string | undefined {
     const imageSize = getImageDimensions(settings)
-    const bytesPerChannel = imageSize.X * imageSize.Y * 8
-    if (bytesPerChannel > MAX_IMAGE_SIZE) {
-        warn(
-            `Image larger than recommended: ${imageSize}. ${SIZE_ERROR_MESSAGE}`
-        )
+    if (imageSize.X > MAX_PIXEL_SIZE || imageSize.Y > MAX_PIXEL_SIZE) {
+        return `Image too large: ${imageSize.X}px x ${imageSize.Y}px. ${SIZE_ERROR_MESSAGE}`
     }
+    return undefined
 }
