@@ -32,6 +32,13 @@ export const RASTER_CHANNEL_ORDER = FILE_FORMAT_DATA_ORDER.filter(
     (key): key is RasterChannel => key !== "materialsEncoding"
 )
 
+export type RgbChannel = Extract<RasterChannel, "red" | "green" | "blue">
+
+export const RGB_CHANNEL_ORDER: RgbChannel[] = ["red", "green", "blue"]
+
+export const renderedChannels = (rgbOnly: boolean): RasterChannel[] =>
+    rgbOnly ? RGB_CHANNEL_ORDER : RASTER_CHANNEL_ORDER
+
 export type RleRowBuffers = {
     [K in RasterChannel]: buffer[]
 }

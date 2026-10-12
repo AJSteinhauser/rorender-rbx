@@ -3,9 +3,10 @@ import { HeightPrepassGrid, RenderConstants } from "./render.model"
 import { getImageDimensions } from "shared/utils"
 import {
     ImageBuffers,
-    RASTER_CHANNEL_ORDER,
+    RasterChannel,
     RleRow,
-    RleRowBuffers
+    RleRowBuffers,
+    renderedChannels
 } from "shared/file/file.modal"
 import { WorkerPool } from "./actor-pool.handler"
 import {
@@ -13,7 +14,7 @@ import {
     generateBufferChannels,
     generateEmptyRleRowBuffers,
     generateStringEncodings,
-    writePixelToImageBuffer
+    pixelChannelValue
 } from "shared/file/file.utils"
 import { computePixel, delayForScriptExhuastion } from "./render.utils"
 import {
@@ -33,11 +34,18 @@ const meshPixels = script.Parent?.Parent?.Parent?.FindFirstChild(
 
 export async function render(
     settings: Settings,
-    progressHooks: ProgressUpdateHooks
+    progressHooks: ProgressUpdateHooks,
+    rgbOnly = false
 ): Promise<buffer> {
     const initTime = tick()
     const imageDimensions = getImageDimensions(settings)
-    const renderConstants = getRenderConstants(settings, imageDimensions)
+    const renderConstants = getRenderConstants(
+        settings,
+        imageDimensions,
+        true,
+        rgbOnly
+    )
+    const channels = renderedChannels(rgbOnly)
 
     const pool = new WorkerPool(settings)
 
@@ -89,7 +97,7 @@ export async function render(
                 const binding = rowCalculatedEvent.Event.Connect(
                     (data: RleRow) => {
                         binding.Disconnect()
-                        for (let channel of RASTER_CHANNEL_ORDER) {
+                        for (let channel of channels) {
                             rleRows[channel][row] = data[channel]
                         }
                         finishedRows++
@@ -135,6 +143,7 @@ export async function render(
             rleRows,
             row,
             positions,
+            channels,
             settings,
             renderConstants,
             progressState,
@@ -146,7 +155,8 @@ export async function render(
     progressHooks.setCurrentStatusText("Splicing Mesh Textures...")
     const result = assembleFinalRleBuffer(
         rleRows,
-        generateStringEncodings(settings)
+        rgbOnly ? undefined : generateStringEncodings(settings),
+        channels
     )
     print("Render Time: ", tick() - initTime, "(s)")
 
@@ -157,21 +167,15 @@ function patchRowInPlace(
     rleRows: RleRowBuffers,
     row: number,
     patchPositions: Vector2[],
+    channels: RasterChannel[],
     settings: Settings,
     renderConstants: RenderConstants,
     progressState: { patched: number; total: number },
     progressHooks: ProgressUpdateHooks
 ): void {
-    const rowBuffers: ImageBuffers = {
-        red: runLengthDecode(rleRows.red[row]),
-        green: runLengthDecode(rleRows.green[row]),
-        blue: runLengthDecode(rleRows.blue[row]),
-        height: runLengthDecode(rleRows.height[row]),
-        material: runLengthDecode(rleRows.material[row]),
-        roads: runLengthDecode(rleRows.roads[row]),
-        buildings: runLengthDecode(rleRows.buildings[row]),
-        water: runLengthDecode(rleRows.water[row]),
-        materialsEncoding: buffer.create(0)
+    const rowBuffers = {} as RleRow
+    for (let channel of channels) {
+        rowBuffers[channel] = runLengthDecode(rleRows[channel][row])
     }
 
     let startTime = tick()
@@ -179,7 +183,13 @@ function patchRowInPlace(
         startTime = delayForScriptExhuastion(startTime)
         const pixel = computePixel(position, settings, renderConstants, false)
         if (pixel && pixel !== "texture") {
-            writePixelToImageBuffer(position.X, pixel, rowBuffers)
+            for (let channel of channels) {
+                buffer.writeu8(
+                    rowBuffers[channel],
+                    position.X,
+                    pixelChannelValue(pixel, channel)
+                )
+            }
         }
         progressState.patched++
         if (progressState.patched % 30 === 0) {
@@ -189,7 +199,7 @@ function patchRowInPlace(
         }
     }
 
-    for (let channel of RASTER_CHANNEL_ORDER) {
+    for (let channel of channels) {
         rleRows[channel][row] = runLengthEncode(rowBuffers[channel])
     }
 }
@@ -379,7 +389,8 @@ function buildHeightPrepass(
 function getRenderConstants(
     settings: Settings,
     imageDimensions: Vector2,
-    enableHeightPrepass = true
+    enableHeightPrepass = true,
+    rgbOnly = false
 ): RenderConstants {
     const rayLength = settings.mapScale.Y
 
@@ -414,6 +425,7 @@ function getRenderConstants(
             roadCache: new Map<Instance, number>(),
             buildingCache: new Map<Instance, number>()
         },
-        heightPrepass
+        heightPrepass,
+        rgbOnly
     }
 }

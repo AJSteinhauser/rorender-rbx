@@ -11,9 +11,10 @@ import {
     mergeImageBuffersIntoSingleBuffer,
     writeHeader
 } from "shared/file/file.utils"
-import { ImageBuffers } from "shared/file/file.modal"
+import { ImageBuffers, RGB_CHANNEL_ORDER } from "shared/file/file.modal"
 import { render, renderPreview } from "shared/render/render.main"
 import { ParsedRenderId } from "shared/render/render.model"
+import { applyWaterOverlay } from "shared/render/water-overlay"
 import {
     getImageSizeError,
     getImageDimensions,
@@ -30,7 +31,6 @@ const UPLOAD_URL = "https://uploadrenderchunk-izsda2emzq-uc.a.run.app"
 const VALIDATE_URL =
     "https://validateimagepipeline-izsda2emzq-uc.a.run.app/validateImagePipeline"
 const ROSA_MAX_DIMENSION = 2000
-const WATER_OPACITY = 0.7
 
 // Returns an error string on failure, undefined on success
 function validateRosaPipeline(rawId: string): string | undefined {
@@ -69,38 +69,6 @@ function buildRosaSettings(settings: Settings): Settings {
             materials: existingMaterials.includes(Enum.Material.Water)
                 ? existingMaterials
                 : [Enum.Material.Water, ...existingMaterials]
-        }
-    }
-}
-
-function applyWaterOverlay(output: ImageBuffers, pixelCount: number): void {
-    const waterColor = game.Workspace.Terrain.WaterColor
-    for (let i = 0; i < pixelCount; i++) {
-        if (buffer.readu8(output.water, i) > 0) {
-            buffer.writeu8(
-                output.red,
-                i,
-                math.floor(
-                    (1 - WATER_OPACITY) * buffer.readu8(output.red, i) +
-                        WATER_OPACITY * waterColor.R * 255
-                )
-            )
-            buffer.writeu8(
-                output.green,
-                i,
-                math.floor(
-                    (1 - WATER_OPACITY) * buffer.readu8(output.green, i) +
-                        WATER_OPACITY * waterColor.G * 255
-                )
-            )
-            buffer.writeu8(
-                output.blue,
-                i,
-                math.floor(
-                    (1 - WATER_OPACITY) * buffer.readu8(output.blue, i) +
-                        WATER_OPACITY * waterColor.B * 255
-                )
-            )
         }
     }
 }
@@ -306,15 +274,17 @@ export const runRender = (
         return
     }
 
+    const rgbOnly = parsedId.renderType === "simple"
     progressHooks.setCurrentStatusText(translate("RenderingImage"))
     progressHooks.setCurrentProgress(0)
     task.wait(0.5)
-    render(renderSettings, progressHooks)
+    render(renderSettings, progressHooks, rgbOnly)
         .then((encoded) => {
             const dims = getImageDimensions(renderSettings)
-            const approxRawSizeBytes =
-                dims.X * dims.Y * 8 +
-                buffer.len(generateStringEncodings(renderSettings))
+            const approxRawSizeBytes = rgbOnly
+                ? dims.X * dims.Y * RGB_CHANNEL_ORDER.size()
+                : dims.X * dims.Y * 8 +
+                  buffer.len(generateStringEncodings(renderSettings))
             finalizeAndUpload(
                 renderSettings,
                 encoded,

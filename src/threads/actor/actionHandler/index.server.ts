@@ -5,6 +5,7 @@ import {
 import { getImageDimensions } from "shared/utils"
 import {
     generateBufferChannels,
+    pixelChannelValue,
     writePixelToImageBuffer
 } from "shared/file/file.utils"
 import { getRenderMaterialMap } from "shared/render/render.main"
@@ -13,12 +14,8 @@ import {
     COMPUTE_ROW_MESSAGE,
     SET_HEIGHT_PREPASS_MESSAGE
 } from "shared/render/actor.model"
-import {
-    RasterChannel,
-    RASTER_CHANNEL_ORDER,
-    RleRow
-} from "shared/file/file.modal"
-import { HeightPrepassGrid, Pixel } from "shared/render/render.model"
+import { RleRow, renderedChannels } from "shared/file/file.modal"
+import { HeightPrepassGrid } from "shared/render/render.model"
 import { ScalingBuffer } from "shared/compression/autoscaling-buffer.util"
 import { MAX_RUN_LENGTH } from "shared/compression/run-length/run-length.model"
 
@@ -37,27 +34,6 @@ if (!rowCalculatedEvent) {
 const actorHelperRequest = script.Parent?.Parent?.FindFirstChild(
     "meshPixel"
 ) as BindableEvent
-
-const channelValueOf = (pixel: Pixel, channel: RasterChannel): number => {
-    switch (channel) {
-        case "red":
-            return pixel.r
-        case "green":
-            return pixel.g
-        case "blue":
-            return pixel.b
-        case "height":
-            return pixel.h
-        case "material":
-            return pixel.material
-        case "roads":
-            return pixel.road
-        case "buildings":
-            return pixel.building
-        case "water":
-            return pixel.water
-    }
-}
 
 interface RleChannelState {
     output: ScalingBuffer
@@ -113,7 +89,7 @@ actor?.BindToMessage(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
         ? undefined
         : generateBufferChannels(message.settings, true)
     const encoders = message.encodeOnRow
-        ? RASTER_CHANNEL_ORDER.map((channel) => ({
+        ? renderedChannels(message.renderConstants.rgbOnly).map((channel) => ({
               channel,
               state: newRleChannelState()
           }))
@@ -139,7 +115,7 @@ actor?.BindToMessage(COMPUTE_ROW_MESSAGE, (message: ActorMessage) => {
                 pushRleValue(
                     entry.state,
                     resolvedPixel
-                        ? channelValueOf(resolvedPixel, entry.channel)
+                        ? pixelChannelValue(resolvedPixel, entry.channel)
                         : 0
                 )
             }

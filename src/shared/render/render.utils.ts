@@ -11,6 +11,7 @@ import { color3ToVector3 } from "shared/utils"
 import { getEditableImage, getEditableMesh } from "./editable-cache"
 import { render } from "./render.main"
 import { getImageDimensions } from "../utils"
+import { overlayWaterColor } from "./water-overlay"
 
 const LIGHTING = game.GetService("Lighting")
 const TERRAIN = game.Workspace.Terrain
@@ -101,6 +102,9 @@ export function computePixel(
     if (isWater) {
         waterHeight = calculateHeight(primary.Position.Y)
         primary = castRay(castOrigin, castVector, true)
+        if (!primary && renderConstants.rgbOnly) {
+            return toRgbOnlyPixel(color3ToVector3(TERRAIN.WaterColor))
+        }
         if (!primary) {
             const bottomCastParams = new RaycastParams()
             bottomCastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -143,11 +147,6 @@ export function computePixel(
         }
     }
 
-    // Handle terrain hit
-    const terrainHit =
-        getTerrainHit(primary, castOrigin, castVector, settings.terrain) ||
-        primary
-
     // Compute color
     let color = averageColorSamples(results, renderConstants.rayVector)
 
@@ -157,6 +156,14 @@ export function computePixel(
     if (settings.shadows.enabled) {
         color = applyShadowsSamples(results, color, settings)
     }
+
+    if (renderConstants.rgbOnly) {
+        return toRgbOnlyPixel(isWater ? overlayWaterColor(color) : color)
+    }
+
+    const terrainHit =
+        getTerrainHit(primary, castOrigin, castVector, settings.terrain) ||
+        primary
 
     // Fully transparent surfaces get swapped for the underlying hit during
     // color sampling; follow that swap so grouping/material match the color.
@@ -193,6 +200,19 @@ export function computePixel(
         road: roadGrouping,
         building: buildingGrouping,
         water: waterHeight
+    }
+}
+
+function toRgbOnlyPixel(color: Vector3): Pixel {
+    return {
+        r: math.floor(color.X * 255),
+        g: math.floor(color.Y * 255),
+        b: math.floor(color.Z * 255),
+        h: 0,
+        material: 0,
+        road: 0,
+        building: 0,
+        water: 0
     }
 }
 

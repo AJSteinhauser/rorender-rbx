@@ -4,6 +4,7 @@ import {
     HEADER_DATA_SIZE,
     ImageBuffers,
     RASTER_CHANNEL_ORDER,
+    RasterChannel,
     RleRowBuffers,
     RORENDER_FILE_VERSION,
     STRING_ENCODING_SEPERATOR
@@ -98,6 +99,30 @@ export const writePixelToImageBuffer = (
     buffer.writeu8(imageBuffers.water, offset, pixel.water)
 }
 
+export const pixelChannelValue = (
+    pixel: Pixel,
+    channel: RasterChannel
+): number => {
+    switch (channel) {
+        case "red":
+            return pixel.r
+        case "green":
+            return pixel.g
+        case "blue":
+            return pixel.b
+        case "height":
+            return pixel.h
+        case "material":
+            return pixel.material
+        case "roads":
+            return pixel.road
+        case "buildings":
+            return pixel.building
+        case "water":
+            return pixel.water
+    }
+}
+
 const getFileSizeFromBuffers = (imageBuffers: ImageBuffers): number => {
     let output = 0
     for (let key of FILE_FORMAT_DATA_ORDER) {
@@ -139,13 +164,16 @@ export const generateEmptyRleRowBuffers = (): RleRowBuffers => ({
 
 export const assembleFinalRleBuffer = (
     rleRows: RleRowBuffers,
-    materialsEncoding: buffer
+    materialsEncoding: buffer | undefined,
+    channels: RasterChannel[] = RASTER_CHANNEL_ORDER
 ): buffer => {
-    const encodedMaterialsEncoding = runLengthEncode(materialsEncoding)
+    const encodedMaterialsEncoding = materialsEncoding
+        ? runLengthEncode(materialsEncoding)
+        : buffer.create(0)
     const rowCount = rleRows.red.size()
 
     let totalSize = 0
-    for (let channel of RASTER_CHANNEL_ORDER) {
+    for (let channel of channels) {
         for (let row = 0; row < rowCount; row++) {
             totalSize += buffer.len(rleRows[channel][row])
         }
@@ -155,7 +183,7 @@ export const assembleFinalRleBuffer = (
     const output = buffer.create(totalSize)
     let currentOffset = 0
     let startTime = tick()
-    for (let channel of RASTER_CHANNEL_ORDER) {
+    for (let channel of channels) {
         for (let row = 0; row < rowCount; row++) {
             startTime = delayForScriptExhuastion(startTime)
             const rowBuffer = rleRows[channel][row]

@@ -28,6 +28,7 @@ export interface RenderConstants {
         buildingCache: Map<Instance, number>
     }
     heightPrepass?: HeightPrepassGrid
+    rgbOnly: boolean
 }
 
 export enum ActorHelperRequest {
