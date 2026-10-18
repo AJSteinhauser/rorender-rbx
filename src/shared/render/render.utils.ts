@@ -23,7 +23,7 @@ const MAX_SURFACE_APPEREANCE_RECASTS = 10
 
 const rand = new Random()
 
-function lookupHeightShift(
+export function lookupHeightShift(
     grid: HeightPrepassGrid | undefined,
     position: Vector2
 ): number {

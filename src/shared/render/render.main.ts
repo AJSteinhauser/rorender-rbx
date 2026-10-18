@@ -1,5 +1,5 @@
 import { Settings } from "shared/settings/settings.model"
-import { HeightPrepassGrid, RenderConstants } from "./render.model"
+import { RenderConstants } from "./render.model"
 import { getImageDimensions } from "shared/utils"
 import {
     ImageBuffers,
@@ -17,6 +17,7 @@ import {
     pixelChannelValue
 } from "shared/file/file.utils"
 import { computePixel, delayForScriptExhuastion } from "./render.utils"
+import { buildHeightPrepass } from "./height-prepass"
 import {
     ActorMessage,
     COMPUTE_ROW_MESSAGE,
@@ -323,67 +324,6 @@ function combineAllBuffers(
         )
     }
     return output
-}
-
-const HEIGHT_PREPASS_CELL_WORLD_SIZE = 15
-const HEIGHT_PREPASS_FOOTPRINT_OVERLAP = 1.5
-const HEIGHT_PREPASS_BOX_THICKNESS = 1
-
-function buildHeightPrepass(
-    settings: Settings,
-    startingPosition: CFrame,
-    rayVector: Vector3,
-    rayLength: number,
-    imageDimensions: Vector2
-): HeightPrepassGrid {
-    const rayUnit = rayVector.Unit
-    const cellWorldSize = HEIGHT_PREPASS_CELL_WORLD_SIZE
-    const cellPixelSize = cellWorldSize / settings.resolution
-    const cellsX = math.ceil(imageDimensions.X / cellPixelSize)
-    const cellsZ = math.ceil(imageDimensions.Y / cellPixelSize)
-    const boxFootprint = cellWorldSize * HEIGHT_PREPASS_FOOTPRINT_OVERLAP
-    const margin = cellWorldSize
-
-    const params = new RaycastParams()
-    params.FilterType = Enum.RaycastFilterType.Exclude
-    const boxSize = new Vector3(
-        boxFootprint,
-        HEIGHT_PREPASS_BOX_THICKNESS,
-        boxFootprint
-    )
-
-    const shifts: number[] = []
-    let yieldTime = tick()
-    for (let cz = 0; cz < cellsZ; cz++) {
-        for (let cx = 0; cx < cellsX; cx++) {
-            yieldTime = delayForScriptExhuastion(yieldTime)
-            const pixelCenterX = (cx + 0.5) * cellPixelSize
-            const pixelCenterZ = (cz + 0.5) * cellPixelSize
-            const cellTopCFrame = startingPosition.mul(
-                new CFrame(
-                    pixelCenterX * settings.resolution,
-                    0,
-                    pixelCenterZ * settings.resolution
-                )
-            )
-            const hit = game.Workspace.Blockcast(
-                cellTopCFrame,
-                boxSize,
-                rayVector,
-                params
-            )
-            if (!hit) {
-                shifts.push(0)
-                continue
-            }
-            const distanceFromTop = hit.Position.sub(
-                cellTopCFrame.Position
-            ).Dot(rayUnit)
-            shifts.push(math.clamp(distanceFromTop - margin, 0, rayLength))
-        }
-    }
-
-    return { cellPixelSize, cellsX, cellsZ, shifts }
 }
 
 function getRenderConstants(
